@@ -46,6 +46,28 @@
           </div>
         </div>
 
+        <!-- Public Booking Link -->
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <span class="material-symbols-outlined text-lg">link</span>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-on-surface">Link Booking Publik</p>
+              <p class="text-xs text-on-surface-variant">Bagikan link ini ke pelanggan untuk booking mandiri</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <input ref="bookingLinkInput" :value="publicBookingUrl" readonly
+                   class="flex-1 sm:w-64 bg-surface-container px-3 py-2 rounded-lg text-xs font-mono text-on-surface border-none focus:ring-2 focus:ring-primary/20"
+                   @click="copyBookingLink">
+            <button @click="copyBookingLink" class="bg-primary text-white px-4 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all flex items-center gap-1.5 whitespace-nowrap">
+              <span class="material-symbols-outlined text-sm">{{ linkCopied ? 'check' : 'content_copy' }}</span>
+              {{ linkCopied ? 'Tersalin' : 'Salin' }}
+            </button>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Recent Bookings -->
           <div class="lg:col-span-2 space-y-6">
@@ -141,6 +163,20 @@ import VueApexCharts from 'vue3-apexcharts'
 const apexchart = VueApexCharts
 const loading = ref(true)
 const stats = ref(null)
+const bookingLinkInput = ref(null)
+const linkCopied = ref(false)
+
+const publicBookingUrl = window.location.origin + '/booking'
+
+const copyBookingLink = () => {
+  if (bookingLinkInput.value) {
+    bookingLinkInput.value.select()
+    navigator.clipboard.writeText(publicBookingUrl).then(() => {
+      linkCopied.value = true
+      setTimeout(() => { linkCopied.value = false }, 2000)
+    })
+  }
+}
 
 const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0)
 
