@@ -19,8 +19,8 @@
       <button @click="showDropdown = !showDropdown" 
               class="flex items-center gap-3 md:gap-4 hover:opacity-80 transition-all focus:outline-none">
         <div class="hidden md:flex flex-col text-right">
-          <p class="text-xs font-black text-on-surface uppercase">{{ user?.username || 'Admin' }}</p>
-          <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{{ user?.Role?.name || 'Super Admin' }}</p>
+          <p class="text-xs font-black text-on-surface uppercase">{{ user?.name || 'Admin' }}</p>
+          <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{{ user?.role || 'Super Admin' }}</p>
         </div>
         <div class="w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-surface-container-highest border border-outline-variant/10 flex items-center justify-center font-black text-primary text-xs md:text-sm shadow-sm overflow-hidden">
           <img v-if="user?.avatar" :src="user.avatar" class="w-full h-full object-cover" />
@@ -32,8 +32,8 @@
       <div v-if="showDropdown" 
            class="absolute right-0 top-full mt-2 w-48 bg-surface-container-lowest border border-outline-variant/20 shadow-2xl rounded-2xl p-2 z-[100] animate-in fade-in slide-in-from-top-2">
         <div class="px-4 py-3 border-b border-outline-variant/5 mb-1 md:hidden">
-          <p class="text-xs font-black text-on-surface uppercase">{{ user?.username || 'Admin' }}</p>
-          <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{{ user?.Role?.name || 'Super Admin' }}</p>
+          <p class="text-xs font-black text-on-surface uppercase">{{ user?.name || 'Admin' }}</p>
+          <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{{ user?.role || 'Super Admin' }}</p>
         </div>
         <button @click="handleLogout" 
                 class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-error hover:bg-error/5 transition-all">
