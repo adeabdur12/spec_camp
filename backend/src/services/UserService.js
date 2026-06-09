@@ -1,5 +1,5 @@
 import db from '../models/index.js';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
 const { User, Role } = db;
 
@@ -32,7 +32,9 @@ export default class UserService {
     const user = await User.findByPk(id);
     if (!user) return null;
 
-    if (data.password) {
+    if (!data.password) {
+      delete data.password;
+    } else {
       data.password = await bcrypt.hash(data.password, 10);
     }
 

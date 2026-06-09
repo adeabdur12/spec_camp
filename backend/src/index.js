@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import routes from './routes/index.js';
 import sequelize from './config/database.js';
+import { startBookingScheduler } from './services/scheduler.js';
 
 dotenv.config();
 
@@ -79,6 +80,13 @@ app.listen(PORT, async () => {
           console.log('Column isViewPublic already exists');
         }
       }
+      try {
+        await sequelize.query("ALTER TABLE services ADD COLUMN icon VARCHAR(50) AFTER isViewPublic");
+      } catch (e) {
+        if (!e.message?.includes('Duplicate column')) {
+          console.log('Column icon already exists');
+        }
+      }
       // Seed missing permissions
       try {
         const missingPerms = [
@@ -114,6 +122,7 @@ app.listen(PORT, async () => {
     }
     
     console.log(`Server running on port ${PORT}`);
+    startBookingScheduler();
   } catch (error) {
     console.error('Unable to start server:', error);
     process.exit(1);

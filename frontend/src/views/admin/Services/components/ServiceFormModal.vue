@@ -1,7 +1,7 @@
 <template>
   <div class="fixed inset-0 z-[80] flex items-center justify-center p-4">
     <div class="fixed inset-0 bg-on-surface/40 backdrop-blur-sm" @click="$emit('close')"></div>
-    <div class="relative bg-surface-container-lowest w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-outline-variant/10">
+    <div class="relative bg-surface-container-lowest w-full max-w-lg rounded-2xl shadow-xl overflow-y-auto max-h-[90vh] border border-outline-variant/10">
       <div class="p-6 md:p-6">
         <div class="flex justify-between items-start mb-6">
           <div>
@@ -72,6 +72,21 @@
                    placeholder="Detail layanan..."></textarea>
           </div>
 
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-on-surface-variant">Ikon</label>
+            <select v-model="form.icon"
+                    class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
+              <option value="">Tidak ada ikon</option>
+              <option v-for="ico in iconList" :key="ico.value" :value="ico.value">
+                {{ ico.label }}
+              </option>
+            </select>
+            <div v-if="form.icon" class="flex items-center gap-2 mt-1">
+              <span class="material-symbols-outlined text-lg text-primary">{{ form.icon }}</span>
+              <span class="text-xs text-on-surface-variant">{{ form.icon }}</span>
+            </div>
+          </div>
+
           <div class="flex items-center gap-3 pt-2">
             <input v-model="form.isActive" type="checkbox" id="isActive" class="w-4 h-4 text-primary rounded focus:ring-primary/20">
             <label for="isActive" class="text-sm font-medium text-on-surface">Layanan aktif dan tersedia</label>
@@ -106,4 +121,27 @@ defineProps({
 })
 
 defineEmits(['close', 'save'])
+
+const iconList = [
+  { value: 'hiking', label: '🥾 Hiking' },
+  { value: 'groups', label: '👥 Groups' },
+  { value: 'nature', label: '🌿 Nature' },
+  { value: 'camping', label: '🏕️ Camping' },
+  { value: 'fire_pit', label: '🔥 Fire Pit' },
+  { value: 'celebration', label: '🎉 Celebration' },
+  { value: 'directions_run', label: '🏃 Run' },
+  { value: 'theater_comedy', label: '🎭 Comedy' },
+  { value: 'photo_camera', label: '📷 Camera' },
+  { value: 'videocam', label: '🎥 Video' },
+  { value: 'music_note', label: '🎵 Music' },
+  { value: 'local_taxi', label: '🚕 Taxi' },
+  { value: 'local_hospital', label: '🏥 Medical' },
+  { value: 'restaurant', label: '🍽️ Restaurant' },
+  { value: 'checkroom', label: '🧳 Checkroom' },
+  { value: 'flashlight_on', label: '🔦 Flashlight' },
+  { value: 'kayaking', label: '🛶 Kayaking' },
+  { value: 'celebration', label: '🎊 Party' },
+  { value: 'movie', label: '🎬 Movie' },
+  { value: 'gamepad', label: '🎮 Games' }
+]
 </script>

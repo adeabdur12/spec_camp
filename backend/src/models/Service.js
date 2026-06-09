@@ -42,6 +42,10 @@ const Service = sequelize.define('Service', {
   isViewPublic: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  icon: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   tableName: 'services',

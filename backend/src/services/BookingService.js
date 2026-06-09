@@ -1,6 +1,7 @@
 import db from '../models/index.js';
-const { Booking, PackageEvent, Service, InventoryItem } = db;
+const { Booking, PackageEvent, Service, InventoryItem, User } = db;
 import { Op } from 'sequelize';
+import axios from 'axios';
 
 const generateBookingCode = async () => {
   for (let i = 0; i < 10; i++) {
@@ -175,7 +176,72 @@ export const createBooking = async (data) => {
     await db.BookingInventory.bulkCreate(items);
   }
 
-  return await getBookingById(booking.id);
+  const result = await getBookingById(booking.id);
+  sendWaNotification(result);
+  return result;
+};
+
+// Fire-and-forget WhatsApp notification
+const sendWaNotification = async (booking) => {
+  try {
+    const users = await User.findAll({ where: { notifWa: true } });
+    if (!users.length) return;
+    
+    const msg = `🔔 *Reservasi Baru Spec Camp*
+━━━━━━━━━━━━━━━━━━━
+👤 Nama: ${booking.customerName}
+📦 Paket: ${booking.PackageEvent?.name || '-'}
+📅 Tanggal: ${booking.checkInDate}
+👥 Pax: ${booking.pax} orang
+💰 Total: Rp ${Number(booking.totalPrice).toLocaleString('id-ID')}
+🔑 Kode: #${booking.bookingCode}
+━━━━━━━━━━━━━━━━━━━
+Klik untuk detail: https://speccamp.site/search-booking?code=${booking.bookingCode}`;
+
+    const target = users
+      .filter(u => u.phone)
+      .map(u => ({ number: u.phone, message: msg }));
+
+    if (!target.length) return;
+
+    console.log('Sending WA to', target.length, 'users');
+    const res = await axios.post('http://100.93.25.40:3000/send_message', 
+      { target },
+      { headers: { 'Authorization': 'wiku_admin_devices', 'Content-Type': 'application/json' }, timeout: 10000 }
+    );
+    console.log('WA sent:', res.data?.success);
+
+    // Send confirmation to the customer
+    if (booking.phone) {
+      const customerMsg = `✅ *Booking Diterima!*
+━━━━━━━━━━━━━━━━━━━
+Halo ${booking.customerName},
+Pemesanan kamu di *Spec Camp* sudah tercatat.
+
+🔑 Kode Booking: *${booking.bookingCode}*
+📅 Tanggal: ${booking.checkInDate} s/d ${booking.checkOutDate}
+👥 ${booking.pax} orang
+💰 Total: Rp ${Number(booking.totalPrice).toLocaleString('id-ID')}
+
+📌 Silakan transfer ke:
+Bank Mandiri
+157-00-3199999-9
+a.n. PT Bumimakmur Jaya Sentosa
+
+Upload bukti bayar di:
+https://speccamp.site/search-booking?code=${booking.bookingCode}
+
+Terima kasih! 🏕️`;
+
+      await axios.post('http://100.93.25.40:3000/send_message', 
+        { target: [{ number: booking.phone, message: customerMsg }] },
+        { headers: { 'Authorization': 'wiku_admin_devices', 'Content-Type': 'application/json' }, timeout: 10000 }
+      );
+      console.log('Customer WA sent');
+    }
+  } catch (e) {
+    console.error('WA notif failed:', e.message);
+  }
 };
 
 export const updateBooking = async (id, data) => {
