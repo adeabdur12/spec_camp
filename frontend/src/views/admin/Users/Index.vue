@@ -41,8 +41,9 @@
             
             <!-- User Info -->
             <div class="col-span-12 md:col-span-5 flex items-center">
-              <div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary font-bold shrink-0 uppercase text-lg mr-4 border border-outline-variant/10">
-                {{ (user.name || 'U').substring(0, 2) }}
+              <div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary font-bold shrink-0 uppercase text-lg mr-4 border border-outline-variant/10 overflow-hidden">
+                <img v-if="user.avatar" :src="user.avatar" class="w-full h-full object-cover" />
+                <span v-else>{{ (user.name || 'U').substring(0, 2) }}</span>
               </div>
               <div>
                 <h4 class="font-bold text-on-surface text-base">{{ user.name }}</h4>
