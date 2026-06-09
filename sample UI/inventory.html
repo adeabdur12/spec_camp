@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Expedition Admin - Product Management</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;700;900&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "primary-container": "#2d4b3e",
+                "surface-container": "#eeeeed",
+                "secondary-fixed": "#d8e5e6",
+                "on-error-container": "#93000a",
+                "on-tertiary-container": "#ff9965",
+                "tertiary": "#541e00",
+                "secondary-container": "#d5e2e3",
+                "surface-tint": "#466557",
+                "error-container": "#ffdad6",
+                "inverse-surface": "#2f3131",
+                "tertiary-fixed": "#ffdbcc",
+                "error": "#ba1a1a",
+                "primary-fixed-dim": "#adcebd",
+                "surface-container-low": "#f3f4f3",
+                "on-secondary": "#ffffff",
+                "surface-container-lowest": "#ffffff",
+                "surface-bright": "#f9f9f9",
+                "on-tertiary-fixed-variant": "#7a3000",
+                "on-primary-fixed-variant": "#2f4d40",
+                "on-secondary-fixed-variant": "#3d494a",
+                "on-primary": "#ffffff",
+                "on-secondary-fixed": "#111e1f",
+                "on-secondary-container": "#586566",
+                "secondary": "#546162",
+                "on-background": "#1a1c1c",
+                "surface-dim": "#dadada",
+                "on-tertiary": "#ffffff",
+                "secondary-fixed-dim": "#bcc9ca",
+                "outline": "#727974",
+                "on-error": "#ffffff",
+                "primary-fixed": "#c8ead8",
+                "inverse-on-surface": "#f1f1f0",
+                "background": "#f9f9f9",
+                "on-tertiary-fixed": "#351000",
+                "inverse-primary": "#adcebd",
+                "on-primary-container": "#99baa9",
+                "on-primary-fixed": "#012116",
+                "tertiary-fixed-dim": "#ffb693",
+                "outline-variant": "#c1c8c3",
+                "surface-container-highest": "#e2e2e2",
+                "primary": "#163428",
+                "surface-container-high": "#e8e8e8",
+                "on-surface": "#1a1c1c",
+                "tertiary-container": "#772f00",
+                "on-surface-variant": "#424844",
+                "surface": "#f9f9f9",
+                "surface-variant": "#e2e2e2"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Epilogue"],
+                "body": ["Manrope"],
+                "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', sans-serif; }
+        h1, h2, h3, .brand-font { font-family: 'Epilogue', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex">
+<!-- NavigationDrawer (Sidebar) -->
+<aside class="hidden md:flex h-full w-64 fixed left-0 top-0 z-40 flex-col py-6 bg-zinc-50 dark:bg-zinc-950 border-r-0">
+<div class="px-6 mb-8">
+<span class="text-lg font-black text-emerald-900 dark:text-emerald-50 tracking-tighter">ADMIN PANEL</span>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg mx-2 my-1 transition-transform hover:translate-x-1 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+<span class="font-epilogue font-medium">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-3 bg-emerald-900 text-white rounded-lg mx-2 my-1 transition-transform hover:translate-x-1 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="inventory_2">inventory_2</span>
+<span class="font-epilogue font-medium">Inventory</span>
+</a>
+<a class="flex items-center px-6 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg mx-2 my-1 transition-transform hover:translate-x-1 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="calendar_today">calendar_today</span>
+<span class="font-epilogue font-medium">Bookings</span>
+</a>
+<a class="flex items-center px-6 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg mx-2 my-1 transition-transform hover:translate-x-1 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="group">group</span>
+<span class="font-epilogue font-medium">Customers</span>
+</a>
+<div class="mt-auto pt-4 border-t border-outline-variant/10">
+<a class="flex items-center px-6 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg mx-2 my-1 transition-transform hover:translate-x-1 duration-200 ease-out" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="font-epilogue font-medium">Settings</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 md:left-64 right-0 z-30 h-16 bg-emerald-50/70 backdrop-blur-md flex justify-between items-center px-6">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-emerald-900 mr-4 md:hidden" data-icon="menu">menu</span>
+<h1 class="text-xl font-bold tracking-tighter text-emerald-900 font-epilogue">EXPEDITION</h1>
+</div>
+<div class="flex items-center space-x-4">
+<div class="hidden sm:flex bg-surface-container-high rounded-full px-4 py-1.5 items-center">
+<span class="material-symbols-outlined text-sm text-on-surface-variant mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 text-on-surface" placeholder="Search gear..." type="text"/>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="Professional portrait of a male outdoor gear manager in his 40s wearing a high-quality green technical vest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdMPWo2pnJWlgZAqiyhtVZ1zyRb8tncbeVCgao4DDj2nrc4byXn3_5JQABcOmOcTjN3ibOto5qzMxQg4plbTMBs5EHtXwhz_uYIM-K8fnj60Hw21rVPvYmni5gmVBdFHQe3AcSoIndzABXEDBHGx404m-nx_sxMCqcTM0CSS-9NzQZw7I4Jot3bnfOT6bVRyKCyK45CLEPHoj8dUik0f7e8gL7UzQt8Qb9WEomsUnT19UWxmBmZ8BCDnj1wm5IUKADVVhiY2zHFcQ"/>
+</div>
+</div>
+</header>
+<!-- Body Canvas -->
+<div class="pt-24 pb-32 px-6 max-w-7xl mx-auto">
+<!-- Page Header Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+<div class="space-y-1">
+<h2 class="text-4xl font-bold tracking-tight text-primary font-epilogue">Product Inventory</h2>
+<p class="text-on-surface-variant font-medium">Manage and monitor expedition gear listings and availability.</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-semibold flex items-center justify-center transition-all hover:opacity-90 active:scale-95 shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined mr-2" data-icon="add">add</span>
+                    Add New Product
+                </button>
+</div>
+<!-- Dashboard Stats Tonal Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+<div class="bg-surface-container-low p-6 rounded-xl space-y-2">
+<span class="text-on-surface-variant text-sm font-bold uppercase tracking-widest font-label">Total SKUs</span>
+<div class="text-3xl font-bold text-primary">142</div>
+<div class="text-emerald-700 text-xs font-bold">+4 this month</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl space-y-2">
+<span class="text-on-surface-variant text-sm font-bold uppercase tracking-widest font-label">Low Stock</span>
+<div class="text-3xl font-bold text-tertiary-container">12</div>
+<div class="text-tertiary text-xs font-bold">Needs reorder</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl space-y-2">
+<span class="text-on-surface-variant text-sm font-bold uppercase tracking-widest font-label">Active Rentals</span>
+<div class="text-3xl font-bold text-primary">87</div>
+<div class="text-emerald-700 text-xs font-bold">62% utilization</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl space-y-2">
+<span class="text-on-surface-variant text-sm font-bold uppercase tracking-widest font-label">Total Value</span>
+<div class="text-3xl font-bold text-primary">$42.8k</div>
+<div class="text-emerald-700 text-xs font-bold">Insured value</div>
+</div>
+</div>
+<!-- Product Data List (Bento-style list) -->
+<div class="space-y-4">
+<!-- Header Labels -->
+<div class="hidden md:grid grid-cols-12 px-6 py-2 text-on-surface-variant text-xs font-bold uppercase tracking-widest font-label">
+<div class="col-span-5">Product Details</div>
+<div class="col-span-2 text-center">Stock Level</div>
+<div class="col-span-2 text-center">Price / Day</div>
+<div class="col-span-2 text-center">Status</div>
+<div class="col-span-1 text-right">Actions</div>
+</div>
+<!-- Product Item 1 -->
+<div class="bg-surface-container-lowest p-4 md:p-6 rounded-xl group transition-all hover:bg-white hover:shadow-xl hover:shadow-primary/5">
+<div class="grid grid-cols-1 md:grid-cols-12 items-center gap-4">
+<div class="col-span-12 md:col-span-5 flex items-center">
+<div class="w-16 h-16 rounded-lg bg-surface-container-high overflow-hidden mr-4">
+<img class="w-full h-full object-cover" data-alt="Professional grade 4-season mountain tent pitched in a dramatic snowy landscape at sunset" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzWEPsT-m7gLGAIebCt2qxi8tGUciBQjl0SF53sCBO5VJA3S6_LDXu887ZHGO3SAkdep9n9-O30KawFy0TDkug9OPR4DbtQBl-nDI-LuNz36LxxjtWacg1l9_8o5Kmuvh_8jPFs0xEBg7t__05hyBnyKp2rzjZITzUFjY6X8XfI6u0DLJmOOXo4HW1b7UflZToIwCQRQV0O-sTqyJA4FkN26IeQpwsJF24uJdbEVR9ocZJZXtlLyHDnGypPz6UIB_MLyPCZWu-bVw"/>
+</div>
+<div>
+<h4 class="font-bold text-primary text-lg">Alps Mountaineering 4-Person</h4>
+<div class="flex gap-2 mt-1">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight">Shelter</span>
+<span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight">Premium</span>
+</div>
+</div>
+</div>
+<div class="col-span-6 md:col-span-2 flex flex-col items-center">
+<span class="md:hidden text-[10px] uppercase font-bold text-on-surface-variant mb-1">Stock</span>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden max-w-[80px]">
+<div class="bg-emerald-600 h-full w-[85%]"></div>
+</div>
+<span class="text-sm font-bold text-on-surface mt-1">17 / 20</span>
+</div>
+<div class="col-span-6 md:col-span-2 flex flex-col items-center">
+<span class="md:hidden text-[10px] uppercase font-bold text-on-surface-variant mb-1">Price</span>
+<span class="text-lg font-bold text-primary">$45.00</span>
+</div>
+<div class="col-span-6 md:col-span-2 flex justify-center">
+<span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">Available</span>
+</div>
+<div class="col-span-6 md:col-span-1 flex justify-end space-x-2">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Item 2 -->
+<div class="bg-surface-container-lowest p-4 md:p-6 rounded-xl group transition-all hover:bg-white hover:shadow-xl hover:shadow-primary/5">
+<div class="grid grid-cols-1 md:grid-cols-12 items-center gap-4">
+<div class="col-span-12 md:col-span-5 flex items-center">
+<div class="w-16 h-16 rounded-lg bg-surface-container-high overflow-hidden mr-4">
+<img class="w-full h-full object-cover" data-alt="Technical navy blue sleeping bag laid out on a clean white surface highlighting its loft and texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwVSjQ9Pb8RygaO5MiFy7aCojR0_RA2TnSAU9u82sWEYaoba4tChOe294L9ffDrNL4dhSJMGNhru48mqOFo0O37tW_zQM6E6O5Gg-cEK6mnoBfOD5l74d1VgrLpOHBE1dDeJ2qxqV5ZWRpSMKqL69eFOlJK4SPIIEsT55KMb3Mx3x9AS0lS3f9WtDTms-kvf95MUnkRzrBxuCKfqEMGTfTRdweYsJWlRXVFWVeYZ9CQMZZTGCKkKtFVc0UEdtJMVFDTPIpgx5Qt14"/>
+</div>
+<div>
+<h4 class="font-bold text-primary text-lg">Summit Zero degree Sleeping Bag</h4>
+<div class="flex gap-2 mt-1">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight">Sleep System</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight">Critical Stock</span>
+</div>
+</div>
+</div>
+<div class="col-span-6 md:col-span-2 flex flex-col items-center">
+<span class="md:hidden text-[10px] uppercase font-bold text-on-surface-variant mb-1">Stock</span>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden max-w-[80px]">
+<div class="bg-tertiary-container h-full w-[15%]"></div>
+</div>
+<span class="text-sm font-bold text-tertiary mt-1">2 / 12</span>
+</div>
+<div class="col-span-6 md:col-span-2 flex flex-col items-center">
+<span class="md:hidden text-[10px] uppercase font-bold text-on-surface-variant mb-1">Price</span>
+<span class="text-lg font-bold text-primary">$18.50</span>
+</div>
+<div class="col-span-6 md:col-span-2 flex justify-center">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-xs font-bold">Low Stock</span>
+</div>
+<div class="col-span-6 md:col-span-1 flex justify-end space-x-2">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Item 3 -->
+<div class="bg-surface-container-lowest p-4 md:p-6 rounded-xl group transition-all hover:bg-white hover:shadow-xl hover:shadow-primary/5">
+<div class="grid grid-cols-1 md:grid-cols-12 items-center gap-4">
+<div class="col-span-12 md:col-span-5 flex items-center">
+<div class="w-16 h-16 rounded-lg bg-surface-container-high overflow-hidden mr-4">
+<img class="w-full h-full object-cover" data-alt="Heavy duty charcoal gray portable gas stove for camping on a rustic wooden picnic table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqVxrVO7jxTtl0hCviJZtFy0gkQBDB45t0MYtr-W2c7nJZO0AnfgraZTOXhGsetF45Crj_z3F6Ed0g3copxOkw_BCGgalt_AL18WU2CwUhy_Ru3mQ9KUmi0aRAyHHEPxeWXalzynkAnOZkeLw38Fv-lhnTXp9iT2Ye7AskqGlZVXGVcPsPMnDDGdH1gQwwIITPJn_yg1B9xs7lr935Jq73QFdQeViHSEAbLHim-lVY6pbMVi5L4WnS0zG4KVGrKb0vrlbA8puJkCk"/>
+</div>
+<div>
+<h4 class="font-bold text-primary text-lg">Dual-Burner Camp Stove</h4>
+<div class="flex gap-2 mt-1">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight">Cooking</span>
+</div>
+</div>
+</div>
+<div class="col-span-6 md:col-span-2 flex flex-col items-center">
+<span class="md:hidden text-[10px] uppercase font-bold text-on-surface-variant mb-1">Stock</span>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden max-w-[80px]">
+<div class="bg-emerald-600 h-full w-[45%]"></div>
+</div>
+<span class="text-sm font-bold text-on-surface mt-1">9 / 20</span>
+</div>
+<div class="col-span-6 md:col-span-2 flex flex-col items-center">
+<span class="md:hidden text-[10px] uppercase font-bold text-on-surface-variant mb-1">Price</span>
+<span class="text-lg font-bold text-primary">$12.00</span>
+</div>
+<div class="col-span-6 md:col-span-2 flex justify-center">
+<span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">Available</span>
+</div>
+<div class="col-span-6 md:col-span-1 flex justify-end space-x-2">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Item 4 -->
+<div class="bg-surface-container-lowest p-4 md:p-6 rounded-xl group transition-all hover:bg-white hover:shadow-xl hover:shadow-primary/5">
+<div class="grid grid-cols-1 md:grid-cols-12 items-center gap-4">
+<div class="col-span-12 md:col-span-5 flex items-center">
+<div class="w-16 h-16 rounded-lg bg-surface-container-high overflow-hidden mr-4">
+<img class="w-full h-full object-cover" data-alt="Durable technical hiking backpack with multiple straps and pockets displayed against a minimalist concrete background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFefDCMVme225sWqhbLpxiALpHT9QbiYfwxbH0--_wEG7gWP3drHPxxru31w6Lt0Cwm4tenWcmP4WuQaIIpzXMSGGEy3vNwQRm6D5vreg-EiW9x1ZAzvYKyThAL34EGWmSRL26gLmFGL1PKY4p1ZJdM5qgBYBgN83DI_LpBcGgAV5qd5Ny5gSnCJHqrh0HEE0XldNYZvF0sc1-fTOSPlnYVe049BrUmoq_UrIqs07LymROeps7EYyJoQEaeGkHzC6_zQK7RMqCzh0"/>
+</div>
+<div>
+<h4 class="font-bold text-primary text-lg">Osprey 65L Technical Pack</h4>
+<div class="flex gap-2 mt-1">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight">Gear</span>
+<span class="bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight">Out of Order</span>
+</div>
+</div>
+</div>
+<div class="col-span-6 md:col-span-2 flex flex-col items-center">
+<span class="md:hidden text-[10px] uppercase font-bold text-on-surface-variant mb-1">Stock</span>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden max-w-[80px]">
+<div class="bg-outline h-full w-[0%]"></div>
+</div>
+<span class="text-sm font-bold text-on-surface-variant mt-1">0 / 8</span>
+</div>
+<div class="col-span-6 md:col-span-2 flex flex-col items-center">
+<span class="md:hidden text-[10px] uppercase font-bold text-on-surface-variant mb-1">Price</span>
+<span class="text-lg font-bold text-primary">$28.00</span>
+</div>
+<div class="col-span-6 md:col-span-2 flex justify-center">
+<span class="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full text-xs font-bold">Under Repair</span>
+</div>
+<div class="col-span-6 md:col-span-1 flex justify-end space-x-2">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination (Mobile/Desktop Hybrid) -->
+<div class="mt-12 flex items-center justify-between">
+<span class="text-sm text-on-surface-variant font-medium">Showing 1 to 4 of 142 items</span>
+<div class="flex space-x-2">
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-primary disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="p-2 rounded-lg bg-primary text-on-primary shadow-lg shadow-primary/10 px-4 font-bold text-sm">1</button>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-primary px-4 font-bold text-sm">2</button>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-primary px-4 font-bold text-sm">3</button>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-primary">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-20 px-4 pb-2 bg-emerald-50/80 backdrop-blur-xl rounded-t-2xl z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+<a class="flex flex-col items-center justify-center text-emerald-800/50 dark:text-zinc-500 scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-manrope text-[11px] font-semibold uppercase tracking-widest mt-1">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-emerald-200/50 dark:bg-emerald-800/30 text-emerald-900 dark:text-emerald-50 rounded-xl px-4 py-1 scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-manrope text-[11px] font-semibold uppercase tracking-widest mt-1">Inventory</span>
+</a>
+<a class="flex flex-col items-center justify-center text-emerald-800/50 dark:text-zinc-500 scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+<span class="font-manrope text-[11px] font-semibold uppercase tracking-widest mt-1">Saved</span>
+</a>
+<a class="flex flex-col items-center justify-center text-emerald-800/50 dark:text-zinc-500 scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-manrope text-[11px] font-semibold uppercase tracking-widest mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

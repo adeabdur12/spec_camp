@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EXPEDITION Admin - Booking Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;700;800;900&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#2d4b3e",
+                        "surface-container": "#eeeeed",
+                        "secondary-fixed": "#d8e5e6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#ff9965",
+                        "tertiary": "#541e00",
+                        "secondary-container": "#d5e2e3",
+                        "surface-tint": "#466557",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2f3131",
+                        "tertiary-fixed": "#ffdbcc",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#adcebd",
+                        "surface-container-low": "#f3f4f3",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f9f9f9",
+                        "on-tertiary-fixed-variant": "#7a3000",
+                        "on-primary-fixed-variant": "#2f4d40",
+                        "on-secondary-fixed-variant": "#3d494a",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#111e1f",
+                        "on-secondary-container": "#586566",
+                        "secondary": "#546162",
+                        "on-background": "#1a1c1c",
+                        "surface-dim": "#dadada",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#bcc9ca",
+                        "outline": "#727974",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#c8ead8",
+                        "inverse-on-surface": "#f1f1f0",
+                        "background": "#f9f9f9",
+                        "on-tertiary-fixed": "#351000",
+                        "inverse-primary": "#adcebd",
+                        "on-primary-container": "#99baa9",
+                        "on-primary-fixed": "#012116",
+                        "tertiary-fixed-dim": "#ffb693",
+                        "outline-variant": "#c1c8c3",
+                        "surface-container-highest": "#e2e2e2",
+                        "primary": "#163428",
+                        "surface-container-high": "#e8e8e8",
+                        "on-surface": "#1a1c1c",
+                        "tertiary-container": "#772f00",
+                        "on-surface-variant": "#424844",
+                        "surface": "#f9f9f9",
+                        "surface-variant": "#e2e2e2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Epilogue"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #f9f9f9;
+            color: #1a1c1c;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Epilogue', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex min-h-screen bg-background">
+<!-- NavigationDrawer (The Shell) -->
+<aside class="hidden md:flex flex-col py-6 h-full w-64 fixed left-0 top-0 bg-zinc-50 dark:bg-zinc-950 z-40 transition-all duration-200 ease-out">
+<div class="px-6 mb-8 text-lg font-black text-emerald-900 dark:text-emerald-50 tracking-tighter">ADMIN PANEL</div>
+<nav class="flex flex-col space-y-1">
+<a class="flex items-center px-6 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg mx-2 my-1 font-epilogue font-medium transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center px-6 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg mx-2 my-1 font-epilogue font-medium transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined mr-3">inventory_2</span>
+                Inventory
+            </a>
+<a class="flex items-center px-6 py-3 bg-emerald-900 text-white rounded-lg mx-2 my-1 font-epilogue font-medium transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined mr-3">calendar_today</span>
+                Bookings
+            </a>
+<a class="flex items-center px-6 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg mx-2 my-1 font-epilogue font-medium transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+                Customers
+            </a>
+<a class="flex items-center px-6 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg mx-2 my-1 font-epilogue font-medium transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+                Settings
+            </a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 pb-24 md:pb-8">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-30 flex justify-between items-center px-6 h-16 bg-emerald-50/70 dark:bg-zinc-900/70 backdrop-blur-md md:w-[calc(100%-16rem)]">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-emerald-900">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="text-xl font-bold tracking-tighter text-emerald-900 dark:text-emerald-50 font-epilogue uppercase">EXPEDITION</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex gap-6 items-center mr-4">
+<span class="text-emerald-900 dark:text-emerald-50 font-bold font-epilogue text-sm">BOOKINGS OVERVIEW</span>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
+<img class="w-full h-full object-cover" data-alt="professional portrait of a mountain guide with weathered skin and kind eyes wearing outdoor gear" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDL7N2OXo9u5Hxhb1lBIaCl0570F2ZIATVmfPkWIaHpW7KvMo613V4oDNVRSGa2mMqaR82IGkPNvdf0nbjXDi6BlyN-xO_ucO2l3jgVzs66hGTuB9IlCupnYFagvmI_XOWntfUiRnK7OhsUmagRMf_XF3G428xg9oRBbY8iPZWM3ZA5T0LnsD0PDw2_qqlw-UMBZsjeZVeIydtbe625UMMm_XayFXT80iYUT4HqNYY04Gu1zeDk15Y9rOxvIJ6SOl-cOXABhknTs5Y"/>
+</div>
+</div>
+</header>
+<div class="pt-24 px-6 max-w-7xl mx-auto">
+<!-- Dashboard Stats Bento -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+<div class="md:col-span-2 bg-primary text-white p-8 rounded-xl flex flex-col justify-between overflow-hidden relative">
+<div class="z-10">
+<p class="font-label uppercase tracking-widest text-xs text-primary-fixed-dim mb-2">Total Revenue</p>
+<h2 class="text-4xl font-black font-headline tracking-tight">$42,850.00</h2>
+</div>
+<div class="mt-8 flex items-center gap-2 z-10">
+<span class="text-emerald-400 material-symbols-outlined">trending_up</span>
+<span class="text-sm font-medium">+12.5% from last month</span>
+</div>
+<!-- Decorative Graphic -->
+<div class="absolute -right-10 -bottom-10 opacity-10">
+<span class="material-symbols-outlined text-[160px]">mountain_flag</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col justify-between">
+<p class="font-label uppercase tracking-widest text-[10px] text-on-surface-variant font-bold">Active Rentals</p>
+<h3 class="text-3xl font-bold font-headline text-on-surface">24</h3>
+<div class="h-1 w-full bg-surface-container rounded-full mt-4">
+<div class="h-1 bg-emerald-600 rounded-full w-3/4"></div>
+</div>
+</div>
+<div class="bg-tertiary-container text-white p-6 rounded-xl flex flex-col justify-between">
+<p class="font-label uppercase tracking-widest text-[10px] text-on-tertiary-container font-bold">Pending Reviews</p>
+<h3 class="text-3xl font-bold font-headline">12</h3>
+<button class="mt-4 text-xs font-bold uppercase tracking-widest flex items-center gap-1">
+                        View all <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Booking Management Section -->
+<div class="bg-surface-container-low rounded-xl p-1">
+<!-- Filters Bar -->
+<div class="bg-surface-container-lowest rounded-t-xl p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<h2 class="text-xl font-extrabold font-headline tracking-tight text-on-surface">Recent Bookings</h2>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-bold font-label transition-all active:scale-95">All</button>
+<button class="px-4 py-2 bg-surface-container text-on-surface-variant rounded-lg text-sm font-medium font-label hover:bg-surface-container-high transition-all">Pending</button>
+<button class="px-4 py-2 bg-surface-container text-on-surface-variant rounded-lg text-sm font-medium font-label hover:bg-surface-container-high transition-all">Confirmed</button>
+<button class="px-4 py-2 bg-surface-container text-on-surface-variant rounded-lg text-sm font-medium font-label hover:bg-surface-container-high transition-all">Completed</button>
+<button class="ml-auto p-2 bg-surface-container text-on-surface-variant rounded-lg">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Bookings Grid (Editorial Style) -->
+<div class="p-4 md:p-6 space-y-4">
+<!-- Header Row -->
+<div class="hidden md:grid grid-cols-6 px-4 py-2 text-[10px] uppercase tracking-widest font-black text-on-surface-variant/60">
+<div class="col-span-2">Customer / Trip</div>
+<div>Date Range</div>
+<div>Equipment</div>
+<div>Status</div>
+<div class="text-right">Actions</div>
+</div>
+<!-- Booking Card 1 -->
+<div class="group bg-surface-container-lowest p-4 md:p-5 rounded-xl transition-all duration-300 hover:translate-x-1 flex flex-col md:grid md:grid-cols-6 md:items-center gap-4">
+<div class="col-span-2 flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-900 font-bold shrink-0">
+                                JD
+                            </div>
+<div>
+<h4 class="font-bold text-on-surface">Julianne DeMarco</h4>
+<p class="text-xs text-on-surface-variant font-medium">Glacier National Park Expedition</p>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Oct 12 - 18</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-semibold">6 Days Total</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">4-Season Tent</span>
+</div>
+<div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-900 text-[10px] font-black rounded-full uppercase tracking-tighter">
+<span class="w-1.5 h-1.5 bg-emerald-600 rounded-full"></span>
+                                Confirmed
+                            </span>
+</div>
+<div class="flex justify-end gap-2">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Booking Card 2 -->
+<div class="group bg-surface-container-lowest p-4 md:p-5 rounded-xl transition-all duration-300 hover:translate-x-1 flex flex-col md:grid md:grid-cols-6 md:items-center gap-4">
+<div class="col-span-2 flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center text-orange-900 font-bold shrink-0">
+                                MR
+                            </div>
+<div>
+<h4 class="font-bold text-on-surface">Marcus Reed</h4>
+<p class="text-xs text-on-surface-variant font-medium">Pacific Crest Trail Section A</p>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Oct 15 - 22</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-semibold">7 Days Total</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Ultralight Pack</span>
+</div>
+<div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-black rounded-full uppercase tracking-tighter">
+<span class="w-1.5 h-1.5 bg-tertiary rounded-full"></span>
+                                Pending
+                            </span>
+</div>
+<div class="flex justify-end gap-2">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Booking Card 3 -->
+<div class="group bg-surface-container-lowest p-4 md:p-5 rounded-xl transition-all duration-300 hover:translate-x-1 flex flex-col md:grid md:grid-cols-6 md:items-center gap-4">
+<div class="col-span-2 flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900 font-bold shrink-0">
+                                SK
+                            </div>
+<div>
+<h4 class="font-bold text-on-surface">Sarah Kincaid</h4>
+<p class="text-xs text-on-surface-variant font-medium">Yosemite Valley Basecamp</p>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Oct 01 - 05</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-semibold">4 Days Total</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Cooking System</span>
+</div>
+<div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-black rounded-full uppercase tracking-tighter">
+<span class="w-1.5 h-1.5 bg-on-surface-variant rounded-full"></span>
+                                Completed
+                            </span>
+</div>
+<div class="flex justify-end gap-2">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Booking Card 4 -->
+<div class="group bg-surface-container-lowest p-4 md:p-5 rounded-xl transition-all duration-300 hover:translate-x-1 flex flex-col md:grid md:grid-cols-6 md:items-center gap-4">
+<div class="col-span-2 flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-900 font-bold shrink-0">
+                                BW
+                            </div>
+<div>
+<h4 class="font-bold text-on-surface">Bennett Walters</h4>
+<p class="text-xs text-on-surface-variant font-medium">Appalachian Trail Thru-Hike</p>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface">Oct 20 - 30</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-semibold">10 Days Total</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Full Kit</span>
+</div>
+<div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-900 text-[10px] font-black rounded-full uppercase tracking-tighter">
+<span class="w-1.5 h-1.5 bg-emerald-600 rounded-full"></span>
+                                Confirmed
+                            </span>
+</div>
+<div class="flex justify-end gap-2">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination Footer -->
+<div class="bg-surface-container-lowest rounded-b-xl px-6 py-4 flex items-center justify-between border-t border-surface-container">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Showing 4 of 128 bookings</p>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-on-primary text-xs font-bold">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant text-xs font-bold">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-20 px-4 pb-2 bg-emerald-50/80 dark:bg-zinc-900/80 backdrop-blur-xl z-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+<a class="flex flex-col items-center justify-center text-emerald-800/50 dark:text-zinc-500 hover:text-emerald-700 transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="font-manrope text-[11px] font-semibold uppercase tracking-widest mt-1">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-emerald-200/50 dark:bg-emerald-800/30 text-emerald-900 dark:text-emerald-50 rounded-xl px-4 py-1 transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-manrope text-[11px] font-semibold uppercase tracking-widest mt-1">Rentals</span>
+</a>
+<a class="flex flex-col items-center justify-center text-emerald-800/50 dark:text-zinc-500 hover:text-emerald-700 transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">favorite</span>
+<span class="font-manrope text-[11px] font-semibold uppercase tracking-widest mt-1">Saved</span>
+</a>
+<a class="flex flex-col items-center justify-center text-emerald-800/50 dark:text-zinc-500 hover:text-emerald-700 transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-manrope text-[11px] font-semibold uppercase tracking-widest mt-1">Profile</span>
+</a>
+</nav>
+<!-- Contextual FAB (Create Booking) -->
+<button class="fixed bottom-24 right-6 md:bottom-12 md:right-12 w-14 h-14 bg-tertiary-container text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 group z-40">
+<span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">add</span>
+</button>
+</body></html>
