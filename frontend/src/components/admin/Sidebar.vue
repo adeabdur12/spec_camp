@@ -64,6 +64,8 @@ const allMenuItems = [
 ]
 
 const userPermissions = computed(() => {
+  // Use route path as dependency to re-evaluate on navigation
+  route.path
   try {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     if (user.role === 'admin') return allMenuItems.map(i => i.perm)
