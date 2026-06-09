@@ -6,11 +6,11 @@ export const getDashboardStats = async () => {
   const now = new Date();
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // 1. Total Revenue This Month
+  // 1. Total Revenue This Month (by check-in date)
   const bookingsMonth = await Booking.findAll({
     where: {
       status: { [Op.in]: ['confirmed', 'completed'] },
-      createdAt: { [Op.gte]: firstDayOfMonth }
+      checkInDate: { [Op.gte]: firstDayOfMonth }
     }
   });
   const revenueMonth = bookingsMonth.reduce((sum, b) => sum + Number(b.totalPrice), 0);
