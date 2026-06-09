@@ -88,9 +88,8 @@ const handleLogin = async () => {
         manage_role: 'roles',
         manage_settings: 'settings'
       }
-      const firstRoute = perms
-        .map(p => permRoutes[p])
-        .filter(Boolean)[0] || 'admin-dashboard'
+      const firstRoute = perms.includes('view_dashboard') ? 'admin-dashboard'
+        : perms.map(p => permRoutes[p]).filter(Boolean)[0] || 'admin-dashboard'
       router.push({ name: firstRoute })
     }
   } catch (err) {
