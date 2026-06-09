@@ -21,10 +21,7 @@ export const getCustomerById = async (id) => {
 };
 
 export const createCustomer = async (data) => {
-  const [customer, created] = await Customer.findOrCreate({
-    where: { email: data.email },
-    defaults: data
-  });
+  const customer = await Customer.create(data);
   return customer;
 };
 
@@ -49,7 +46,6 @@ export const searchCustomers = async (query) => {
     where: {
       [Op.or]: [
         { name: { [Op.like]: `%${query}%` } },
-        { email: { [Op.like]: `%${query}%` } },
         { phone: { [Op.like]: `%${query}%` } }
       ]
     },

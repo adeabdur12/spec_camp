@@ -13,7 +13,8 @@ async function runMigrations() {
   const files = readdirSync(migrationsDir).sort();
   for (const file of files) {
     if (!file.endsWith('.js')) continue;
-    const migration = await import(join(migrationsDir, file));
+    const mod = await import(join(migrationsDir, file));
+    const migration = mod.default || mod;
     console.log(`  -> ${file}`);
     await migration.up(sequelize.getQueryInterface(), sequelize.Sequelize);
   }
@@ -25,8 +26,9 @@ async function runSeeders() {
   const files = readdirSync(seedersDir).sort();
   for (const file of files) {
     if (!file.endsWith('.js')) continue;
+    const mod = await import(join(seedersDir, file));
+    const seeder = mod.default || mod;
     console.log(`  -> ${file}`);
-    const seeder = await import(join(seedersDir, file));
     await seeder.up(sequelize.getQueryInterface(), sequelize.Sequelize);
   }
   console.log('Seeders done.');

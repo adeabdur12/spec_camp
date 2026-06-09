@@ -47,7 +47,6 @@ const Customer = sequelize.define('Customer', {
   tableName: 'customers',
   timestamps: true,
   indexes: [
-    { fields: ['email'] },
     { fields: ['phone'] },
     { fields: ['name'] }
   ]

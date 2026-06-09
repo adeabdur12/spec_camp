@@ -455,6 +455,14 @@ watch([() => form.value.packageEventId, () => form.value.pax, () => form.value.e
   form.value.totalPrice = total
 }, { deep: true })
 
+watch(() => form.value.checkInDate, (date) => {
+  if (date && !form.value.checkOutDate) {
+    const d = new Date(date)
+    d.setDate(d.getDate() + 1)
+    form.value.checkOutDate = d.toISOString().split('T')[0]
+  }
+})
+
 const closeModal = () => {
   showModal.value = false
   editingId.value = null
