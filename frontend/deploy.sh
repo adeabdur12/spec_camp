@@ -3,6 +3,19 @@ set -e
 
 echo "=== DEPLOY SPEC CAMP ==="
 
+# Check remote
+if ! git remote get-url origin &>/dev/null; then
+  echo ""
+  echo "⚠️  Remote 'origin' belum diatur."
+  echo ""
+  echo "Pertama, buat repository di GitHub, lalu jalankan:"
+  echo "   git remote add origin https://github.com/<username>/<repo>.git"
+  echo "   git push -u origin develop"
+  echo "   git push -u origin main"
+  echo ""
+  exit 1
+fi
+
 # Paths
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
