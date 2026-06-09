@@ -18,6 +18,11 @@
             <span class="material-symbols-outlined text-sm">refresh</span>
             Tampilkan
           </button>
+          <button @click="exportCSV" :disabled="!transactions.length"
+                  class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-emerald-700 disabled:opacity-40 transition-all flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm">download</span>
+            CSV
+          </button>
         </div>
       </div>
 
@@ -171,6 +176,37 @@ const translateStatus = (s) => {
 const formatDate = (date) => {
   if (!date) return '-'
   return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+}
+
+const exportCSV = () => {
+  const rows = [['Tanggal', 'Nama', 'Paket', 'Status', 'Total', 'Mimount', 'Spec Camp']]
+  transactions.value.forEach(b => {
+    rows.push([
+      b.checkInDate,
+      b.customerName,
+      b.PackageEvent?.name || '-',
+      b.status,
+      Number(b.totalPrice || 0),
+      Number(b.mimountTotal || 0),
+      Number(b.specCampShare || 0)
+    ])
+  })
+  // Summary row
+  rows.push([])
+  rows.push(['TOTAL', '', '', '', stats.value?.totalRevenue || 0, stats.value?.totalMimountTotal || 0, stats.value?.totalSpecCampShare || 0])
+  rows.push(['Pajak 10%', '', '', '', '', '', reportTax.value])
+  rows.push(['Warga 5%', '', '', '', '', '', reportLocalFee.value])
+  rows.push(['Net Spec Camp', '', '', '', '', '', reportSpecCampNet.value])
+
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+  const BOM = '\uFEFF'
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `laporan-${monthName.value.toLowerCase()}-${periodYear.value}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 const getStartDate = () => {
