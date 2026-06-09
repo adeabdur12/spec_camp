@@ -33,7 +33,8 @@
           <div class="p-5 flex-1 flex flex-col">
             <div class="flex justify-between items-start mb-4">
               <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-xl">home_repair_service</span>
+                <i v-if="service.icon" :class="'bi ' + service.icon + ' text-xl'"></i>
+                <span v-else class="material-symbols-outlined text-xl">home_repair_service</span>
               </div>
               <div class="flex flex-col items-end gap-1.5">
                 <span v-if="service.isActive" class="bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">

@@ -82,7 +82,7 @@
               </option>
             </select>
             <div v-if="form.icon" class="flex items-center gap-2 mt-1">
-              <span class="material-symbols-outlined text-lg text-primary">{{ form.icon }}</span>
+              <i :class="'bi ' + form.icon + ' text-lg text-primary'"></i>
               <span class="text-xs text-on-surface-variant">{{ form.icon }}</span>
             </div>
           </div>
@@ -123,25 +123,33 @@ defineProps({
 defineEmits(['close', 'save'])
 
 const iconList = [
-  { value: 'hiking', label: '🥾 Hiking' },
-  { value: 'groups', label: '👥 Groups' },
-  { value: 'nature', label: '🌿 Nature' },
-  { value: 'camping', label: '🏕️ Camping' },
-  { value: 'fire_pit', label: '🔥 Fire Pit' },
-  { value: 'celebration', label: '🎉 Celebration' },
-  { value: 'directions_run', label: '🏃 Run' },
-  { value: 'theater_comedy', label: '🎭 Comedy' },
-  { value: 'photo_camera', label: '📷 Camera' },
-  { value: 'videocam', label: '🎥 Video' },
-  { value: 'music_note', label: '🎵 Music' },
-  { value: 'local_taxi', label: '🚕 Taxi' },
-  { value: 'local_hospital', label: '🏥 Medical' },
-  { value: 'restaurant', label: '🍽️ Restaurant' },
-  { value: 'checkroom', label: '🧳 Checkroom' },
-  { value: 'flashlight_on', label: '🔦 Flashlight' },
-  { value: 'kayaking', label: '🛶 Kayaking' },
-  { value: 'celebration', label: '🎊 Party' },
-  { value: 'movie', label: '🎬 Movie' },
-  { value: 'gamepad', label: '🎮 Games' }
+  { value: 'bi-tree', label: '🌲 Pohon' },
+  { value: 'bi-flower1', label: '🌸 Bunga' },
+  { value: 'bi-mountain', label: '⛰️ Gunung' },
+  { value: 'bi-water', label: '💧 Air' },
+  { value: 'bi-sun', label: '☀️ Cerah' },
+  { value: 'bi-moon', label: '🌙 Bulan' },
+  { value: 'bi-star', label: '⭐ Bintang' },
+  { value: 'bi-fire', label: '🔥 Api' },
+  { value: 'bi-cup-hot', label: '☕ Minuman' },
+  { value: 'bi-basket', label: '🧺 Piknik' },
+  { value: 'bi-bicycle', label: '🚲 Sepeda' },
+  { value: 'bi-car-front', label: '🚗 Mobil' },
+  { value: 'bi-camera', label: '📷 Kamera' },
+  { value: 'bi-music-note-beamed', label: '🎵 Musik' },
+  { value: 'bi-film', label: '🎬 Film' },
+  { value: 'bi-controller', label: '🎮 Game' },
+  { value: 'bi-people', label: '👥 Kelompok' },
+  { value: 'bi-person-walking', label: '🚶 Jalan' },
+  { value: 'bi-binoculars', label: '🔭 Teropong' },
+  { value: 'bi-compass', label: '🧭 Kompas' },
+  { value: 'bi-map', label: '🗺️ Peta' },
+  { value: 'bi-tent', label: '⛺ Tenda' },
+  { value: 'bi-backpack', label: '🎒 Ransel' },
+  { value: 'bi-lamp', label: '💡 Lampu' },
+  { value: 'bi-tools', label: '🔧 Alat' },
+  { value: 'bi-heart', label: '❤️ Kesehatan' },
+  { value: 'bi-truck', label: '🚚 Angkut' },
+  { value: 'bi-shield-check', label: '🛡️ Aman' }
 ]
 </script>
