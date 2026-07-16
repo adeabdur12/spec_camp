@@ -104,7 +104,7 @@
                 <div class="col-span-1 flex md:flex-col items-center gap-2 md:gap-0">
                   <span class="material-symbols-outlined text-sm md:hidden text-on-surface-variant">calendar_month</span>
                   <span class="text-sm font-black text-on-surface">{{ formatShortDate(booking.checkInDate) }}</span>
-                  <span class="text-xs font-black text-on-surface">{{ formatShortDate(booking.checkInDate) }}</span>
+                  <span class="text-xs font-black text-on-surface">{{ formatShortDate(booking.checkOutDate) }}</span>
                   <span class="text-[9px] text-on-surface-variant uppercase font-bold tracking-tight text-center">
                     {{ calculateDays(booking.checkInDate, booking.checkOutDate) }} Ml
                   </span>
@@ -149,20 +149,19 @@
                   </div>
 
                     <!-- Aksi -->
-                    <div class="flex items-center gap-2 md:gap-1 md:col-span-1 md:justify-end">
-                      <!-- Quick Status Update -->
+                    <div class="flex items-center gap-1">
+                      <!-- Status Toggle -->
                       <div class="relative">
-                        <button @click.stop="toggleStatus(booking.id)" 
-                                class="w-9 h-9 flex items-center justify-center hover:bg-primary/10 rounded-xl text-primary/60 hover:text-primary transition-all bg-surface-container/30 md:bg-transparent" title="Ganti Status">
-                          <span class="material-symbols-outlined text-xl">published_with_changes</span>
+                        <button @click.stop="toggleStatus(booking.id)"
+                                class="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded-lg text-on-surface-variant/50 hover:text-primary transition-all" title="Ganti Status">
+                          <span class="material-symbols-outlined text-lg">published_with_changes</span>
                         </button>
-                        <!-- Status Dropdown Menu -->
                         <div v-if="statusOpenId === booking.id" @click.stop
                              class="absolute right-0 bottom-full mb-2 bg-surface-container-lowest border border-outline-variant/20 shadow-2xl rounded-2xl p-2 z-[70] min-w-[150px]">
                           <p class="text-[9px] font-black text-on-surface-variant/40 uppercase tracking-widest px-3 py-1 mb-1 border-b border-outline-variant/5">Ganti Status</p>
                           <button v-for="st in ['pending', 'confirmed', 'completed', 'cancelled']" :key="st"
                                   @click="updateStatus(booking, st)"
-                                  class="w-full text-left px-3 py-2 text-[10px] font-bold rounded-xl hover:bg-surface-container transition-all flex items-center justify-between group/item"
+                                  class="w-full text-left px-3 py-2 text-[10px] font-bold rounded-xl hover:bg-surface-container transition-all flex items-center justify-between"
                                   :class="booking.status === st ? 'text-primary bg-primary/5' : 'text-on-surface-variant'">
                             {{ translateStatus(st) }}
                             <span v-if="booking.status === st" class="material-symbols-outlined text-sm">check_circle</span>
@@ -170,16 +169,33 @@
                         </div>
                       </div>
 
-                      <button @click="viewDetail(booking)" class="w-9 h-9 flex items-center justify-center hover:bg-primary/10 rounded-xl text-on-surface-variant hover:text-primary transition-all bg-surface-container/30 md:bg-transparent" title="Detail">
-                        <span class="material-symbols-outlined text-xl">visibility</span>
+                      <!-- Lihat Detail -->
+                      <button @click="viewDetail(booking)" class="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded-lg text-on-surface-variant/50 hover:text-primary transition-all" title="Detail">
+                        <span class="material-symbols-outlined text-lg">visibility</span>
                       </button>
-                      <button @click="openModal(booking)" class="w-9 h-9 flex items-center justify-center hover:bg-primary/10 rounded-xl text-on-surface-variant hover:text-primary transition-all bg-surface-container/30 md:bg-transparent" title="Ubah">
-                      <span class="material-symbols-outlined text-xl">edit</span>
-                    </button>
-                    <button @click="deleteBooking(booking.id)" class="w-9 h-9 flex items-center justify-center hover:bg-error/10 rounded-xl text-on-surface-variant/30 hover:text-error transition-all bg-surface-container/30 md:bg-transparent" title="Hapus">
-                      <span class="material-symbols-outlined text-xl">delete</span>
-                    </button>
-                  </div>
+
+                      <!-- Popover Edit & Hapus -->
+                      <div class="relative">
+                        <button @click.stop="toggleActions(booking.id)"
+                                class="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded-lg text-on-surface-variant/50 hover:text-primary transition-all">
+                          <span class="material-symbols-outlined text-lg">more_vert</span>
+                        </button>
+                        <div v-if="actionsOpenId === booking.id" @click.stop
+                             class="absolute right-0 bottom-full mb-2 bg-surface-container-lowest border border-outline-variant/20 shadow-2xl rounded-2xl p-1.5 z-[70] min-w-[150px]">
+                          <button @click="openModal(booking); actionsOpenId = null"
+                                  class="w-full text-left px-3 py-2.5 text-xs font-bold rounded-xl hover:bg-surface-container transition-all flex items-center gap-2.5 text-on-surface">
+                            <span class="material-symbols-outlined text-lg text-primary">edit</span>
+                            Ubah
+                          </button>
+                          <div class="border-t border-outline-variant/10 my-1"></div>
+                          <button @click="deleteBooking(booking.id); actionsOpenId = null"
+                                  class="w-full text-left px-3 py-2.5 text-xs font-bold rounded-xl hover:bg-error/10 transition-all flex items-center gap-2.5 text-error">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                            Hapus
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                 </div>
               </div>
             </div>
@@ -228,7 +244,7 @@
                   <span class="text-on-surface-variant">Tanggal:</span>
                   <span class="font-bold text-right">{{ detailBooking.checkInDate }} s/d {{ detailBooking.checkOutDate }}</span>
                   <span class="text-on-surface-variant">Jumlah Tamu:</span>
-                  <span class="font-bold text-right">{{ detailBooking.pax }} orang</span>
+                  <span class="font-bold text-right">{{ detailBooking.pax }} orang <span v-if="detailBooking.freePax > 0" class="text-emerald-600">({{ detailBooking.freePax }} gratis)</span></span>
                   <span class="text-on-surface-variant">Status:</span>
                   <span class="font-bold text-right" :class="detailBooking.status === 'confirmed' ? 'text-emerald-600' : detailBooking.status === 'cancelled' ? 'text-red-500' : 'text-amber-600'">{{ translateStatus(detailBooking.status) }}</span>
                 </div>
@@ -313,12 +329,9 @@ const confirmTitle = ref('')
 const confirmMessage = ref('')
 const itemToDelete = ref(null)
 const statusOpenId = ref(null)
+const actionsOpenId = ref(null)
 const showDetail = ref(false)
 const detailBooking = ref(null)
-
-const toggleStatus = (id) => {
-  statusOpenId.value = statusOpenId.value === id ? null : id
-}
 
 const viewDetail = (booking) => {
   detailBooking.value = booking
@@ -334,9 +347,11 @@ const initialForm = {
   checkInDate: '',
   checkOutDate: '',
   pax: 1,
+  freePax: 0,
   status: 'pending',
   notes: '',
   totalPrice: 0,
+  paymentProof: '',
   sendWhatsapp: false,
   extraServices: [],
   inventoryItems: []
@@ -422,16 +437,19 @@ const openModal = (booking = null) => {
     editingId.value = null
     form.value = JSON.parse(JSON.stringify(initialForm))
   }
+  form.value.freePax = form.value.freePax || 0
   showModal.value = true
 }
 
 // Watch for package/pax/extraServices/inventoryItems changes to auto-calculate price
-watch([() => form.value.packageEventId, () => form.value.pax, () => form.value.extraServices, () => form.value.inventoryItems], ([newPkgId, newPax, newExtras, newInventory]) => {
+watch([() => form.value.packageEventId, () => form.value.pax, () => form.value.freePax, () => form.value.extraServices, () => form.value.inventoryItems], ([newPkgId, newPax, newFreePax, newExtras, newInventory]) => {
   let total = 0
-  if (newPkgId && newPax) {
+  const freePax = Math.min(newFreePax || 0, Math.max(0, (newPax || 1) - 1))
+  const effectivePax = (newPax || 1) - freePax
+  if (newPkgId && effectivePax) {
     const pkg = packages.value.find(p => p.id === newPkgId)
     if (pkg) {
-      total += Number(pkg.pricePerPax) * newPax
+      total += Number(pkg.pricePerPax) * effectivePax
     }
   }
   
@@ -599,14 +617,23 @@ onMounted(() => {
   fetchCustomers()
   fetchServices()
   fetchInventory()
-  document.addEventListener('click', closeStatusDropdown)
+  document.addEventListener('click', closeActionsDropdown)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeStatusDropdown)
+  document.removeEventListener('click', closeActionsDropdown)
 })
 
-const closeStatusDropdown = () => {
+const toggleStatus = (id) => {
+  statusOpenId.value = statusOpenId.value === id ? null : id
+}
+
+const toggleActions = (id) => {
+  actionsOpenId.value = actionsOpenId.value === id ? null : id
+}
+
+const closeActionsDropdown = () => {
   statusOpenId.value = null
+  actionsOpenId.value = null
 }
 </script>

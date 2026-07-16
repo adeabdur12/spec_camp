@@ -77,12 +77,18 @@
               </label>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-1.5">
                 <label class="text-xs font-medium text-on-surface-variant font-label">Jumlah Orang (Pax) *</label>
                 <input v-model.number="form.pax" type="number" required min="1"
                        class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body"
                        placeholder="1">
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-on-surface-variant font-label">Gratis (Free Pax)</label>
+                <input v-model.number="form.freePax" type="number" min="0" :max="form.pax - 1"
+                       class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body text-emerald-600 font-bold"
+                       placeholder="0">
               </div>
               <div class="space-y-1.5">
                 <label class="text-xs font-medium text-on-surface-variant font-label">Total Harga (Rp) *</label>
@@ -133,6 +139,39 @@
               <textarea v-model="form.notes" rows="2"
                         class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body resize-none"
                         placeholder="Catatan khusus tamu..."></textarea>
+            </div>
+
+            <!-- Payment Proof Upload -->
+            <div class="mt-4">
+              <div class="flex justify-between items-center mb-3">
+                <h4 class="text-xs font-bold text-primary uppercase tracking-wider font-label">Bukti Pembayaran</h4>
+              </div>
+
+              <div v-if="!form.paymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-6 text-center transition-colors cursor-pointer" :class="uploading ? 'opacity-50 pointer-events-none' : 'hover:border-primary/30'" @click="triggerUpload">
+                <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileSelect" :disabled="uploading">
+                <span class="material-symbols-outlined text-2xl text-on-surface-variant/40 mb-1">{{ uploading ? 'hourglass_top' : 'cloud_upload' }}</span>
+                <p class="text-xs font-medium text-on-surface-variant">{{ uploading ? 'Mengupload...' : 'Klik untuk upload bukti bayar' }}</p>
+                <p class="text-[9px] text-on-surface-variant/40 mt-0.5">Maks 5MB, format gambar</p>
+              </div>
+
+              <div v-else>
+                <div class="bg-surface-container rounded-xl overflow-hidden">
+                  <img :src="form.paymentProof" alt="Bukti Pembayaran" class="w-full max-h-48 object-contain p-2">
+                </div>
+                <div class="flex items-center justify-between mt-2">
+                  <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                    Bukti pembayaran terupload
+                  </p>
+                  <button type="button" @click="removePaymentProof"
+                          class="text-[10px] font-bold text-error hover:text-error/70 transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                    Hapus
+                  </button>
+                </div>
+              </div>
+
+              <p v-if="uploadError" class="mt-2 bg-error-container text-on-error-container p-2 rounded-lg text-[10px] font-medium">{{ uploadError }}</p>
             </div>
             <!-- Extra Services Selection -->
             <div class="border-t border-outline-variant/10 pt-4 mt-4">
@@ -212,8 +251,12 @@
             <div class="space-y-2">
               <!-- Package -->
               <div v-if="selectedPackage" class="flex justify-between items-center text-xs">
-                <span class="text-on-surface-variant">Paket ({{ formatCurrency(selectedPackage.pricePerPax) }} x {{ form.pax }} pax)</span>
+                <span class="text-on-surface-variant">Paket ({{ formatCurrency(selectedPackage.pricePerPax) }} x {{ form.pax - (form.freePax || 0) }} pax bayar)</span>
                 <span class="font-bold text-on-surface">{{ formatCurrency(revenueEstimate.pkgTotal) }}</span>
+              </div>
+              <div v-if="form.freePax > 0" class="flex justify-between items-center text-xs">
+                <span class="text-emerald-600 font-medium">Diskon Free Pax ({{ form.freePax }} orang gratis)</span>
+                <span class="font-bold text-emerald-600">- {{ formatCurrency(selectedPackage ? Number(selectedPackage.pricePerPax) * form.freePax : 0) }}</span>
               </div>
 
               <!-- Inventory -->
@@ -283,7 +326,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import api from '../../../../services/api'
 
 const props = defineProps({
   form: Object,
@@ -296,7 +340,10 @@ const props = defineProps({
   inventoryList: Array
 })
 
-defineEmits(['close', 'save'])
+const emit = defineEmits(['close', 'save'])
+const fileInput = ref(null)
+const uploading = ref(false)
+const uploadError = ref('')
 
 const selectedPackage = computed(() => {
   if (!props.form.packageEventId) return null
@@ -329,9 +376,11 @@ const inventorySummary = computed(() => {
 
 const revenueEstimate = computed(() => {
   const pax = props.form.pax || 1
+  const freePax = Math.min(props.form.freePax || 0, pax - 1)
+  const effectivePax = pax - freePax
   const pkg = selectedPackage.value
-  const pkgTotal = pkg ? Number(pkg.pricePerPax) * pax : 0
-  const pkgMimount = pkg ? Number(pkg.mimountShare) * pax : 0
+  const pkgTotal = pkg ? Number(pkg.pricePerPax) * effectivePax : 0
+  const pkgMimount = pkg ? Number(pkg.mimountShare) * effectivePax : 0
 
   const inventoryCost = inventorySummary.value.reduce((sum, i) => sum + (i.price * i.quantity), 0)
   const mimountServices = extraServicesSummary.value.filter(s => s.type === 'mimount').reduce((sum, s) => sum + (s.price * s.quantity), 0)
@@ -392,6 +441,34 @@ const handleCustomerSelect = (event) => {
     props.form.customerName = customer.name
     props.form.phone = customer.phone
   }
+}
+
+const triggerUpload = () => fileInput.value?.click()
+
+const handleFileSelect = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  uploading.value = true
+  uploadError.value = ''
+  try {
+    const formData = new FormData()
+    formData.append('paymentProof', file)
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/upload/payment-proof`, {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    if (!data.success) throw new Error(data.message)
+    props.form.paymentProof = data.url
+  } catch (e) {
+    uploadError.value = e.message || 'Gagal upload bukti bayar.'
+  } finally {
+    uploading.value = false
+  }
+}
+
+const removePaymentProof = () => {
+  props.form.paymentProof = ''
 }
 
 const formatCurrency = (value) => {
