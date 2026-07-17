@@ -119,6 +119,20 @@
             </div>
           </div>
 
+          <!-- Lokasi -->
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
+            <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm">location_on</span>
+              Lokasi Spec Camp
+            </h3>
+            <p class="text-xs text-on-surface-variant mb-3">Sukabumi Prestige Equestrian Center</p>
+            <a href="https://maps.app.goo.gl/CSVCFhcjedwDrpN97" target="_blank" rel="noopener noreferrer"
+               class="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl hover:bg-primary/20 transition-all">
+              <span class="material-symbols-outlined text-sm">map</span>
+              Buka Google Maps
+            </a>
+          </div>
+
           <!-- Bank Info -->
           <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
             <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-3">Pembayaran ke Rekening</h3>

@@ -273,6 +273,20 @@
           <h2 class="font-headline text-2xl font-black text-emerald-800 mb-2">Pemesanan Berhasil!</h2>
           <p class="text-emerald-700 text-sm mb-2">Kode Booking: <span class="font-bold">#{{ bookingCode }}</span></p>
           <p class="text-emerald-600 text-xs mb-6">Simpan kode booking untuk cek status dan upload bukti bayar.</p>
+
+          <div class="bg-white rounded-xl p-4 mb-4 text-left border border-emerald-200">
+            <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm">location_on</span>
+              Lokasi Spec Camp
+            </h4>
+            <p class="text-xs text-emerald-700 mb-2">Sukabumi Prestige Equestrian Center</p>
+            <a href="https://maps.app.goo.gl/CSVCFhcjedwDrpN97" target="_blank" rel="noopener noreferrer"
+               class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-100 px-4 py-2 rounded-lg hover:bg-emerald-200 transition-colors">
+              <span class="material-symbols-outlined text-sm">map</span>
+              Buka Google Maps
+            </a>
+          </div>
+
           <router-link :to="'/search-booking?code=' + bookingCode"
                        class="inline-block bg-primary text-white px-8 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all">
             Lanjut ke Pembayaran
