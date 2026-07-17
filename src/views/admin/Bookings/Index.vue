@@ -250,6 +250,12 @@
                 </div>
               </div>
 
+              <!-- Notes -->
+              <div v-if="detailBooking.notes" class="bg-surface-container rounded-xl p-4">
+                <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Catatan</p>
+                <p class="text-xs text-on-surface-variant">{{ detailBooking.notes }}</p>
+              </div>
+
               <!-- Inventory Items -->
               <div v-if="detailBooking.InventoryItems?.length" class="bg-surface-container rounded-xl p-4">
                 <p class="text-[9px] font-bold text-blue-600 uppercase tracking-wider mb-2">Peralatan Mimount</p>
