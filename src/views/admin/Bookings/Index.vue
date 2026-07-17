@@ -271,7 +271,7 @@
               <!-- Payment Proof -->
               <div class="bg-surface-container rounded-xl p-4">
                 <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Bukti Pembayaran</p>
-                <div v-if="detailBooking.paymentProof" class="rounded-lg overflow-hidden border border-outline-variant/10">
+                <div v-if="detailBooking.paymentProof" class="rounded-lg overflow-hidden border border-outline-variant/10 cursor-pointer" @click="showImagePreview = detailBooking.paymentProof">
                   <img :src="detailBooking.paymentProof" alt="Bukti Pembayaran" class="w-full max-h-64 object-contain bg-white">
                 </div>
                 <p v-else class="text-xs text-on-surface-variant italic">Belum ada bukti pembayaran</p>
@@ -291,6 +291,18 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Image Preview Lightbox -->
+      <div v-if="showImagePreview" class="fixed inset-0 z-[90] flex items-center justify-center p-4" @click="showImagePreview = null">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm"></div>
+        <div class="relative max-w-4xl max-h-[90vh] w-full" @click.stop>
+          <img :src="showImagePreview" alt="Preview" class="w-full h-full object-contain rounded-2xl">
+          <button @click="showImagePreview = null"
+                  class="absolute -top-3 -right-3 w-8 h-8 bg-surface-container-lowest rounded-full flex items-center justify-center shadow-lg hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
         </div>
       </div>
 
@@ -332,6 +344,7 @@ const statusOpenId = ref(null)
 const actionsOpenId = ref(null)
 const showDetail = ref(false)
 const detailBooking = ref(null)
+const showImagePreview = ref(null)
 
 const viewDetail = (booking) => {
   detailBooking.value = booking
