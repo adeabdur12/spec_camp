@@ -301,14 +301,16 @@
       </div>
 
       <!-- Image Preview Lightbox -->
-      <div v-if="showImagePreview" class="fixed inset-0 z-[90] flex items-center justify-center p-4" @click="showImagePreview = null">
+      <div v-if="showImagePreview" class="fixed inset-0 z-[90] overflow-y-auto" @click="showImagePreview = null">
         <div class="fixed inset-0 bg-black/80 backdrop-blur-sm"></div>
-        <div class="relative max-w-4xl max-h-[90vh] w-full" @click.stop>
-          <img :src="showImagePreview" alt="Preview" class="w-full h-full object-contain rounded-2xl">
-          <button @click="showImagePreview = null"
-                  class="absolute -top-3 -right-3 w-8 h-8 bg-surface-container-lowest rounded-full flex items-center justify-center shadow-lg hover:bg-surface-container transition-colors">
-            <span class="material-symbols-outlined text-lg">close</span>
-          </button>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+          <div class="relative max-w-4xl w-full" @click.stop>
+            <img :src="showImagePreview" alt="Preview" class="w-full h-auto rounded-2xl">
+            <button @click="showImagePreview = null"
+                    class="fixed top-4 right-4 w-9 h-9 bg-surface-container-lowest rounded-full flex items-center justify-center shadow-lg hover:bg-surface-container transition-colors z-10">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
         </div>
       </div>
 
