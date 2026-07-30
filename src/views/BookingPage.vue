@@ -97,9 +97,38 @@
             </div>
             <div class="space-y-1.5">
               <label class="text-xs font-medium text-on-surface-variant">Nomor WhatsApp *</label>
-              <input v-model="form.phone" type="tel" required
-                     class="w-full bg-surface-container-lowest border border-outline-variant/20 px-4 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-primary/20"
-                     placeholder="0812xxxxxx">
+              <div class="flex gap-2">
+                <input v-model="form.phone" type="tel" required :disabled="phoneVerified"
+                       class="w-full bg-surface-container-lowest border px-4 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                       :class="phoneError && !phoneVerified ? 'border-error' : 'border-outline-variant/20'"
+                       placeholder="0812xxxxxx" @input="onPhoneInput">
+                <button v-if="!phoneVerified" @click="sendOtp" :disabled="otpSending || !isPhoneValid"
+                        class="shrink-0 bg-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 disabled:opacity-40 transition-all whitespace-nowrap">
+                  <span v-if="otpSending" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block"></span>
+                  <span v-else>{{ otpSent ? 'Kirim Ulang' : 'Verifikasi' }}</span>
+                </button>
+              </div>
+              <p v-if="phoneError && !phoneVerified" class="text-xs text-error font-medium">{{ phoneError }}</p>
+              <p v-if="otpError" class="text-xs text-error font-medium">{{ otpError }}</p>
+              <p v-if="otpSent && !phoneVerified" class="text-xs text-on-surface-variant">Kode OTP telah dikirim ke {{ form.phone }}</p>
+
+              <!-- OTP Input -->
+              <div v-if="otpSent && !phoneVerified" class="flex gap-2 items-center mt-1">
+                <input v-model="otpCode" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                       class="w-32 bg-surface-container-lowest border border-outline-variant/20 px-4 py-2.5 rounded-xl text-sm text-center font-bold tracking-[0.3em] focus:ring-2 focus:ring-primary/20"
+                       placeholder="000000">
+                <button @click="verifyOtp" :disabled="!otpCode || otpSending"
+                        class="shrink-0 bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 disabled:opacity-40 transition-all">
+                  Konfirmasi
+                </button>
+                <span v-if="otpTimer > 0" class="text-[10px] text-on-surface-variant">{{ otpTimer }}dt</span>
+              </div>
+
+              <!-- Verified badge -->
+              <div v-if="phoneVerified" class="flex items-center gap-1.5 text-xs text-emerald-600 font-medium mt-1">
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+                Nomor WhatsApp terverifikasi
+              </div>
             </div>
           </div>
         </section>
@@ -111,45 +140,74 @@
           <!-- Sewa Alat -->
           <div class="mb-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-5">
             <h3 class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-3">Sewa Alat Camping</h3>
-            
-            <div class="relative mb-3">
-              <div class="flex gap-2 items-center">
-                <div class="relative flex-1">
-                  <input v-model="invSearch" type="text" placeholder="Cari & pilih alat..."
-                         class="w-full bg-surface-container border-none px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-primary/20"
-                         @focus="invOpen = true" @blur="setTimeout(() => invOpen = false, 200)" @input="newInventoryId = ''">
-                  <div v-if="invOpen && filteredInventory.length > 0" class="absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant/20 rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto">
-                    <button v-for="item in filteredInventory" :key="item.id" type="button"
-                            @click="selectInventory(item)"
-                            class="w-full text-left px-3 py-2.5 text-sm hover:bg-surface-container transition-colors flex items-center justify-between">
-                      <span class="font-medium">{{ item.name }}</span>
-                      <span class="text-[10px] text-on-surface-variant">{{ formatCurrency(item.price) }}/{{ item.unit || 'unit' }}</span>
-                    </button>
-                  </div>
-                  <div v-if="invOpen && invSearch && filteredInventory.length === 0" class="absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant/20 rounded-xl shadow-xl z-20 p-3 text-xs text-on-surface-variant text-center">
-                    Alat tidak ditemukan
-                  </div>
+
+            <div v-if="selectedInventory.length === 0" class="text-xs text-on-surface-variant/50 text-center py-6 bg-surface-container rounded-xl mb-3">
+              Belum ada alat dipilih
+            </div>
+            <div v-else class="space-y-2 mb-3">
+              <div v-for="(item, idx) in selectedInventory" :key="idx"
+                   class="flex items-center gap-3 bg-surface-container p-3 rounded-xl">
+                <img v-if="item.imageUrl" :src="getImageUrl(item.imageUrl)" class="w-10 h-10 rounded-lg object-cover bg-surface-container-high shrink-0">
+                <div v-else class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-sm text-on-surface-variant">backpack</span>
                 </div>
-                <input v-model.number="newInventoryQty" type="number" min="1" placeholder="Jml"
-                       class="w-16 bg-surface-container border-none px-2 py-2.5 rounded-xl text-sm font-bold text-center focus:ring-2 focus:ring-primary/20"
-                       :disabled="!newInventoryId">
-                <button @click="addInventoryItem" :disabled="!newInventoryId || !newInventoryQty"
-                        class="bg-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 disabled:opacity-40 transition-all shrink-0 whitespace-nowrap">
-                  + Tambah
+                <span class="flex-1 text-sm font-medium text-on-surface truncate">{{ item.name }}</span>
+                <span class="text-xs font-bold text-primary">{{ formatCurrency(item.price) }} x {{ item.qty }}</span>
+                <button @click="removeInventoryItem(idx)" class="text-error hover:bg-error/10 p-1 rounded-lg transition-colors">
+                  <span class="material-symbols-outlined text-sm">close</span>
                 </button>
               </div>
             </div>
 
-            <div v-if="selectedInventory.length === 0" class="text-xs text-on-surface-variant/50 text-center py-3 bg-surface-container rounded-xl">
-              Belum ada alat dipilih
-            </div>
-            <div v-else class="space-y-2">
-              <div v-for="(item, idx) in selectedInventory" :key="idx"
-                   class="flex items-center gap-3 bg-surface-container p-3 rounded-xl">
-                <span class="flex-1 text-sm font-medium text-on-surface">{{ item.name }}</span>
-                <span class="text-xs font-bold text-primary">{{ formatCurrency(item.price) }} x {{ item.qty }}</span>
-                <button @click="removeInventoryItem(idx)" class="text-error hover:bg-error/10 p-1 rounded-lg transition-colors">
-                  <span class="material-symbols-outlined text-sm">close</span>
+            <button @click="openInventoryModal"
+                    class="w-full bg-surface-container border-2 border-dashed border-outline-variant/30 rounded-xl py-3 text-sm font-medium text-on-surface-variant hover:border-primary/30 hover:text-primary transition-all flex items-center justify-center gap-1.5">
+              <span class="material-symbols-outlined text-sm">add</span>
+              Pilih Alat Camping
+            </button>
+          </div>
+
+          <!-- Inventory Modal -->
+          <div v-if="showInventoryModal" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="fixed inset-0 bg-on-surface/40 backdrop-blur-sm" @click="showInventoryModal = false"></div>
+            <div class="relative bg-surface-container-lowest w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[85vh] flex flex-col">
+              <div class="flex items-center justify-between p-4 border-b border-outline-variant/10">
+                <h3 class="text-sm font-bold text-on-surface">Pilih Alat Camping</h3>
+                <button @click="showInventoryModal = false" class="text-on-surface-variant hover:text-error p-1 transition-colors">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <div class="p-4 pb-0">
+                <input v-model="invSearch" type="text" placeholder="Cari alat..."
+                       class="w-full bg-surface-container border-none px-4 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-primary/20">
+              </div>
+              <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                <div v-for="item in filteredInventory" :key="item.id"
+                     class="flex items-center gap-3 bg-surface-container rounded-xl p-3 border border-outline-variant/5">
+                  <img v-if="item.imageUrl" :src="getImageUrl(item.imageUrl)" class="w-14 h-14 rounded-lg object-cover bg-surface-container-high shrink-0">
+                  <div v-else class="w-14 h-14 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl text-on-surface-variant">backpack</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-on-surface truncate">{{ item.name }}</p>
+                    <p class="text-xs text-on-surface-variant">{{ formatCurrency(item.price) }}/{{ item.unit || 'unit' }}</p>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <button @click="decreaseInventoryQty(item.id)"
+                            class="w-7 h-7 flex items-center justify-center rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all text-sm font-bold">-</button>
+                    <span class="w-6 text-center text-sm font-bold text-on-surface">{{ getInventoryQty(item.id) }}</span>
+                    <button @click="increaseInventoryQty(item.id)"
+                            class="w-7 h-7 flex items-center justify-center rounded-lg bg-surface-container-high text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all text-sm font-bold">+</button>
+                  </div>
+                </div>
+                <div v-if="filteredInventory.length === 0" class="text-xs text-on-surface-variant/50 text-center py-8">
+                  Alat tidak ditemukan
+                </div>
+              </div>
+              <div class="border-t border-outline-variant/10 p-4 flex justify-between items-center">
+                <span class="text-sm text-on-surface-variant">{{ modalSelectedCount }} item dipilih</span>
+                <button @click="confirmInventorySelection"
+                        class="bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all">
+                  Simpan
                 </button>
               </div>
             </div>
@@ -302,10 +360,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { packageService } from '../services/packageService'
 import { bookingService } from '../services/bookingService'
+import api from '../services/api'
 
 const router = useRouter()
 const loading = ref(true)
@@ -315,6 +374,62 @@ const submitting = ref(false)
 const submitError = ref('')
 const success = ref(false)
 const bookingCode = ref('')
+
+// OTP Verification
+const phoneVerified = ref(false)
+const otpSent = ref(false)
+const otpCode = ref('')
+const otpSending = ref(false)
+const otpError = ref('')
+const otpTimer = ref(0)
+let otpTimerInterval = null
+
+const VERIFIED_PHONES_KEY = 'spec_camp_verified_phones'
+
+const cleanPhone = (val) => (val || '').replace(/[^0-9]/g, '')
+
+const isPhoneValid = computed(() => {
+  const cleaned = cleanPhone(form.value.phone)
+  return cleaned.length >= 10 && cleaned.length <= 15 && cleaned.startsWith('08')
+})
+
+const phoneError = computed(() => {
+  if (!form.value.phone || phoneVerified.value) return ''
+  const cleaned = cleanPhone(form.value.phone)
+  if (cleaned.length > 0 && cleaned.length < 10) return 'Nomor terlalu pendek'
+  if (cleaned.length > 15) return 'Nomor terlalu panjang'
+  if (cleaned.length > 0 && !cleaned.startsWith('08')) return 'Harus diawali 08'
+  return ''
+})
+
+const getVerifiedPhones = () => {
+  try {
+    return JSON.parse(localStorage.getItem(VERIFIED_PHONES_KEY) || '{}')
+  } catch { return {} }
+}
+
+const saveVerifiedPhone = (phone) => {
+  const cleaned = cleanPhone(phone)
+  if (!cleaned) return
+  const phones = getVerifiedPhones()
+  phones[cleaned] = Date.now()
+  localStorage.setItem(VERIFIED_PHONES_KEY, JSON.stringify(phones))
+}
+
+const checkPhoneVerified = () => {
+  const cleaned = cleanPhone(form.value.phone)
+  if (!cleaned) return
+  const phones = getVerifiedPhones()
+  if (phones[cleaned]) {
+    phoneVerified.value = true
+    otpSent.value = false
+    otpCode.value = ''
+  }
+}
+
+const onPhoneInput = () => {
+  form.value.phone = form.value.phone.replace(/[^0-9]/g, '')
+}
 
 const form = ref({
   packageEventId: null,
@@ -329,19 +444,24 @@ const inventoryItems = ref([])
 const publicServices = ref([])
 const selectedInventory = ref([])
 const selectedServices = ref([])
-const newInventoryId = ref('')
-const newInventoryQty = ref(1)
 const newServiceId = ref('')
 const newServiceQty = ref(1)
 const invSearch = ref('')
 const svcSearch = ref('')
-const invOpen = ref(false)
 const svcOpen = ref(false)
+
+// Inventory Modal
+const showInventoryModal = ref(false)
+const inventoryQtys = ref({})
 
 const filteredInventory = computed(() => {
   const q = invSearch.value.toLowerCase().trim()
   if (!q) return inventoryItems.value
   return inventoryItems.value.filter(i => i.name.toLowerCase().includes(q))
+})
+
+const modalSelectedCount = computed(() => {
+  return Object.values(inventoryQtys.value).filter(q => q > 0).length
 })
 
 const filteredServices = computed(() => {
@@ -350,19 +470,47 @@ const filteredServices = computed(() => {
   return publicServices.value.filter(s => s.name.toLowerCase().includes(q))
 })
 
-const addInventoryItem = () => {
-  const item = inventoryItems.value.find(i => i.id === Number(newInventoryId.value))
-  if (!item) return
-  selectedInventory.value.push({ id: item.id, name: item.name, price: Number(item.price), qty: newInventoryQty.value || 1 })
-  newInventoryId.value = ''
-  newInventoryQty.value = 1
-  invSearch.value = ''
+const getImageUrl = (path) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  const base = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  const apiPath = '/api'
+  const serverBase = base.endsWith(apiPath) ? base.slice(0, -apiPath.length) : base
+  return `${serverBase}${path}`
 }
 
-const selectInventory = (item) => {
-  newInventoryId.value = item.id
-  invSearch.value = item.name
-  invOpen.value = false
+const getInventoryQty = (id) => inventoryQtys.value[id] || 0
+
+const increaseInventoryQty = (id) => {
+  if (!inventoryQtys.value[id]) inventoryQtys.value[id] = 0
+  inventoryQtys.value[id] += 1
+}
+
+const decreaseInventoryQty = (id) => {
+  if (!inventoryQtys.value[id] || inventoryQtys.value[id] <= 1) {
+    delete inventoryQtys.value[id]
+  } else {
+    inventoryQtys.value[id] -= 1
+  }
+}
+
+const openInventoryModal = () => {
+  const qtys = {}
+  selectedInventory.value.forEach(i => { qtys[i.id] = i.qty })
+  inventoryQtys.value = qtys
+  showInventoryModal.value = true
+}
+
+const confirmInventorySelection = () => {
+  const newSelected = []
+  for (const item of inventoryItems.value) {
+    const qty = inventoryQtys.value[item.id]
+    if (qty && qty > 0) {
+      newSelected.push({ id: item.id, name: item.name, price: Number(item.price), qty, imageUrl: item.imageUrl })
+    }
+  }
+  selectedInventory.value = newSelected
+  showInventoryModal.value = false
 }
 
 const removeInventoryItem = (idx) => {
@@ -423,8 +571,45 @@ const localFeeAmount = computed(() => {
 
 const submittable = computed(() => {
   return form.value.packageEventId && form.value.checkInDate && form.value.checkOutDate &&
-         form.value.pax > 0 && form.value.customerName && form.value.phone
+         form.value.pax > 0 && form.value.customerName && isPhoneValid.value && phoneVerified.value
 })
+
+const sendOtp = async () => {
+  if (!form.value.phone) return
+  otpSending.value = true
+  otpError.value = ''
+  try {
+    await api.post('/otp/send', { phone: form.value.phone })
+    otpSent.value = true
+    otpTimer.value = 60
+    if (otpTimerInterval) clearInterval(otpTimerInterval)
+    otpTimerInterval = setInterval(() => {
+      if (otpTimer.value > 0) otpTimer.value -= 1
+      else clearInterval(otpTimerInterval)
+    }, 1000)
+  } catch (e) {
+    otpError.value = e.response?.data?.message || 'Gagal mengirim kode verifikasi.'
+  } finally {
+    otpSending.value = false
+  }
+}
+
+const verifyOtp = async () => {
+  if (!otpCode.value) return
+  otpSending.value = true
+  otpError.value = ''
+  try {
+    await api.post('/otp/verify', { phone: form.value.phone, otp: otpCode.value })
+    phoneVerified.value = true
+    saveVerifiedPhone(form.value.phone)
+    if (otpTimerInterval) clearInterval(otpTimerInterval)
+    otpTimer.value = 0
+  } catch (e) {
+    otpError.value = e.response?.data?.message || 'Kode OTP salah.'
+  } finally {
+    otpSending.value = false
+  }
+}
 
 const whatsappUrl = computed(() => {
   if (!bookingCode.value) return '#'
@@ -509,11 +694,29 @@ onMounted(() => {
   fetchPublicServices()
 })
 
+onUnmounted(() => {
+  if (otpTimerInterval) clearInterval(otpTimerInterval)
+})
+
 watch(() => form.value.checkInDate, (date) => {
   if (date && !form.value.checkOutDate) {
     const d = new Date(date)
     d.setDate(d.getDate() + 1)
     form.value.checkOutDate = d.toISOString().split('T')[0]
+  }
+})
+
+watch(() => form.value.phone, (newPhone, oldPhone) => {
+  if (newPhone !== oldPhone) {
+    phoneVerified.value = false
+    otpSent.value = false
+    otpCode.value = ''
+    otpError.value = ''
+    if (otpTimerInterval) clearInterval(otpTimerInterval)
+    otpTimer.value = 0
+  }
+  if (newPhone && !phoneVerified.value) {
+    checkPhoneVerified()
   }
 })
 </script>

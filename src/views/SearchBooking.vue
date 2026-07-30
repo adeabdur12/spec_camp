@@ -76,69 +76,203 @@
                   <p class="text-xs font-bold text-gray-800 truncate">{{ booking.customerName }}</p>
                 </div>
                 <div>
-                  <p class="text-[8px] text-gray-400 uppercase tracking-wider">Tanggal</p>
+                  <p class="text-[8px] text-gray-400 uppercase tracking-wider">No. Telepon</p>
+                  <p class="text-xs font-bold text-gray-800">{{ booking.phone || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-[8px] text-gray-400 uppercase tracking-wider">Check In</p>
                   <p class="text-xs font-bold text-gray-800">{{ formatDate(booking.checkInDate) }}</p>
                 </div>
                 <div>
+                  <p class="text-[8px] text-gray-400 uppercase tracking-wider">Check Out</p>
+                  <p class="text-xs font-bold text-gray-800">{{ formatDate(booking.checkOutDate) }}</p>
+                </div>
+                <div>
                   <p class="text-[8px] text-gray-400 uppercase tracking-wider">Tamu</p>
-                  <p class="text-xs font-bold text-gray-800">{{ booking.pax }} Orang</p>
+                  <p class="text-xs font-bold text-gray-800">{{ booking.pax }} Orang <span v-if="booking.freePax > 0" class="text-emerald-600">({{ booking.freePax }} gratis)</span></p>
                 </div>
                 <div v-if="booking.PackageEvent">
                   <p class="text-[8px] text-gray-400 uppercase tracking-wider">Paket</p>
                   <p class="text-xs font-bold text-gray-800 truncate">{{ booking.PackageEvent.name }}</p>
                 </div>
               </div>
+
+              <!-- Notes -->
+              <div v-if="booking.notes" class="border-t border-gray-100 pt-3 mt-3">
+                <p class="text-[8px] text-gray-400 uppercase tracking-wider mb-1">Catatan</p>
+                <p class="text-xs text-gray-600">{{ booking.notes }}</p>
+              </div>
+
+              <!-- Inventory Items -->
+              <div v-if="booking.InventoryItems?.length" class="border-t border-gray-100 pt-3 mt-3">
+                <p class="text-[9px] font-bold text-blue-600 uppercase tracking-wider mb-2">Sewa Alat Camping</p>
+                <div v-for="i in booking.InventoryItems" :key="i.id" class="flex justify-between text-xs py-1">
+                  <span>{{ i.name }}</span>
+                  <span class="font-bold">{{ i.BookingInventory?.quantity }}x {{ formatCurrency(i.BookingInventory?.priceAtBooking || i.price) }}</span>
+                </div>
+              </div>
+
+              <!-- Extra Services -->
+              <div v-if="booking.ExtraServices?.length" class="border-t border-gray-100 pt-3 mt-3">
+                <p class="text-[9px] font-bold text-primary uppercase tracking-wider mb-2">Layanan Ekstra</p>
+                <div v-for="s in booking.ExtraServices" :key="s.id" class="flex justify-between text-xs py-1">
+                  <span>{{ s.name }}</span>
+                  <span class="font-bold">{{ s.BookingService?.quantity }}x {{ formatCurrency(s.BookingService?.priceAtBooking || s.price) }}</span>
+                </div>
+              </div>
+
+              <!-- Price Breakdown -->
+              <div class="border-t border-gray-100 pt-3 mt-3 space-y-1">
+                <div v-if="booking.PackageEvent" class="flex justify-between text-xs">
+                  <span class="text-gray-500">{{ booking.PackageEvent.name }} ({{ formatCurrency(booking.PackageEvent.pricePerPax) }} x {{ booking.pax }} {{ booking.PackageEvent.perPerson }})</span>
+                  <span class="font-bold text-gray-800">{{ formatCurrency(Number(booking.PackageEvent.pricePerPax) * booking.pax) }}</span>
+                </div>
+              </div>
+
+              <!-- Total -->
+              <div class="border-t border-gray-100 pt-3 mt-3 flex justify-between items-center">
+                <span class="text-sm font-bold text-gray-800">Total</span>
+                <span class="text-lg font-black text-primary">{{ formatCurrency(booking.totalPrice) }}</span>
+              </div>
             </div>
           </div>
           </div>
+
         </div>
 
-        <!-- Completed: Done message -->
-        <div v-else-if="booking.status === 'completed'" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-8 text-center">
-          <span class="material-symbols-outlined text-5xl text-emerald-600 mb-3">task_alt</span>
-          <h2 class="font-headline text-2xl font-black text-emerald-800 mb-2">Kegiatan Selesai</h2>
-          <p class="text-on-surface-variant text-sm">Terima kasih telah berkemah di SPEC CAMP. Sampai jumpa kembali!</p>
+        <!-- Completed: Show full detail -->
+        <div v-else-if="booking.status === 'completed'" class="space-y-4">
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6 text-center">
+            <span class="material-symbols-outlined text-5xl text-emerald-600 mb-3">task_alt</span>
+            <h2 class="font-headline text-2xl font-black text-emerald-800 mb-2">Kegiatan Selesai</h2>
+            <p class="text-on-surface-variant text-sm">Terima kasih telah berkemah di SPEC CAMP. Sampai jumpa kembali!</p>
+          </div>
+
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
+            <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-3">Detail Pesanan</h3>
+            <div class="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+              <span class="text-on-surface-variant">Nama:</span>
+              <span class="font-medium text-right">{{ booking.customerName }}</span>
+              <span class="text-on-surface-variant">No. Telepon:</span>
+              <span class="font-medium text-right">{{ booking.phone || '-' }}</span>
+              <span class="text-on-surface-variant">Paket:</span>
+              <span class="font-medium text-right">{{ booking.PackageEvent?.name || '-' }}</span>
+              <span class="text-on-surface-variant">Check In:</span>
+              <span class="font-medium text-right">{{ formatDate(booking.checkInDate) }}</span>
+              <span class="text-on-surface-variant">Check Out:</span>
+              <span class="font-medium text-right">{{ formatDate(booking.checkOutDate) }}</span>
+              <span class="text-on-surface-variant">Tamu:</span>
+              <span class="font-medium text-right">{{ booking.pax }} {{ booking.PackageEvent.perPerson}} <span v-if="booking.freePax > 0" class="text-emerald-600">({{ booking.freePax }} gratis)</span></span>
+              <span class="text-on-surface-variant">Status:</span>
+              <span class="font-semibold text-right text-emerald-600">{{ translateStatus(booking.status) }}</span>
+            </div>
+
+            <div v-if="booking.notes" class="border-t border-outline-variant/10 pt-3 mt-3">
+              <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Catatan</p>
+              <p class="text-sm text-on-surface-variant">{{ booking.notes }}</p>
+            </div>
+
+            <div v-if="booking.InventoryItems?.length" class="border-t border-outline-variant/10 pt-3 mt-3">
+              <p class="text-[9px] font-bold text-blue-600 uppercase tracking-wider mb-2">Sewa Alat Camping</p>
+              <div v-for="i in booking.InventoryItems" :key="i.id" class="flex justify-between text-xs py-1">
+                <span>{{ i.name }}</span>
+                <span class="font-bold">{{ i.BookingInventory?.quantity }}x {{ formatCurrency(i.BookingInventory?.priceAtBooking || i.price) }}</span>
+              </div>
+            </div>
+
+            <div v-if="booking.ExtraServices?.length" class="border-t border-outline-variant/10 pt-3 mt-3">
+              <p class="text-[9px] font-bold text-primary uppercase tracking-wider mb-2">Layanan Ekstra</p>
+              <div v-for="s in booking.ExtraServices" :key="s.id" class="flex justify-between text-xs py-1">
+                <span>{{ s.name }}</span>
+                <span class="font-bold">{{ s.BookingService?.quantity }}x {{ formatCurrency(s.BookingService?.priceAtBooking || s.price) }}</span>
+              </div>
+            </div>
+
+            <div class="border-t border-outline-variant/10 pt-3 mt-3">
+              <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Bukti Pembayaran</p>
+              <div v-if="booking.paymentProof" class="rounded-lg overflow-hidden border border-outline-variant/10 cursor-pointer" @click="showImagePreview = booking.paymentProof">
+                <img :src="booking.paymentProof" alt="Bukti Pembayaran" class="w-full max-h-64 object-contain bg-white">
+              </div>
+              <p v-else class="text-xs text-on-surface-variant italic">Belum ada bukti pembayaran</p>
+            </div>
+
+            <div class="border-t border-outline-variant/10 pt-3 mt-3 space-y-1">
+              <div v-if="booking.PackageEvent" class="flex justify-between text-xs">
+                <span class="text-on-surface-variant">{{ booking.PackageEvent.name }} ({{ formatCurrency(booking.PackageEvent.pricePerPax) }} x {{ booking.pax }} pax)</span>
+                <span class="font-bold text-on-surface">{{ formatCurrency(Number(booking.PackageEvent.pricePerPax) * booking.pax) }}</span>
+              </div>
+            </div>
+
+            <div class="border-t border-outline-variant/10 pt-3 mt-3 flex justify-between">
+              <span class="font-bold text-on-surface">Total</span>
+              <span class="font-bold text-primary text-lg">{{ formatCurrency(booking.totalPrice) }}</span>
+            </div>
+          </div>
+
         </div>
 
         <!-- Pending: Details + Payment -->
         <div v-else class="space-y-6">
           <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
             <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-3">Detail Pesanan</h3>
-            <div class="text-sm space-y-1.5">
-              <p><span class="text-on-surface-variant">Nama:</span> <span class="font-medium">{{ booking.customerName }}</span></p>
-              <p><span class="text-on-surface-variant">Paket:</span> <span class="font-medium">{{ booking.PackageEvent?.name }}</span></p>
-              <p><span class="text-on-surface-variant">Tanggal:</span> <span class="font-medium">{{ formatDate(booking.checkInDate) }} s/d {{ formatDate(booking.checkOutDate) }}</span></p>
-              <p><span class="text-on-surface-variant">Jumlah:</span> <span class="font-medium">{{ booking.pax }} orang</span></p>
-              <p><span class="text-on-surface-variant">Status:</span> 
-                <span class="font-semibold text-amber-600">{{ translateStatus(booking.status) }}</span>
-              </p>
-              <div class="border-t border-outline-variant/10 pt-2 mt-2 flex justify-between">
-                <span class="font-bold text-on-surface">Total</span>
-                <span class="font-bold text-primary text-lg">{{ formatCurrency(booking.totalPrice) }}</span>
+            <div class="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+              <span class="text-on-surface-variant">Nama:</span>
+              <span class="font-medium text-right">{{ booking.customerName }}</span>
+              <span class="text-on-surface-variant">No. Telepon:</span>
+              <span class="font-medium text-right">{{ booking.phone || '-' }}</span>
+              <span class="text-on-surface-variant">Paket:</span>
+              <span class="font-medium text-right">{{ booking.PackageEvent?.name || '-' }}</span>
+              <span class="text-on-surface-variant">Check In:</span>
+              <span class="font-medium text-right">{{ formatDate(booking.checkInDate) }}</span>
+              <span class="text-on-surface-variant">Check Out:</span>
+              <span class="font-medium text-right">{{ formatDate(booking.checkOutDate) }}</span>
+              <span class="text-on-surface-variant">Tamu:</span>
+              <span class="font-medium text-right">{{ booking.pax }} orang <span v-if="booking.freePax > 0" class="text-emerald-600">({{ booking.freePax }} gratis)</span></span>
+              <span class="text-on-surface-variant">Status:</span>
+              <span class="font-semibold text-right text-amber-600">{{ translateStatus(booking.status) }}</span>
+            </div>
+
+            <div v-if="booking.notes" class="border-t border-outline-variant/10 pt-3 mt-3">
+              <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Catatan</p>
+              <p class="text-sm text-on-surface-variant">{{ booking.notes }}</p>
+            </div>
+
+            <div v-if="booking.InventoryItems?.length" class="border-t border-outline-variant/10 pt-3 mt-3">
+              <p class="text-[9px] font-bold text-blue-600 uppercase tracking-wider mb-2">Sewa Alat Camping</p>
+              <div v-for="i in booking.InventoryItems" :key="i.id" class="flex justify-between text-xs py-1">
+                <span>{{ i.name }}</span>
+                <span class="font-bold">{{ i.BookingInventory?.quantity }}x {{ formatCurrency(i.BookingInventory?.priceAtBooking || i.price) }}</span>
               </div>
+            </div>
+
+            <div v-if="booking.ExtraServices?.length" class="border-t border-outline-variant/10 pt-3 mt-3">
+              <p class="text-[9px] font-bold text-primary uppercase tracking-wider mb-2">Layanan Ekstra</p>
+              <div v-for="s in booking.ExtraServices" :key="s.id" class="flex justify-between text-xs py-1">
+                <span>{{ s.name }}</span>
+                <span class="font-bold">{{ s.BookingService?.quantity }}x {{ formatCurrency(s.BookingService?.priceAtBooking || s.price) }}</span>
+              </div>
+            </div>
+
+            <div class="border-t border-outline-variant/10 pt-3 mt-3 space-y-1">
+              <div v-if="booking.PackageEvent" class="flex justify-between text-xs">
+                <span class="text-on-surface-variant">{{ booking.PackageEvent.name }} ({{ formatCurrency(booking.PackageEvent.pricePerPax) }} x {{ booking.pax }} pax)</span>
+                <span class="font-bold text-on-surface">{{ formatCurrency(Number(booking.PackageEvent.pricePerPax) * booking.pax) }}</span>
+              </div>
+            </div>
+
+            <div class="border-t border-outline-variant/10 pt-3 mt-3 flex justify-between">
+              <span class="font-bold text-on-surface">Total</span>
+              <span class="font-bold text-primary text-lg">{{ formatCurrency(booking.totalPrice) }}</span>
             </div>
           </div>
 
-          <!-- Lokasi -->
+          <!-- Pembayaran -->
           <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
-            <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm">location_on</span>
-              Lokasi Spec Camp
-            </h3>
-            <p class="text-xs text-on-surface-variant mb-3">Sukabumi Prestige Equestrian Center</p>
-            <a href="https://maps.app.goo.gl/CSVCFhcjedwDrpN97" target="_blank" rel="noopener noreferrer"
-               class="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl hover:bg-primary/20 transition-all">
-              <span class="material-symbols-outlined text-sm">map</span>
-              Buka Google Maps
-            </a>
-          </div>
+            <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-4">Pembayaran</h3>
 
-          <!-- Bank Info -->
-          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
-            <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-3">Pembayaran ke Rekening</h3>
-            <div class="bg-surface-container rounded-xl p-5 space-y-2">
-              <p class="text-xs text-on-surface-variant">Atas Nama</p>
-              <p class="font-bold text-on-surface">PT Bumimakmur Jaya Sentosa</p>
+            <div class="bg-surface-container rounded-xl p-5 space-y-2 mb-4">
+              <p class="text-xs text-on-surface-variant">Transfer ke Rekening</p>
+              <p class="font-bold text-on-surface text-sm">PT Bumimakmur Jaya Sentosa</p>
               <div class="border-t border-outline-variant/10 pt-3 mt-3">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center shrink-0">
@@ -151,11 +285,7 @@
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Upload Payment Proof -->
-          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
-            <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-3">Upload Bukti Pembayaran</h3>
             <p class="text-xs text-on-surface-variant mb-4">Upload screenshot atau foto bukti transfer agar pesanan segera diproses.</p>
 
             <div v-if="!booking.paymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-8 text-center hover:border-primary/30 transition-colors cursor-pointer" @click="triggerUpload">
@@ -179,6 +309,23 @@
           </div>
         </div>
 
+        <!-- Lokasi -->
+        <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
+          <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm">location_on</span>
+            Lokasi Spec Camp
+          </h3>
+          <p class="text-xs text-on-surface-variant mb-3">Sukabumi Prestige Equestrian Center</p>
+          <div class="rounded-xl overflow-hidden border border-outline-variant/10 mb-3">
+            <iframe src="https://maps.google.com/maps?q=Sukabumi+Prestige+Equestrian+Center+Tenjolaya+Cicurug+Sukabumi&output=embed" width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+          <a href="https://maps.app.goo.gl/5CaeiQx6oKL3pWd79" target="_blank" rel="noopener noreferrer"
+             class="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl hover:bg-primary/20 transition-all">
+            <span class="material-symbols-outlined text-sm">map</span>
+            Buka Google Maps
+          </a>
+        </div>
+
         <div class="flex gap-3 justify-center">
           <router-link to="/" class="bg-surface-container text-on-surface px-6 py-2.5 rounded-xl font-bold text-xs hover:bg-surface-container-high transition-colors">Kembali ke Beranda</router-link>
           <a :href="whatsappUrl" target="_blank"
@@ -187,6 +334,20 @@
             Hubungi via WhatsApp
           </a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Preview Lightbox -->
+  <div v-if="showImagePreview" class="fixed inset-0 z-[90] overflow-y-auto" @click="showImagePreview = null">
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+      <div class="relative max-w-4xl w-full" @click.stop>
+        <img :src="showImagePreview" alt="Preview" class="w-full h-auto rounded-2xl">
+        <button @click="showImagePreview = null"
+                class="fixed top-4 right-4 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors z-10">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
       </div>
     </div>
   </div>
@@ -205,6 +366,7 @@ const searchError = ref('')
 const uploading = ref(false)
 const uploadError = ref('')
 const fileInput = ref(null)
+const showImagePreview = ref(null)
 
 const whatsappUrl = computed(() => {
   if (!booking.value) return '#'
