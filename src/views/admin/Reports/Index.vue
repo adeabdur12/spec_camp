@@ -281,7 +281,7 @@ const exportSingleCSV = () => {
   rows.push([])
   
   // Data header
-  rows.push(['Tanggal', 'Nama', 'Paket', 'Quantity', 'Harga/Pax', 'Inventory Mimount', 'Markup Inventory', 'Layanan Ekstra', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Bukti Bayar'])
+  rows.push(['Tanggal Check-in', 'Nama', 'Paket', 'Quantity', 'Harga/Pax', 'Inventory Mimount', 'Markup Inventory', 'Layanan Ekstra', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Metode Bayar', 'Tanggal Bayar', 'Bukti Bayar'])
   transactions.value.forEach(b => {
     const invCost = Number(b.inventoryCost || 0)
     const mimountBase = Math.round(invCost / 1.2)
@@ -291,8 +291,8 @@ const exportSingleCSV = () => {
       b.checkInDate,
       b.customerName,
       b.PackageEvent?.name || '-',
-      b.pax || 1,
-      b.PackageEvent?.pricePerPax || 0,
+      Number(b.pax || 1),
+      Number(b.PackageEvent?.pricePerPax || 0),
       mimountBase,
       markup,
       Number(b.serviceCost || 0),
@@ -301,22 +301,24 @@ const exportSingleCSV = () => {
       Number(b.mimountTotal || 0),
       Number(b.specCampShare || 0),
       b.notes || '-',
+      b.paymentMethod || '-',
+      b.paidAt || '-',
       b.paymentProof || '-'
     ])
   })
   // Summary row
   rows.push([])
-  rows.push(['TOTAL', '', '', '', '', '', '', '', '', stats.value?.totalRevenue || 0, stats.value?.totalMimountTotal || 0, stats.value?.totalSpecCampShare || 0, '', ''])
-  rows.push(['Layanan Mimount', '', '', '', '', '', '', '', '', '', stats.value?.mimountServiceCost || 0, '', '', ''])
-  rows.push(['Layanan Spec Camp', '', '', '', '', '', '', '', '', '', stats.value?.specCampServiceCost || 0, '', '', ''])
-  rows.push(['Layanan Eksternal', '', '', '', '', '', '', '', '', '', stats.value?.eksternalServiceCost || 0, '', '', ''])
-  rows.push(['Markup Inventory (Spec Camp)', '', '', '', '', '', '', '', '', '', inventoryMarkup.value, '', '', ''])
-  rows.push(['Pajak 10%', '', '', '', '', '', '', '', '', '', reportTax.value, '', '', ''])
-  rows.push(['Retribusi Desa 5%', '', '', '', '', '', '', '', '', '', reportLocalFee.value, '', '', ''])
-  rows.push(['Net Spec Camp', '', '', '', '', '', '', '', '', '', reportSpecCampNet.value, '', '', ''])
+  rows.push(['TOTAL', '', '', '', '', '', '', '', '', Number(stats.value?.totalRevenue || 0), Number(stats.value?.totalMimountTotal || 0), Number(stats.value?.totalSpecCampShare || 0), '', '', '', ''])
+  rows.push(['Layanan Mimount', '', '', '', '', '', '', '', '', '', '', Number(stats.value?.mimountServiceCost || 0), '', '', '', ''])
+  rows.push(['Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', Number(stats.value?.specCampServiceCost || 0), '', '', '', ''])
+  rows.push(['Layanan Eksternal', '', '', '', '', '', '', '', '', '', '', Number(stats.value?.eksternalServiceCost || 0), '', '', '', ''])
+  rows.push(['Markup Inventory (Spec Camp)', '', '', '', '', '', '', '', '', '', '', Number(inventoryMarkup.value), '', '', '', ''])
+  rows.push(['Pajak 10%', '', '', '', '', '', '', '', '', '', '', Number(reportTax.value), '', '', '', ''])
+  rows.push(['Retribusi Desa 5%', '', '', '', '', '', '', '', '', '', '', Number(reportLocalFee.value), '', '', '', ''])
+  rows.push(['Net Spec Camp', '', '', '', '', '', '', '', '', '', '', Number(reportSpecCampNet.value), '', '', '', ''])
 
   const csv = rows.map(r => r.map(v => {
-    if (typeof v === 'number') return v
+    if (typeof v === 'number') return formatRupiah(v)
     return `"${String(v).replace(/"/g, '""')}"`
   }).join(',')).join('\n')
   const BOM = '\uFEFF'
@@ -334,16 +336,18 @@ const exportMultiMonthCSV = async () => {
   const startDate = `${periodYear.value}-${String(periodMonth.value).padStart(2, '0')}-01`
   const endDate = `${exportEndYear.value}-${String(exportEndMonth.value).padStart(2, '0')}-${new Date(exportEndYear.value, exportEndMonth.value, 0).getDate()}`
 
-  const bookingsRes = await api.get('/bookings')
-  const allBookings = (bookingsRes.data?.data || []).filter(b => {
-    const d = new Date(b.checkInDate)
+  // Fetch all bookings with pagination
+  const allBookingsRaw = await fetchAllBookings(api)
+  const allBookings = allBookingsRaw.filter(b => {
+    if (!b.paidAt) return false
+    const d = new Date(b.paidAt)
     return d >= new Date(startDate) && d <= new Date(endDate) && b.status === 'completed'
-  }).sort((a, b) => new Date(a.checkInDate) - new Date(b.checkInDate))
+  }).sort((a, b) => new Date(a.paidAt) - new Date(b.paidAt))
 
-  // Group by month
+  // Group by month (based on paidAt)
   const grouped = {}
   allBookings.forEach(b => {
-    const d = new Date(b.checkInDate)
+    const d = new Date(b.paidAt)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
     if (!grouped[key]) grouped[key] = []
     grouped[key].push(b)
@@ -367,7 +371,7 @@ const exportMultiMonthCSV = async () => {
 
     rows.push([])
     rows.push([`${monthLabel.toUpperCase()} ${y}`])
-    rows.push(['Tanggal', 'Nama', 'Paket', 'Quantity', 'Harga/Pax', 'Inventory Mimount', 'Markup Inventory', 'Layanan Ekstra', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Bukti Bayar'])
+    rows.push(['Tanggal Check-in', 'Nama', 'Paket', 'Quantity', 'Harga/Pax', 'Inventory Mimount', 'Markup Inventory', 'Layanan Ekstra', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Metode Bayar', 'Tanggal Bayar', 'Bukti Bayar'])
 
     const monthStats = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0, mimountSvc: 0, specCampSvc: 0, eksternalSvc: 0 }
     grouped[monthKey].forEach(b => {
@@ -379,8 +383,8 @@ const exportMultiMonthCSV = async () => {
         b.checkInDate,
         b.customerName,
         b.PackageEvent?.name || '-',
-        b.pax || 1,
-        b.PackageEvent?.pricePerPax || 0,
+        Number(b.pax || 1),
+        Number(b.PackageEvent?.pricePerPax || 0),
         mimountBase,
         markup,
         Number(b.serviceCost || 0),
@@ -389,6 +393,8 @@ const exportMultiMonthCSV = async () => {
         Number(b.mimountTotal || 0),
         Number(b.specCampShare || 0),
         b.notes || '-',
+        b.paymentMethod || '-',
+        b.paidAt || '-',
         b.paymentProof || '-'
       ])
       monthStats.revenue += Number(b.totalPrice || 0)
@@ -415,14 +421,14 @@ const exportMultiMonthCSV = async () => {
     const net = Math.max(0, monthStats.specCamp - tax - fee)
 
     rows.push([])
-    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', '', '', '', monthStats.revenue, monthStats.mimount, monthStats.specCamp, '', ''])
-    rows.push(['  Layanan Mimount', '', '', '', '', '', '', '', '', '', monthStats.mimountSvc, '', '', ''])
-    rows.push(['  Layanan Spec Camp', '', '', '', '', '', '', '', '', '', monthStats.specCampSvc, '', '', ''])
-    rows.push(['  Layanan Eksternal', '', '', '', '', '', '', '', '', '', monthStats.eksternalSvc, '', '', ''])
-    rows.push(['  Markup Inventory', '', '', '', '', '', '', '', '', '', invMarkup, '', '', ''])
-    rows.push(['  Pajak 10%', '', '', '', '', '', '', '', '', '', tax, '', '', ''])
-    rows.push(['  Retribusi 5%', '', '', '', '', '', '', '', '', '', fee, '', '', ''])
-    rows.push(['  Net Spec Camp', '', '', '', '', '', '', '', '', '', net, '', '', ''])
+    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', '', '', '', Number(monthStats.revenue), Number(monthStats.mimount), Number(monthStats.specCamp), '', '', '', ''])
+    rows.push(['  Layanan Mimount', '', '', '', '', '', '', '', '', '', '', Number(monthStats.mimountSvc), '', '', '', ''])
+    rows.push(['  Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', Number(monthStats.specCampSvc), '', '', '', ''])
+    rows.push(['  Layanan Eksternal', '', '', '', '', '', '', '', '', '', '', Number(monthStats.eksternalSvc), '', '', '', ''])
+    rows.push(['  Markup Inventory', '', '', '', '', '', '', '', '', '', '', Number(invMarkup), '', '', '', ''])
+    rows.push(['  Pajak 10%', '', '', '', '', '', '', '', '', '', '', Number(tax), '', '', '', ''])
+    rows.push(['  Retribusi 5%', '', '', '', '', '', '', '', '', '', '', Number(fee), '', '', '', ''])
+    rows.push(['  Net Spec Camp', '', '', '', '', '', '', '', '', '', '', Number(net), '', '', '', ''])
 
     grandTotal.revenue += monthStats.revenue
     grandTotal.mimount += monthStats.mimount
@@ -439,17 +445,17 @@ const exportMultiMonthCSV = async () => {
   const totalNet = Math.max(0, grandTotal.specCamp - totalTax - totalFee)
 
   rows.push([])
-  rows.push(['GRAND TOTAL', '', '', '', '', '', '', '', '', grandTotal.revenue, grandTotal.mimount, grandTotal.specCamp, '', ''])
-  rows.push(['Total Layanan Mimount', '', '', '', '', '', '', '', '', '', grandTotal.mimountSvc, '', '', ''])
-  rows.push(['Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', grandTotal.specCampSvc, '', '', ''])
-  rows.push(['Total Layanan Eksternal', '', '', '', '', '', '', '', '', '', grandTotal.eksternalSvc, '', '', ''])
-  rows.push(['Total Markup Inventory', '', '', '', '', '', '', '', '', '', totalInvMarkup, '', '', ''])
-  rows.push(['Total Pajak 10%', '', '', '', '', '', '', '', '', '', totalTax, '', '', ''])
-  rows.push(['Total Retribusi 5%', '', '', '', '', '', '', '', '', '', totalFee, '', '', ''])
-  rows.push(['Total Net Spec Camp', '', '', '', '', '', '', '', '', '', totalNet, '', '', ''])
+  rows.push(['GRAND TOTAL', '', '', '', '', '', '', '', '', Number(grandTotal.revenue), Number(grandTotal.mimount), Number(grandTotal.specCamp), '', '', '', ''])
+  rows.push(['Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', Number(grandTotal.mimountSvc), '', '', '', ''])
+  rows.push(['Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', Number(grandTotal.specCampSvc), '', '', '', ''])
+  rows.push(['Total Layanan Eksternal', '', '', '', '', '', '', '', '', '', '', Number(grandTotal.eksternalSvc), '', '', '', ''])
+  rows.push(['Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', Number(totalInvMarkup), '', '', '', ''])
+  rows.push(['Total Pajak 10%', '', '', '', '', '', '', '', '', '', '', Number(totalTax), '', '', '', ''])
+  rows.push(['Total Retribusi 5%', '', '', '', '', '', '', '', '', '', '', Number(totalFee), '', '', '', ''])
+  rows.push(['Total Net Spec Camp', '', '', '', '', '', '', '', '', '', '', Number(totalNet), '', '', '', ''])
 
   const csv = rows.map(r => r.map(v => {
-    if (typeof v === 'number') return v
+    if (typeof v === 'number') return formatRupiah(v)
     return `"${String(v).replace(/"/g, '""')}"`
   }).join(',')).join('\n')
   const BOM = '\uFEFF'
@@ -508,6 +514,31 @@ const chartOptions = computed(() => ({
 
 const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0)
 
+const formatRupiah = (val) => {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0)
+}
+
+const fetchAllBookings = async (api) => {
+  const allData = []
+  let page = 1
+  const limit = 100
+  let hasMore = true
+  
+  while (hasMore) {
+    const res = await api.get(`/bookings?page=${page}&limit=${limit}`)
+    const data = res.data?.data || []
+    allData.push(...data)
+    
+    if (data.length < limit || !res.data?.pagination?.totalPages || page >= res.data.pagination.totalPages) {
+      hasMore = false
+    } else {
+      page++
+    }
+  }
+  
+  return allData
+}
+
 const fetchStats = async () => {
   loading.value = true
   try {
@@ -516,13 +547,14 @@ const fetchStats = async () => {
     const res = await reportService.getFinancial(startDate, endDate)
     if (res.success) stats.value = res.data
     await fetchSettlements()
-    // Fetch raw bookings for transaction list
+    // Fetch all bookings for transaction list
     const api = (await import('../../../services/api')).default
-    const bookingsRes = await api.get('/bookings')
-    transactions.value = (bookingsRes.data?.data || []).filter(b => {
-      const d = new Date(b.checkInDate)
+    const allBookings = await fetchAllBookings(api)
+    transactions.value = allBookings.filter(b => {
+      if (!b.paidAt) return false
+      const d = new Date(b.paidAt)
       return d >= new Date(startDate) && d <= new Date(endDate)
-    }).sort((a, b) => new Date(b.checkInDate) - new Date(a.checkInDate))
+    }).sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt))
   } catch (e) {
     console.error(e)
   } finally {

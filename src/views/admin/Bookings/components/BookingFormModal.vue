@@ -122,7 +122,7 @@
           <!-- Payment & Status -->
           <div class="border-t border-outline-variant/10 pt-4">
             <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-3 font-label">Status & Pembayaran</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-1.5">
                 <label class="text-xs font-medium text-on-surface-variant font-label">Status Reservasi</label>
                 <select v-model="form.status" required
@@ -131,6 +131,20 @@
                   <option value="confirmed">DIKONFIRMASI (Confirmed)</option>
                   <option value="completed">SELESAI (Completed)</option>
                   <option value="cancelled">DIBATALKAN (Cancelled)</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-on-surface-variant font-label">Tanggal Pembayaran</label>
+                <input v-model="form.paidAt" type="date"
+                       class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-on-surface-variant font-label">Metode Pembayaran</label>
+                <select v-model="form.paymentMethod"
+                        class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                  <option value="">-- Pilih Metode --</option>
+                  <option value="transfer">Transfer Bank</option>
+                  <option value="qris">QRIS</option>
                 </select>
               </div>
             </div>

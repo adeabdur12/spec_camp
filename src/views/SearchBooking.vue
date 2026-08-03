@@ -288,21 +288,38 @@
 
             <p class="text-xs text-on-surface-variant mb-4">Upload screenshot atau foto bukti transfer agar pesanan segera diproses.</p>
 
-            <div v-if="!booking.paymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-8 text-center hover:border-primary/30 transition-colors cursor-pointer" @click="triggerUpload">
-              <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileSelect">
-              <span class="material-symbols-outlined text-3xl text-on-surface-variant/40 mb-2">cloud_upload</span>
-              <p class="text-sm font-medium text-on-surface-variant">Klik untuk upload bukti bayar</p>
-              <p class="text-[10px] text-on-surface-variant/40 mt-1">Maks 5MB, format gambar</p>
+            <div v-if="!booking.paymentProof" class="space-y-4">
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-on-surface-variant">Metode Pembayaran *</label>
+                <select v-model="paymentMethod" required
+                        class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
+                  <option value="" disabled>Pilih Metode Pembayaran</option>
+                  <option value="transfer">Transfer Bank</option>
+                  <option value="qris">QRIS</option>
+                </select>
+              </div>
+
+              <div class="border-2 border-dashed border-outline-variant/30 rounded-xl p-8 text-center hover:border-primary/30 transition-colors cursor-pointer" @click="triggerUpload">
+                <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileSelect">
+                <span class="material-symbols-outlined text-3xl text-on-surface-variant/40 mb-2">cloud_upload</span>
+                <p class="text-sm font-medium text-on-surface-variant">Klik untuk upload bukti bayar</p>
+                <p class="text-[10px] text-on-surface-variant/40 mt-1">Maks 5MB, format gambar</p>
+              </div>
             </div>
 
             <div v-else class="space-y-3">
               <div class="relative bg-surface-container rounded-xl overflow-hidden">
                 <img :src="booking.paymentProof" alt="Bukti Pembayaran" class="w-full max-h-64 object-contain">
               </div>
-              <p class="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">check_circle</span>
-                Bukti pembayaran terupload
-              </p>
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">check_circle</span>
+                  Bukti pembayaran terupload
+                </p>
+                <p class="text-xs text-on-surface-variant font-medium">
+                  {{ booking.paymentMethod === 'qris' ? 'QRIS' : 'Transfer Bank' }}
+                </p>
+              </div>
             </div>
 
             <div v-if="uploadError" class="mt-3 bg-error-container text-on-error-container p-3 rounded-xl text-xs font-medium">{{ uploadError }}</div>
@@ -367,6 +384,7 @@ const uploading = ref(false)
 const uploadError = ref('')
 const fileInput = ref(null)
 const showImagePreview = ref(null)
+const paymentMethod = ref('')
 
 const whatsappUrl = computed(() => {
   if (!booking.value) return '#'
@@ -396,6 +414,10 @@ const triggerUpload = () => fileInput.value?.click()
 const handleFileSelect = async (e) => {
   const file = e.target.files?.[0]
   if (!file) return
+  if (!paymentMethod.value) {
+    uploadError.value = 'Pilih metode pembayaran terlebih dahulu.'
+    return
+  }
   uploading.value = true
   uploadError.value = ''
   try {
@@ -410,9 +432,12 @@ const handleFileSelect = async (e) => {
     await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/bookings/${booking.value.id}/payment`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentProof: data.url })
+      body: JSON.stringify({ paymentProof: data.url, paymentMethod: paymentMethod.value })
     })
     booking.value.paymentProof = data.url
+    booking.value.paymentMethod = paymentMethod.value
+    // Update paidAt to current date
+    booking.value.paidAt = new Date().toISOString().split('T')[0]
   } catch (e) {
     uploadError.value = e.message || 'Gagal upload bukti bayar.'
   } finally {
