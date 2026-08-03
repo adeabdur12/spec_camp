@@ -275,7 +275,7 @@ const exportSingleCSV = () => {
   const rows = []
   
   // Header
-  rows.push(['LAPORAN KEUANGAN SPEC CAMP'])
+  rows.push(['LAPORAN TIKET MASUK SPEC CAMP'])
   rows.push([`Periode: ${monthName.value} ${periodYear.value}`])
   rows.push([`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`])
   rows.push([])
@@ -310,7 +310,10 @@ const exportSingleCSV = () => {
   rows.push(['Retribusi Desa 5%', '', '', '', '', '', '', '', '', reportLocalFee.value, '', '', ''])
   rows.push(['Net Spec Camp', '', '', '', '', '', '', '', '', reportSpecCampNet.value, '', '', ''])
 
-  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+  const csv = rows.map(r => r.map(v => {
+    if (typeof v === 'number') return v
+    return `"${String(v).replace(/"/g, '""')}"`
+  }).join(',')).join('\n')
   const BOM = '\uFEFF'
   const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -347,7 +350,7 @@ const exportMultiMonthCSV = async () => {
   // Header
   const startLabel = months.find(m => m.value === periodMonth.value)?.label || ''
   const endLabel = months.find(m => m.value === exportEndMonth.value)?.label || ''
-  rows.push(['LAPORAN KEUANGAN SPEC CAMP'])
+  rows.push(['LAPORAN TIKET MASUK SPEC CAMP'])
   rows.push([`Periode: ${startLabel} ${periodYear.value} - ${endLabel} ${exportEndYear.value}`])
   rows.push([`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`])
   rows.push([])
@@ -402,14 +405,14 @@ const exportMultiMonthCSV = async () => {
     const net = Math.max(0, monthStats.specCamp - tax - fee)
 
     rows.push([])
-    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', monthStats.revenue, monthStats.mimount, monthStats.specCamp, '', ''])
-    rows.push(['  Layanan Mimount', '', '', '', '', '', '', monthStats.mimountSvc, '', '', ''])
-    rows.push(['  Layanan Spec Camp', '', '', '', '', '', '', monthStats.specCampSvc, '', '', ''])
-    rows.push(['  Layanan Eksternal', '', '', '', '', '', '', monthStats.eksternalSvc, '', '', ''])
-    rows.push(['  Markup Inventory', '', '', '', '', '', '', invMarkup, '', '', ''])
-    rows.push(['  Pajak 10%', '', '', '', '', '', '', tax, '', '', ''])
-    rows.push(['  Retribusi 5%', '', '', '', '', '', '', fee, '', '', ''])
-    rows.push(['  Net Spec Camp', '', '', '', '', '', '', net, '', '', ''])
+    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', '', '', monthStats.revenue, monthStats.mimount, monthStats.specCamp, '', ''])
+    rows.push(['  Layanan Mimount', '', '', '', '', '', '', '', '', monthStats.mimountSvc, '', '', ''])
+    rows.push(['  Layanan Spec Camp', '', '', '', '', '', '', '', '', monthStats.specCampSvc, '', '', ''])
+    rows.push(['  Layanan Eksternal', '', '', '', '', '', '', '', '', monthStats.eksternalSvc, '', '', ''])
+    rows.push(['  Markup Inventory', '', '', '', '', '', '', '', '', invMarkup, '', '', ''])
+    rows.push(['  Pajak 10%', '', '', '', '', '', '', '', '', tax, '', '', ''])
+    rows.push(['  Retribusi 5%', '', '', '', '', '', '', '', '', fee, '', '', ''])
+    rows.push(['  Net Spec Camp', '', '', '', '', '', '', '', '', net, '', '', ''])
 
     grandTotal.revenue += monthStats.revenue
     grandTotal.mimount += monthStats.mimount
@@ -420,21 +423,25 @@ const exportMultiMonthCSV = async () => {
     grandTotal.eksternalSvc += monthStats.eksternalSvc
   })
 
-  rows.push([])
-  rows.push(['GRAND TOTAL', '', '', '', '', '', grandTotal.revenue, grandTotal.mimount, grandTotal.specCamp, '', ''])
-  rows.push(['Total Layanan Mimount', '', '', '', '', '', '', grandTotal.mimountSvc, '', '', ''])
-  rows.push(['Total Layanan Spec Camp', '', '', '', '', '', '', grandTotal.specCampSvc, '', '', ''])
-  rows.push(['Total Layanan Eksternal', '', '', '', '', '', '', grandTotal.eksternalSvc, '', '', ''])
   const totalInvMarkup = Math.round(grandTotal.invCost - grandTotal.invCost / 1.2)
   const totalTax = Math.round(grandTotal.specCamp * 0.1)
   const totalFee = Math.round(grandTotal.specCamp * 0.05)
   const totalNet = Math.max(0, grandTotal.specCamp - totalTax - totalFee)
-  rows.push(['Total Markup Inventory', '', '', '', '', '', '', totalInvMarkup, '', '', ''])
-  rows.push(['Total Pajak 10%', '', '', '', '', '', '', totalTax, '', '', ''])
-  rows.push(['Total Retribusi 5%', '', '', '', '', '', '', totalFee, '', '', ''])
-  rows.push(['Total Net Spec Camp', '', '', '', '', '', '', totalNet, '', '', ''])
 
-  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+  rows.push([])
+  rows.push(['GRAND TOTAL', '', '', '', '', '', '', '', grandTotal.revenue, grandTotal.mimount, grandTotal.specCamp, '', ''])
+  rows.push(['Total Layanan Mimount', '', '', '', '', '', '', '', '', grandTotal.mimountSvc, '', '', ''])
+  rows.push(['Total Layanan Spec Camp', '', '', '', '', '', '', '', '', grandTotal.specCampSvc, '', '', ''])
+  rows.push(['Total Layanan Eksternal', '', '', '', '', '', '', '', '', grandTotal.eksternalSvc, '', '', ''])
+  rows.push(['Total Markup Inventory', '', '', '', '', '', '', '', '', totalInvMarkup, '', '', ''])
+  rows.push(['Total Pajak 10%', '', '', '', '', '', '', '', '', totalTax, '', '', ''])
+  rows.push(['Total Retribusi 5%', '', '', '', '', '', '', '', '', totalFee, '', '', ''])
+  rows.push(['Total Net Spec Camp', '', '', '', '', '', '', '', '', totalNet, '', '', ''])
+
+  const csv = rows.map(r => r.map(v => {
+    if (typeof v === 'number') return v
+    return `"${String(v).replace(/"/g, '""')}"`
+  }).join(',')).join('\n')
   const BOM = '\uFEFF'
   const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
