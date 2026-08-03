@@ -286,7 +286,9 @@ const exportSingleCSV = () => {
     const invCost = Number(b.inventoryCost || 0)
     const mimountBase = Math.round(invCost / 1.2)
     const markup = invCost - mimountBase
-    
+    const adjMimount = Math.max(0, Number(b.mimountTotal || 0) - markup)
+    const adjSpecCamp = Number(b.specCampShare || 0) + markup
+
     rows.push([
       b.checkInDate,
       b.customerName,
@@ -298,8 +300,8 @@ const exportSingleCSV = () => {
       Number(b.serviceCost || 0),
       b.status,
       Number(b.totalPrice || 0),
-      Number(b.mimountTotal || 0),
-      Number(b.specCampShare || 0),
+      adjMimount,
+      adjSpecCamp,
       b.notes || '-',
       b.paymentMethod || '-',
       b.paidAt || '-',
@@ -378,7 +380,9 @@ const exportMultiMonthCSV = async () => {
       const invCost = Number(b.inventoryCost || 0)
       const mimountBase = Math.round(invCost / 1.2)
       const markup = invCost - mimountBase
-      
+      const adjMimount = Math.max(0, Number(b.mimountTotal || 0) - markup)
+      const adjSpecCamp = Number(b.specCampShare || 0) + markup
+
       rows.push([
         b.checkInDate,
         b.customerName,
@@ -390,16 +394,16 @@ const exportMultiMonthCSV = async () => {
         Number(b.serviceCost || 0),
         b.status,
         Number(b.totalPrice || 0),
-        Number(b.mimountTotal || 0),
-        Number(b.specCampShare || 0),
+        adjMimount,
+        adjSpecCamp,
         b.notes || '-',
         b.paymentMethod || '-',
         b.paidAt || '-',
         b.paymentProof || '-'
       ])
       monthStats.revenue += Number(b.totalPrice || 0)
-      monthStats.mimount += Number(b.mimountTotal || 0)
-      monthStats.specCamp += Number(b.specCampShare || 0)
+      monthStats.mimount += adjMimount
+      monthStats.specCamp += adjSpecCamp
       monthStats.invCost += Number(b.inventoryCost || 0)
       
       // Calculate service costs by type
