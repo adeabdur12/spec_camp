@@ -14,11 +14,26 @@
           <select v-model="periodYear" class="bg-transparent border-none text-xs font-bold focus:ring-0 px-2 py-1">
             <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
           </select>
+          <div class="border-l border-outline-variant/10 pl-2 flex items-center gap-2">
+            <select v-model="exportMode" class="bg-transparent border-none text-xs font-bold focus:ring-0 px-2 py-1">
+              <option value="single">1 Bulan</option>
+              <option value="multi">Multi Bulan</option>
+            </select>
+            <template v-if="exportMode === 'multi'">
+              <span class="text-on-surface-variant text-xs">s/d</span>
+              <select v-model="exportEndMonth" class="bg-transparent border-none text-xs font-bold focus:ring-0 px-2 py-1">
+                <option v-for="m in months" :key="'end-'+m.value" :value="m.value">{{ m.label }}</option>
+              </select>
+              <select v-model="exportEndYear" class="bg-transparent border-none text-xs font-bold focus:ring-0 px-2 py-1">
+                <option v-for="y in years" :key="'endy-'+y" :value="y">{{ y }}</option>
+              </select>
+            </template>
+          </div>
           <button @click="fetchStats" class="bg-primary text-white px-5 py-2 rounded-lg font-bold text-xs hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5">
             <span class="material-symbols-outlined text-sm">refresh</span>
             Tampilkan
           </button>
-          <button @click="exportCSV" :disabled="!transactions.length"
+          <button @click="exportCSV" :disabled="!transactions.length && exportMode === 'single'"
                   class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-emerald-700 disabled:opacity-40 transition-all flex items-center gap-1.5">
             <span class="material-symbols-outlined text-sm">download</span>
             CSV
@@ -27,12 +42,28 @@
       </div>
 
       <!-- Settlement Info -->
-      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-        <span class="material-symbols-outlined text-amber-600">info</span>
-        <div class="text-xs text-amber-900">
-          <span class="font-bold">Periode {{ monthName }} {{ periodYear }}</span> —
-          Bagi hasil dibayarkan setiap tanggal <span class="font-bold">10 {{ nextMonthName }} {{ nextYear }}</span>
+      <div :class="currentSettlement ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'" class="border rounded-xl p-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span :class="currentSettlement ? 'material-symbols-outlined text-emerald-600' : 'material-symbols-outlined text-amber-600'">{{ currentSettlement ? 'check_circle' : 'info' }}</span>
+          <div :class="currentSettlement ? 'text-emerald-900' : 'text-amber-900'" class="text-xs">
+            <template v-if="exportMode === 'multi'">
+              <span class="font-bold">{{ monthName }} {{ periodYear }} — {{ endMonthName }} {{ exportEndYear }}</span>
+            </template>
+            <template v-else>
+              <span class="font-bold">Periode {{ monthName }} {{ periodYear }}</span> —
+              Bagi hasil dibayarkan setiap tanggal <span class="font-bold">10 {{ nextMonthName }} {{ nextYear }}</span>
+              <span v-if="currentSettlement" class="ml-2 font-bold">
+                (Dibayar: {{ formatSettlementDate(currentSettlement.paidAt) }})
+              </span>
+            </template>
+          </div>
         </div>
+        <button v-if="stats && exportMode === 'single'" @click="toggleSettlement"
+                :class="currentSettlement ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'"
+                class="px-4 py-2 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 whitespace-nowrap">
+          <span class="material-symbols-outlined text-sm">{{ currentSettlement ? 'undo' : 'payments' }}</span>
+          {{ currentSettlement ? 'Batalkan' : 'Tandai Dibayar' }}
+        </button>
       </div>
 
       <div v-if="loading" class="flex justify-center py-20">
@@ -49,7 +80,12 @@
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
             <span class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Biaya Inventory</span>
             <div class="text-2xl font-bold text-blue-600">{{ formatCurrency(stats.totalInventoryCost) }}</div>
-            <div class="text-blue-500/50 text-xs font-bold">100% untuk Mimount</div>
+            <div class="text-blue-500/50 text-xs font-bold">Harga customer (incl. markup 20%)</div>
+          </div>
+          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
+            <span class="text-emerald-600 text-xs font-bold uppercase tracking-widest">Markup Inventory</span>
+            <div class="text-2xl font-bold text-emerald-600">{{ formatCurrency(inventoryMarkup) }}</div>
+            <div class="text-emerald-500/50 text-xs font-bold">Bagian Spec Camp dari inventory</div>
           </div>
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
             <span class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Layanan Ekstra</span>
@@ -74,13 +110,15 @@
             <div class="text-2xl font-bold text-emerald-400">{{ formatCurrency(reportSpecCampNet) }}</div>
             <div class="text-emerald-300/40 text-xs font-bold">Pendapatan bersih setelah pajak</div>
           </div>
-          <div class="bg-amber-50 p-5 rounded-xl border border-amber-200/50 space-y-2">
-            <span class="text-amber-900/60 text-xs font-bold uppercase tracking-widest">Settlement</span>
-            <div class="flex items-center gap-2 text-amber-900">
-              <span class="material-symbols-outlined text-lg">calendar_month</span>
-              <span class="text-lg font-bold">10 {{ nextMonthName }}</span>
+          <div :class="currentSettlement ? 'bg-emerald-50 border-emerald-200/50' : 'bg-amber-50 border-amber-200/50'" class="p-5 rounded-xl border space-y-2">
+            <span :class="currentSettlement ? 'text-emerald-900/60' : 'text-amber-900/60'" class="text-xs font-bold uppercase tracking-widest">Settlement</span>
+            <div class="flex items-center gap-2" :class="currentSettlement ? 'text-emerald-900' : 'text-amber-900'">
+              <span class="material-symbols-outlined text-lg">{{ currentSettlement ? 'check_circle' : 'calendar_month' }}</span>
+              <span class="text-lg font-bold">{{ currentSettlement ? 'Dibayar' : '10 ' + nextMonthName }}</span>
             </div>
-            <div class="text-amber-700/60 text-xs font-bold">Dibayarkan bulan depan</div>
+            <div :class="currentSettlement ? 'text-emerald-700/60' : 'text-amber-700/60'" class="text-xs font-bold">
+              {{ currentSettlement ? 'Pembayaran tercatat' : 'Dibayarkan bulan depan' }}
+            </div>
           </div>
         </div>
 
@@ -133,6 +171,7 @@
 import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '../../../components/admin/DashboardLayout.vue'
 import { reportService } from '../../../services/reportService'
+import { settlementService } from '../../../services/settlementService'
 import VueApexCharts from 'vue3-apexcharts'
 
 const apexchart = VueApexCharts
@@ -143,6 +182,10 @@ const periodMonth = ref(now.getMonth() + 1)
 const loading = ref(false)
 const stats = ref(null)
 const transactions = ref([])
+const settlements = ref([])
+const exportMode = ref('single')
+const exportEndMonth = ref(now.getMonth() + 1)
+const exportEndYear = ref(now.getFullYear())
 
 const months = [
   { value: 1, label: 'Januari' }, { value: 2, label: 'Februari' },
@@ -159,9 +202,41 @@ const years = computed(() => {
 })
 
 const monthName = computed(() => months.find(m => m.value === periodMonth.value)?.label || '')
+const endMonthName = computed(() => months.find(m => m.value === exportEndMonth.value)?.label || '')
 const nextMonth = computed(() => periodMonth.value === 12 ? 1 : periodMonth.value + 1)
 const nextYear = computed(() => periodMonth.value === 12 ? periodYear.value + 1 : periodYear.value)
 const nextMonthName = computed(() => months.find(m => m.value === nextMonth.value)?.label || '')
+
+const currentSettlement = computed(() => {
+  return settlements.value.find(s => s.year === periodYear.value && s.month === periodMonth.value && s.paidAt) || null
+})
+
+const formatSettlementDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const fetchSettlements = async () => {
+  try {
+    const res = await settlementService.getAll()
+    settlements.value = res.data || []
+  } catch (e) {
+    console.error('Gagal mengambil settlement:', e)
+  }
+}
+
+const toggleSettlement = async () => {
+  try {
+    if (currentSettlement.value) {
+      await settlementService.unmarkPaid(periodYear.value, periodMonth.value)
+    } else {
+      await settlementService.markPaid(periodYear.value, periodMonth.value)
+    }
+    await fetchSettlements()
+  } catch (e) {
+    console.error('Gagal mengubah status settlement:', e)
+  }
+}
 
 const getInitials = (name) => {
   if (!name) return '??'
@@ -178,8 +253,16 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
 }
 
-const exportCSV = () => {
-  const rows = [['Tanggal', 'Nama', 'Paket', 'Status', 'Total', 'Mimount', 'Spec Camp']]
+const exportCSV = async () => {
+  if (exportMode.value === 'single') {
+    exportSingleCSV()
+  } else {
+    await exportMultiMonthCSV()
+  }
+}
+
+const exportSingleCSV = () => {
+  const rows = [['Tanggal', 'Nama', 'Paket', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Bukti Bayar']]
   transactions.value.forEach(b => {
     rows.push([
       b.checkInDate,
@@ -188,15 +271,18 @@ const exportCSV = () => {
       b.status,
       Number(b.totalPrice || 0),
       Number(b.mimountTotal || 0),
-      Number(b.specCampShare || 0)
+      Number(b.specCampShare || 0),
+      b.notes || '-',
+      b.paymentProof || '-'
     ])
   })
   // Summary row
   rows.push([])
-  rows.push(['TOTAL', '', '', '', stats.value?.totalRevenue || 0, stats.value?.totalMimountTotal || 0, stats.value?.totalSpecCampShare || 0])
-  rows.push(['Pajak 10%', '', '', '', '', '', reportTax.value])
-  rows.push(['Retribusi Desa 5%', '', '', '', '', '', reportLocalFee.value])
-  rows.push(['Net Spec Camp', '', '', '', '', '', reportSpecCampNet.value])
+  rows.push(['TOTAL', '', '', '', stats.value?.totalRevenue || 0, stats.value?.totalMimountTotal || 0, stats.value?.totalSpecCampShare || 0, '', ''])
+  rows.push(['Markup Inventory (Spec Camp)', '', '', '', '', '', inventoryMarkup.value, '', ''])
+  rows.push(['Pajak 10%', '', '', '', '', '', reportTax.value, '', ''])
+  rows.push(['Retribusi Desa 5%', '', '', '', '', '', reportLocalFee.value, '', ''])
+  rows.push(['Net Spec Camp', '', '', '', '', '', reportSpecCampNet.value, '', ''])
 
   const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
   const BOM = '\uFEFF'
@@ -209,11 +295,108 @@ const exportCSV = () => {
   URL.revokeObjectURL(url)
 }
 
+const exportMultiMonthCSV = async () => {
+  const api = (await import('../../../services/api')).default
+  const startDate = `${periodYear.value}-${String(periodMonth.value).padStart(2, '0')}-01`
+  const endDate = `${exportEndYear.value}-${String(exportEndMonth.value).padStart(2, '0')}-${new Date(exportEndYear.value, exportEndMonth.value, 0).getDate()}`
+
+  const bookingsRes = await api.get('/bookings')
+  const allBookings = (bookingsRes.data?.data || []).filter(b => {
+    const d = new Date(b.checkInDate)
+    return d >= new Date(startDate) && d <= new Date(endDate) && b.status === 'completed'
+  }).sort((a, b) => new Date(a.checkInDate) - new Date(b.checkInDate))
+
+  // Group by month
+  const grouped = {}
+  allBookings.forEach(b => {
+    const d = new Date(b.checkInDate)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    if (!grouped[key]) grouped[key] = []
+    grouped[key].push(b)
+  })
+
+  const rows = []
+  let grandTotal = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0 }
+
+  const sortedMonths = Object.keys(grouped).sort()
+  sortedMonths.forEach(monthKey => {
+    const [y, m] = monthKey.split('-').map(Number)
+    const monthLabel = months.find(mo => mo.value === m)?.label || ''
+
+    rows.push([])
+    rows.push([`=== ${monthLabel.toUpperCase()} ${y} ===`])
+    rows.push(['Tanggal', 'Nama', 'Paket', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Bukti Bayar'])
+
+    const monthStats = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0 }
+    grouped[monthKey].forEach(b => {
+      rows.push([
+        b.checkInDate,
+        b.customerName,
+        b.PackageEvent?.name || '-',
+        b.status,
+        Number(b.totalPrice || 0),
+        Number(b.mimountTotal || 0),
+        Number(b.specCampShare || 0),
+        b.notes || '-',
+        b.paymentProof || '-'
+      ])
+      monthStats.revenue += Number(b.totalPrice || 0)
+      monthStats.mimount += Number(b.mimountTotal || 0)
+      monthStats.specCamp += Number(b.specCampShare || 0)
+      monthStats.invCost += Number(b.inventoryCost || 0)
+    })
+
+    const invMarkup = Math.round(monthStats.invCost - monthStats.invCost / 1.2)
+    const tax = Math.round(monthStats.specCamp * 0.1)
+    const fee = Math.round(monthStats.specCamp * 0.05)
+    const net = Math.max(0, monthStats.specCamp - tax - fee)
+
+    rows.push([])
+    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', monthStats.revenue, monthStats.mimount, monthStats.specCamp, '', ''])
+    rows.push(['  Markup Inventory', '', '', '', '', '', invMarkup, '', ''])
+    rows.push(['  Pajak 10%', '', '', '', '', '', tax, '', ''])
+    rows.push(['  Retribusi 5%', '', '', '', '', '', fee, '', ''])
+    rows.push(['  Net Spec Camp', '', '', '', '', '', net, '', ''])
+
+    grandTotal.revenue += monthStats.revenue
+    grandTotal.mimount += monthStats.mimount
+    grandTotal.specCamp += monthStats.specCamp
+    grandTotal.invCost += monthStats.invCost
+  })
+
+  rows.push([])
+  rows.push(['=== GRAND TOTAL ===', '', '', '', grandTotal.revenue, grandTotal.mimount, grandTotal.specCamp, '', ''])
+  const totalInvMarkup = Math.round(grandTotal.invCost - grandTotal.invCost / 1.2)
+  const totalTax = Math.round(grandTotal.specCamp * 0.1)
+  const totalFee = Math.round(grandTotal.specCamp * 0.05)
+  const totalNet = Math.max(0, grandTotal.specCamp - totalTax - totalFee)
+  rows.push(['Total Markup Inventory', '', '', '', '', '', totalInvMarkup, '', ''])
+  rows.push(['Total Pajak 10%', '', '', '', '', '', totalTax, '', ''])
+  rows.push(['Total Retribusi 5%', '', '', '', '', '', totalFee, '', ''])
+  rows.push(['Total Net Spec Camp', '', '', '', '', '', totalNet, '', ''])
+
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+  const BOM = '\uFEFF'
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const startLabel = months.find(m => m.value === periodMonth.value)?.label || ''
+  const endLabel = months.find(m => m.value === exportEndMonth.value)?.label || ''
+  a.download = `laporan-${startLabel.toLowerCase()}-${endLabel.toLowerCase()}-${periodYear.value}-${exportEndYear.value}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 const getStartDate = () => {
   return `${periodYear.value}-${String(periodMonth.value).padStart(2, '0')}-01`
 }
 
 const getEndDate = () => {
+  if (exportMode.value === 'multi') {
+    const d = new Date(exportEndYear.value, exportEndMonth.value, 0)
+    return `${exportEndYear.value}-${String(exportEndMonth.value).padStart(2, '0')}-${d.getDate()}`
+  }
   const d = new Date(periodYear.value, periodMonth.value, 0)
   return `${periodYear.value}-${String(periodMonth.value).padStart(2, '0')}-${d.getDate()}`
 }
@@ -221,6 +404,7 @@ const getEndDate = () => {
 const reportTax = computed(() => Math.round((stats.value?.totalSpecCampShare || 0) * 0.1))
 const reportLocalFee = computed(() => Math.round((stats.value?.totalSpecCampShare || 0) * 0.05))
 const reportSpecCampNet = computed(() => Math.max(0, (stats.value?.totalSpecCampShare || 0) - reportTax.value - reportLocalFee.value))
+const inventoryMarkup = computed(() => Math.round((stats.value?.totalInventoryCost || 0) - (stats.value?.totalInventoryCost || 0) / 1.2))
 
 const sortedDailyStats = computed(() => {
   if (!stats.value || !stats.value.daily) return {}
@@ -256,6 +440,7 @@ const fetchStats = async () => {
     const endDate = getEndDate()
     const res = await reportService.getFinancial(startDate, endDate)
     if (res.success) stats.value = res.data
+    await fetchSettlements()
     // Fetch raw bookings for transaction list
     const api = (await import('../../../services/api')).default
     const bookingsRes = await api.get('/bookings')
@@ -270,7 +455,7 @@ const fetchStats = async () => {
   }
 }
 
-onMounted(() => {
-  fetchStats()
+onMounted(async () => {
+  await fetchStats()
 })
 </script>

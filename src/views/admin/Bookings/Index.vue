@@ -141,10 +141,14 @@
                 <!-- Status & Aksi (Mobile Footer) -->
                 <div class="col-span-3 flex items-center justify-between w-full mt-2 pt-4 border-t border-outline-variant/5 md:border-none md:mt-0 md:pt-0">
                   <!-- Status -->
-                  <div class="flex-1 md:flex-none md:col-span-2 flex md:justify-center">
+                  <div class="flex-1 md:flex-none md:col-span-2 flex md:justify-center gap-1.5">
                     <span :class="getStatusBadgeClass(booking.status)" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-black rounded-full uppercase tracking-tighter shadow-sm border border-black/5 whitespace-nowrap">
                       <span :class="getStatusDotClass(booking.status)" class="w-1.5 h-1.5 rounded-full"></span>
                       {{ translateStatus(booking.status) }}
+                    </span>
+                    <span v-if="isBookingSettled(booking)" class="inline-flex items-center gap-1 px-2 py-1.5 text-[9px] font-black rounded-full uppercase tracking-tighter bg-emerald-600 text-white whitespace-nowrap">
+                      <span class="material-symbols-outlined text-xs">payments</span>
+                      Settled
                     </span>
                   </div>
 
@@ -294,6 +298,17 @@
                   <span class="text-emerald-600">Net Spec Camp:</span>
                   <span class="font-bold text-right text-emerald-600">{{ formatCurrency(detailBooking.specCampShare) }}</span>
                 </div>
+                <div v-if="detailBooking.status === 'completed'" class="mt-3 pt-3 border-t border-outline-variant/10 flex items-center justify-between">
+                  <span class="text-xs text-on-surface-variant font-bold">Status Settlement:</span>
+                  <span v-if="isBookingSettled(detailBooking)" class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-full bg-emerald-600 text-white uppercase tracking-tighter">
+                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                    Sudah Dibayar
+                  </span>
+                  <span v-else class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-full bg-amber-100 text-amber-800 uppercase tracking-tighter">
+                    <span class="material-symbols-outlined text-xs">schedule</span>
+                    Belum Dibayar
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -330,6 +345,7 @@ import DashboardLayout from '../../../components/admin/DashboardLayout.vue'
 import ConfirmModal from '../../../components/admin/ConfirmModal.vue'
 import BookingFormModal from './components/BookingFormModal.vue'
 import { bookingService } from '../../../services/bookingService'
+import { settlementService } from '../../../services/settlementService'
 import api from '../../../services/api'
 
 const loading = ref(true)
@@ -339,6 +355,7 @@ const packages = ref([])
 const customers = ref([])
 const serviceList = ref([])
 const inventoryList = ref([])
+const settlements = ref([])
 const showModal = ref(false)
 const editingId = ref(null)
 const errorMessage = ref('')
@@ -436,6 +453,23 @@ const fetchInventory = async () => {
   } catch (err) {
     console.error('Gagal mengambil inventory:', err)
   }
+}
+
+const fetchSettlements = async () => {
+  try {
+    const res = await settlementService.getAll()
+    settlements.value = res.data || []
+  } catch (err) {
+    console.error('Gagal mengambil data settlement:', err)
+  }
+}
+
+const isBookingSettled = (booking) => {
+  if (!booking.checkInDate || booking.status !== 'completed') return false
+  const d = new Date(booking.checkInDate)
+  const year = d.getFullYear()
+  const month = d.getMonth() + 1
+  return settlements.value.some(s => s.year === year && s.month === month && s.paidAt)
 }
 
 const openModal = (booking = null) => {
@@ -638,6 +672,7 @@ onMounted(() => {
   fetchCustomers()
   fetchServices()
   fetchInventory()
+  fetchSettlements()
   document.addEventListener('click', closeActionsDropdown)
 })
 

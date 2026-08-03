@@ -27,6 +27,33 @@
                    placeholder="cth: Pemandu Wisata">
           </div>
 
+          <!-- Type Selector -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-on-surface-variant">Tipe Layanan *</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" @click="form.type = 'spec_camp'"
+                      :class="['px-3 py-2.5 rounded-xl text-xs font-bold transition-all border-2',
+                               form.type === 'spec_camp' ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-transparent bg-surface-container text-on-surface-variant hover:border-primary/30']">
+                Spec Camp
+              </button>
+              <button type="button" @click="form.type = 'mimount'"
+                      :class="['px-3 py-2.5 rounded-xl text-xs font-bold transition-all border-2',
+                               form.type === 'mimount' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-transparent bg-surface-container text-on-surface-variant hover:border-primary/30']">
+                Mimount
+              </button>
+              <button type="button" @click="form.type = 'eksternal'"
+                      :class="['px-3 py-2.5 rounded-xl text-xs font-bold transition-all border-2',
+                               form.type === 'eksternal' ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-transparent bg-surface-container text-on-surface-variant hover:border-primary/30']">
+                Eksternal
+              </button>
+            </div>
+            <p class="text-[10px] text-on-surface-variant/60 mt-1">
+              <span v-if="form.type === 'spec_camp'">Pendapatan 100% untuk Spec Camp</span>
+              <span v-else-if="form.type === 'mimount'">Pendapatan 100% untuk Mimount Outdoor</span>
+              <span v-else>Dipotong sebelum bagi hasil (tidak masuk ke siapapun)</span>
+            </p>
+          </div>
+
           <!-- Icon Picker -->
           <div class="space-y-2">
             <label class="text-xs font-medium text-on-surface-variant">Ikon</label>
