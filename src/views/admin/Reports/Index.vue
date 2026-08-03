@@ -78,9 +78,9 @@
             <div class="text-emerald-700 text-xs font-bold">{{ stats.count }} Transaksi</div>
           </div>
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Biaya Inventory</span>
-            <div class="text-2xl font-bold text-blue-600">{{ formatCurrency(stats.totalInventoryCost) }}</div>
-            <div class="text-blue-500/50 text-xs font-bold">Harga customer (incl. markup 20%)</div>
+            <span class="text-blue-600 text-xs font-bold uppercase tracking-widest">Inventory Mimount</span>
+            <div class="text-2xl font-bold text-blue-600">{{ formatCurrency(mimountInventoryBase) }}</div>
+            <div class="text-blue-500/50 text-xs font-bold">Harga dasar untuk Mimount</div>
           </div>
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
             <span class="text-emerald-600 text-xs font-bold uppercase tracking-widest">Markup Inventory</span>
@@ -88,9 +88,19 @@
             <div class="text-emerald-500/50 text-xs font-bold">Bagian Spec Camp dari inventory</div>
           </div>
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Layanan Ekstra</span>
-            <div class="text-2xl font-bold text-primary">{{ formatCurrency(stats.totalServiceCost) }}</div>
-            <div class="text-on-surface-variant/50 text-xs font-bold">Semua tipe layanan</div>
+            <span class="text-blue-600 text-xs font-bold uppercase tracking-widest">Layanan Mimount</span>
+            <div class="text-2xl font-bold text-blue-600">{{ formatCurrency(stats.mimountServiceCost) }}</div>
+            <div class="text-blue-500/50 text-xs font-bold">100% untuk Mimount</div>
+          </div>
+          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
+            <span class="text-emerald-600 text-xs font-bold uppercase tracking-widest">Layanan Spec Camp</span>
+            <div class="text-2xl font-bold text-emerald-600">{{ formatCurrency(stats.specCampServiceCost) }}</div>
+            <div class="text-emerald-500/50 text-xs font-bold">100% untuk Spec Camp</div>
+          </div>
+          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
+            <span class="text-purple-600 text-xs font-bold uppercase tracking-widest">Layanan Eksternal</span>
+            <div class="text-2xl font-bold text-purple-600">{{ formatCurrency(stats.eksternalServiceCost) }}</div>
+            <div class="text-purple-500/50 text-xs font-bold">Dipotong sebelum bagi hasil</div>
           </div>
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
             <span class="text-blue-600 text-xs font-bold uppercase tracking-widest">Untuk Mimount</span>
@@ -279,6 +289,9 @@ const exportSingleCSV = () => {
   // Summary row
   rows.push([])
   rows.push(['TOTAL', '', '', '', stats.value?.totalRevenue || 0, stats.value?.totalMimountTotal || 0, stats.value?.totalSpecCampShare || 0, '', ''])
+  rows.push(['Layanan Mimount', '', '', '', '', '', stats.value?.mimountServiceCost || 0, '', ''])
+  rows.push(['Layanan Spec Camp', '', '', '', '', '', stats.value?.specCampServiceCost || 0, '', ''])
+  rows.push(['Layanan Eksternal', '', '', '', '', '', stats.value?.eksternalServiceCost || 0, '', ''])
   rows.push(['Markup Inventory (Spec Camp)', '', '', '', '', '', inventoryMarkup.value, '', ''])
   rows.push(['Pajak 10%', '', '', '', '', '', reportTax.value, '', ''])
   rows.push(['Retribusi Desa 5%', '', '', '', '', '', reportLocalFee.value, '', ''])
@@ -316,7 +329,7 @@ const exportMultiMonthCSV = async () => {
   })
 
   const rows = []
-  let grandTotal = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0 }
+  let grandTotal = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0, mimountSvc: 0, specCampSvc: 0, eksternalSvc: 0 }
 
   const sortedMonths = Object.keys(grouped).sort()
   sortedMonths.forEach(monthKey => {
@@ -327,7 +340,7 @@ const exportMultiMonthCSV = async () => {
     rows.push([`${monthLabel.toUpperCase()} ${y}`])
     rows.push(['Tanggal', 'Nama', 'Paket', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Bukti Bayar'])
 
-    const monthStats = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0 }
+    const monthStats = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0, mimountSvc: 0, specCampSvc: 0, eksternalSvc: 0 }
     grouped[monthKey].forEach(b => {
       rows.push([
         b.checkInDate,
@@ -344,6 +357,18 @@ const exportMultiMonthCSV = async () => {
       monthStats.mimount += Number(b.mimountTotal || 0)
       monthStats.specCamp += Number(b.specCampShare || 0)
       monthStats.invCost += Number(b.inventoryCost || 0)
+      
+      // Calculate service costs by type
+      if (b.ExtraServices) {
+        b.ExtraServices.forEach(s => {
+          const qty = Number(s.BookingService?.quantity || 1)
+          const price = Number(s.BookingService?.priceAtBooking || s.price || 0)
+          const total = qty * price
+          if (s.type === 'mimount') monthStats.mimountSvc += total
+          else if (s.type === 'eksternal') monthStats.eksternalSvc += total
+          else monthStats.specCampSvc += total
+        })
+      }
     })
 
     const invMarkup = Math.round(monthStats.invCost - monthStats.invCost / 1.2)
@@ -353,6 +378,9 @@ const exportMultiMonthCSV = async () => {
 
     rows.push([])
     rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', monthStats.revenue, monthStats.mimount, monthStats.specCamp, '', ''])
+    rows.push(['  Layanan Mimount', '', '', '', '', '', monthStats.mimountSvc, '', ''])
+    rows.push(['  Layanan Spec Camp', '', '', '', '', '', monthStats.specCampSvc, '', ''])
+    rows.push(['  Layanan Eksternal', '', '', '', '', '', monthStats.eksternalSvc, '', ''])
     rows.push(['  Markup Inventory', '', '', '', '', '', invMarkup, '', ''])
     rows.push(['  Pajak 10%', '', '', '', '', '', tax, '', ''])
     rows.push(['  Retribusi 5%', '', '', '', '', '', fee, '', ''])
@@ -362,10 +390,16 @@ const exportMultiMonthCSV = async () => {
     grandTotal.mimount += monthStats.mimount
     grandTotal.specCamp += monthStats.specCamp
     grandTotal.invCost += monthStats.invCost
+    grandTotal.mimountSvc += monthStats.mimountSvc
+    grandTotal.specCampSvc += monthStats.specCampSvc
+    grandTotal.eksternalSvc += monthStats.eksternalSvc
   })
 
   rows.push([])
   rows.push(['GRAND TOTAL', '', '', '', grandTotal.revenue, grandTotal.mimount, grandTotal.specCamp, '', ''])
+  rows.push(['Total Layanan Mimount', '', '', '', '', '', grandTotal.mimountSvc, '', ''])
+  rows.push(['Total Layanan Spec Camp', '', '', '', '', '', grandTotal.specCampSvc, '', ''])
+  rows.push(['Total Layanan Eksternal', '', '', '', '', '', grandTotal.eksternalSvc, '', ''])
   const totalInvMarkup = Math.round(grandTotal.invCost - grandTotal.invCost / 1.2)
   const totalTax = Math.round(grandTotal.specCamp * 0.1)
   const totalFee = Math.round(grandTotal.specCamp * 0.05)
@@ -405,6 +439,7 @@ const reportTax = computed(() => Math.round((stats.value?.totalSpecCampShare || 
 const reportLocalFee = computed(() => Math.round((stats.value?.totalSpecCampShare || 0) * 0.05))
 const reportSpecCampNet = computed(() => Math.max(0, (stats.value?.totalSpecCampShare || 0) - reportTax.value - reportLocalFee.value))
 const inventoryMarkup = computed(() => Math.round((stats.value?.totalInventoryCost || 0) - (stats.value?.totalInventoryCost || 0) / 1.2))
+const mimountInventoryBase = computed(() => Math.round((stats.value?.totalInventoryCost || 0) / 1.2))
 
 const sortedDailyStats = computed(() => {
   if (!stats.value || !stats.value.daily) return {}
