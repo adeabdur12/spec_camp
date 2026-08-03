@@ -272,7 +272,16 @@ const exportCSV = async () => {
 }
 
 const exportSingleCSV = () => {
-  const rows = [['Tanggal', 'Nama', 'Paket', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Bukti Bayar']]
+  const rows = []
+  
+  // Header
+  rows.push(['LAPORAN KEUANGAN SPEC CAMP'])
+  rows.push([`Periode: ${monthName.value} ${periodYear.value}`])
+  rows.push([`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`])
+  rows.push([])
+  
+  // Data header
+  rows.push(['Tanggal', 'Nama', 'Paket', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Bukti Bayar'])
   transactions.value.forEach(b => {
     rows.push([
       b.checkInDate,
@@ -330,6 +339,14 @@ const exportMultiMonthCSV = async () => {
 
   const rows = []
   let grandTotal = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0, mimountSvc: 0, specCampSvc: 0, eksternalSvc: 0 }
+
+  // Header
+  const startLabel = months.find(m => m.value === periodMonth.value)?.label || ''
+  const endLabel = months.find(m => m.value === exportEndMonth.value)?.label || ''
+  rows.push(['LAPORAN KEUANGAN SPEC CAMP'])
+  rows.push([`Periode: ${startLabel} ${periodYear.value} - ${endLabel} ${exportEndYear.value}`])
+  rows.push([`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`])
+  rows.push([])
 
   const sortedMonths = Object.keys(grouped).sort()
   sortedMonths.forEach(monthKey => {
@@ -415,8 +432,6 @@ const exportMultiMonthCSV = async () => {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  const startLabel = months.find(m => m.value === periodMonth.value)?.label || ''
-  const endLabel = months.find(m => m.value === exportEndMonth.value)?.label || ''
   a.download = `laporan-${startLabel.toLowerCase()}-${endLabel.toLowerCase()}-${periodYear.value}-${exportEndYear.value}.csv`
   a.click()
   URL.revokeObjectURL(url)
