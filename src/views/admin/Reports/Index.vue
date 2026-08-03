@@ -555,7 +555,7 @@ const fetchStats = async () => {
     const api = (await import('../../../services/api')).default
     const allBookings = await fetchAllBookings(api)
     transactions.value = allBookings.filter(b => {
-      if (!b.paidAt) return false
+      if (!b.paidAt || b.status !== 'completed') return false
       const d = new Date(b.paidAt)
       return d >= new Date(startDate) && d <= new Date(endDate)
     }).sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt))
