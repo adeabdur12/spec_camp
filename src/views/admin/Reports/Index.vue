@@ -324,7 +324,7 @@ const exportMultiMonthCSV = async () => {
     const monthLabel = months.find(mo => mo.value === m)?.label || ''
 
     rows.push([])
-    rows.push([`=== ${monthLabel.toUpperCase()} ${y} ===`])
+    rows.push([`${monthLabel.toUpperCase()} ${y}`])
     rows.push(['Tanggal', 'Nama', 'Paket', 'Status', 'Total', 'Mimount', 'Spec Camp', 'Deskripsi', 'Bukti Bayar'])
 
     const monthStats = { revenue: 0, mimount: 0, specCamp: 0, invCost: 0 }
@@ -365,7 +365,7 @@ const exportMultiMonthCSV = async () => {
   })
 
   rows.push([])
-  rows.push(['=== GRAND TOTAL ===', '', '', '', grandTotal.revenue, grandTotal.mimount, grandTotal.specCamp, '', ''])
+  rows.push(['GRAND TOTAL', '', '', '', grandTotal.revenue, grandTotal.mimount, grandTotal.specCamp, '', ''])
   const totalInvMarkup = Math.round(grandTotal.invCost - grandTotal.invCost / 1.2)
   const totalTax = Math.round(grandTotal.specCamp * 0.1)
   const totalFee = Math.round(grandTotal.specCamp * 0.05)

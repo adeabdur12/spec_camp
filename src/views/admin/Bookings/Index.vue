@@ -178,6 +178,15 @@
                         <span class="material-symbols-outlined text-lg">visibility</span>
                       </button>
 
+                      <button @click="copyBookingLink(booking)" class="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded-lg text-on-surface-variant/50 hover:text-primary transition-all" title="Salin Link Booking">
+                        <span class="material-symbols-outlined text-lg">{{ copiedId === booking.id ? 'check' : 'content_copy' }}</span>
+                      </button>
+
+                      <a :href="'/search-booking?code=' + booking.bookingCode" target="_blank" @click.stop
+                         class="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded-lg text-on-surface-variant/50 hover:text-primary transition-all" title="Buka Halaman Booking">
+                        <span class="material-symbols-outlined text-lg">open_in_new</span>
+                      </a>
+
                       <!-- Popover Edit & Hapus -->
                       <div class="relative">
                         <button @click.stop="toggleActions(booking.id)"
@@ -229,6 +238,20 @@
               <button @click="showDetail = false" class="text-on-surface-variant hover:text-error transition-colors p-1">
                 <span class="material-symbols-outlined">close</span>
               </button>
+            </div>
+
+            <div v-if="detailBooking" class="bg-surface-container rounded-xl p-3 mb-4 flex items-center justify-between gap-2">
+              <span class="text-xs text-on-surface-variant truncate">https://speccamp.site/search-booking?code={{ detailBooking.bookingCode }}</span>
+              <div class="flex gap-1 shrink-0">
+                <button @click="copyBookingLink(detailBooking)" class="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">{{ copiedId === detailBooking.id ? 'check' : 'content_copy' }}</span>
+                  {{ copiedId === detailBooking.id ? 'Tersalin' : 'Salin' }}
+                </button>
+                <a :href="'/search-booking?code=' + detailBooking.bookingCode" target="_blank" class="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">open_in_new</span>
+                  Buka
+                </a>
+              </div>
             </div>
 
             <div class="space-y-4" v-if="detailBooking">
@@ -370,10 +393,29 @@ const actionsOpenId = ref(null)
 const showDetail = ref(false)
 const detailBooking = ref(null)
 const showImagePreview = ref(null)
+const copiedId = ref(null)
 
 const viewDetail = (booking) => {
   detailBooking.value = booking
   showDetail.value = true
+}
+
+const copyBookingLink = async (booking) => {
+  const url = `https://speccamp.site/search-booking?code=${booking.bookingCode}`
+  try {
+    await navigator.clipboard.writeText(url)
+    copiedId.value = booking.id
+    setTimeout(() => { copiedId.value = null }, 2000)
+  } catch {
+    const input = document.createElement('input')
+    input.value = url
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+    copiedId.value = booking.id
+    setTimeout(() => { copiedId.value = null }, 2000)
+  }
 }
 
 const initialForm = {
