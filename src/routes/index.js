@@ -144,7 +144,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.permission && isAuthenticated && to.meta.permission !== 'view_dashboard') {
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}')
-      if (user.role === 'admin') return next()
+      if (user.role?.toLowerCase() === 'admin') return next()
       const perms = user.permissions || []
       if (!perms.includes(to.meta.permission)) {
         return next({ name: 'admin-dashboard' })

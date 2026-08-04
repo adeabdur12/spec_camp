@@ -182,6 +182,7 @@ import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '../../../components/admin/DashboardLayout.vue'
 import { reportService } from '../../../services/reportService'
 import { settlementService } from '../../../services/settlementService'
+import api from '../../../services/api'
 import VueApexCharts from 'vue3-apexcharts'
 
 const apexchart = VueApexCharts
@@ -334,7 +335,6 @@ const exportSingleCSV = () => {
 }
 
 const exportMultiMonthCSV = async () => {
-  const api = (await import('../../../services/api')).default
   const startDate = `${periodYear.value}-${String(periodMonth.value).padStart(2, '0')}-01`
   const endDate = `${exportEndYear.value}-${String(exportEndMonth.value).padStart(2, '0')}-${new Date(exportEndYear.value, exportEndMonth.value, 0).getDate()}`
 
@@ -342,8 +342,8 @@ const exportMultiMonthCSV = async () => {
   const allBookingsRaw = await fetchAllBookings(api)
   const allBookings = allBookingsRaw.filter(b => {
     if (!b.paidAt) return false
-    const d = new Date(b.paidAt)
-    return d >= new Date(startDate) && d <= new Date(endDate) && b.status === 'completed'
+    const paidDate = String(b.paidAt).slice(0, 10)
+    return paidDate >= startDate && paidDate <= endDate && b.status === 'completed'
   }).sort((a, b) => new Date(a.paidAt) - new Date(b.paidAt))
 
   // Group by month (based on paidAt)
@@ -552,12 +552,11 @@ const fetchStats = async () => {
     if (res.success) stats.value = res.data
     await fetchSettlements()
     // Fetch all bookings for transaction list
-    const api = (await import('../../../services/api')).default
     const allBookings = await fetchAllBookings(api)
     transactions.value = allBookings.filter(b => {
       if (!b.paidAt || b.status !== 'completed') return false
-      const d = new Date(b.paidAt)
-      return d >= new Date(startDate) && d <= new Date(endDate)
+      const paidDate = String(b.paidAt).slice(0, 10)
+      return paidDate >= startDate && paidDate <= endDate
     }).sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt))
   } catch (e) {
     console.error(e)

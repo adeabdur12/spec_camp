@@ -68,7 +68,7 @@ const userPermissions = computed(() => {
   route.path
   try {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (user.role === 'admin') return allMenuItems.map(i => i.perm)
+    if (user.role?.toLowerCase() === 'admin') return allMenuItems.map(i => i.perm)
     return user.permissions || []
   } catch { return []
   }
