@@ -17,6 +17,7 @@ import Services from '../views/admin/Services/Index.vue'
 import AdminLogin from '../views/Auth/Login.vue'
 import BookingPage from '../views/BookingPage.vue'
 import SearchBooking from '../views/SearchBooking.vue'
+import Reports from '../views/admin/Reports/Index.vue'
 
 const routes = [
   {
@@ -112,7 +113,7 @@ const routes = [
   {
     path: '/admin/reports',
     name: 'reports',
-    component: () => import('../views/admin/Reports/Index.vue'),
+    component: Reports,
     meta: { requiresAuth: true, permission: 'view_report' }
   }
 ]
