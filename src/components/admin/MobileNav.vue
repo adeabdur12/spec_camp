@@ -23,7 +23,7 @@ defineEmits(['toggle-sidebar'])
 const mobileMenu = [
   { name: 'Beranda', path: '/admin', icon: 'dashboard' },
   { name: 'Pesanan', path: '/admin/bookings', icon: 'calendar_month' },
-  { name: 'Paket', path: '/admin/paket-event', icon: 'local_activity' },
+  { name: 'CRM', path: '/admin/crm', icon: 'hub' },
   { name: 'Laporan', path: '/admin/reports', icon: 'analytics' }
 ]
 </script>

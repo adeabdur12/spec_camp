@@ -18,6 +18,9 @@ import AdminLogin from '../views/Auth/Login.vue'
 import BookingPage from '../views/BookingPage.vue'
 import SearchBooking from '../views/SearchBooking.vue'
 import Reports from '../views/admin/Reports/Index.vue'
+import CRM from '../views/admin/CRM/Index.vue'
+import WhatsappBot from '../views/admin/WhatsappBot/Index.vue'
+import WhatsappBot from '../views/admin/WhatsappBot/Index.vue'
 
 const routes = [
   {
@@ -115,6 +118,18 @@ const routes = [
     name: 'reports',
     component: Reports,
     meta: { requiresAuth: true, permission: 'view_report' }
+  },
+  {
+    path: '/admin/crm',
+    name: 'crm',
+    component: CRM,
+    meta: { requiresAuth: true, permission: 'view_lead' }
+  },
+  {
+    path: '/admin/whatsapp-bot',
+    name: 'whatsapp-bot',
+    component: WhatsappBot,
+    meta: { requiresAuth: true, permission: 'manage_settings' }
   }
 ]
 

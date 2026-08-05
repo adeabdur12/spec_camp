@@ -1,7 +1,8 @@
 <template>
-  <div v-if="show" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-    <div class="fixed inset-0 bg-on-surface/40 backdrop-blur-sm" @click="cancel"></div>
-    <div class="relative bg-surface-container-lowest w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden border border-outline-variant/10 text-center p-8 transform transition-all animate-in fade-in zoom-in duration-200">
+  <Teleport to="body">
+    <div v-if="show" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="cancel"></div>
+      <div class="relative bg-surface-container-lowest w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden border border-outline-variant/10 text-center p-8 transform transition-all animate-in fade-in zoom-in duration-200">
       
       <div class="w-20 h-20 bg-error-container text-on-error-container rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
         <span class="material-symbols-outlined text-[40px]">delete_forever</span>
@@ -20,6 +21,7 @@
       </div>
     </div>
   </div>
+  </Teleport>
 </template>
 
 <script setup>
