@@ -40,7 +40,7 @@
         <div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/10">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <span class="material-symbols-outlined text-primary">{{ bot.isActive ? 'circle' : 'circle_outlined' }}</span>
+              <span class="material-symbols-outlined" :class="bot.isActive ? 'text-primary' : 'text-on-surface-variant'">{{ bot.isActive ? 'circle' : 'circle' }}</span>
             </div>
             <div>
               <p class="text-xs text-on-surface-variant font-medium">Status</p>
@@ -295,6 +295,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import DashboardLayout from '../../../components/admin/DashboardLayout.vue'
+import QRCode from 'qrcode'
 
 const bot = ref({
   id: null,
@@ -342,8 +343,9 @@ const fetchBot = async (deviceToken) => {
       headers: { 'x-api-key': API_SECRET_KEY }
     })
     const data = await response.json()
-    if (data.success && data.data) {
-      bot.value = data.data
+if (data.success && data.data) {
+      data.data.isActive = Boolean(data.data.isActive);
+      bot.value = data.data;
     }
   } catch (error) {
     console.error('Failed to fetch bot:', error)
@@ -361,7 +363,7 @@ const connectWhatsApp = async () => {
     })
     const data = await response.json()
     if (data.success && data.data && data.data.qrCode) {
-      qrCodeUrl.value = data.data.qrCode
+      qrCodeUrl.value = await QRCode.toDataURL(data.data.qrCode)
     }
   } catch (error) {
     console.error('Failed to fetch QR code:', error)
@@ -376,7 +378,7 @@ const refreshQR = async () => {
     })
     const data = await response.json()
     if (data.success && data.data && data.data.qrCode) {
-      qrCodeUrl.value = data.data.qrCode
+      qrCodeUrl.value = await QRCode.toDataURL(data.data.qrCode)
     }
   } catch (error) {
     console.error('Failed to refresh QR code:', error)
@@ -401,6 +403,7 @@ const saveBot = async () => {
     const data = await response.json()
     if (data.success) {
       bot.value = data.data
+      bot.value.isActive = Boolean(bot.value.isActive)
       showToast('success', 'Perubahan berhasil disimpan')
     } else {
       showToast('error', data.message || 'Gagal menyimpan perubahan')
