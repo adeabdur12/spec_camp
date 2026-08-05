@@ -386,13 +386,17 @@ const refreshQR = async () => {
 const saveBot = async () => {
   saving.value = true
   try {
+    const dataToSend = {
+      ...bot.value,
+      isActive: Boolean(bot.value.isActive)
+    }
     const response = await fetch(`${API_BASE}/whatsapp/bots/${bot.value.deviceToken}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': API_SECRET_KEY
       },
-      body: JSON.stringify(bot.value)
+      body: JSON.stringify(dataToSend)
     })
     const data = await response.json()
     if (data.success) {
