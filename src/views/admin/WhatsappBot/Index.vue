@@ -14,18 +14,7 @@
       </div>
 
       <!-- Stats -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/10">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <span class="material-symbols-outlined text-primary">chat</span>
-            </div>
-            <div>
-              <p class="text-xs text-on-surface-variant font-medium">Device Token</p>
-              <p class="text-xl font-black text-on-surface">{{ bot.deviceToken || '-' }}</p>
-            </div>
-          </div>
-        </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/10">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
@@ -191,101 +180,98 @@
         </div>
       </template>
 
-      <!-- History Tab with Inline Chat -->
+      <!-- History Tab with WhatsApp-like Chat -->
       <template v-if="activeTab === 'history' && !loading">
-        <div class="bg-surface-container-low rounded-2xl border border-outline-variant/10 overflow-hidden">
-          <div class="p-4 md:p-6 border-b border-outline-variant/10">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-black text-on-surface">Riwayat Percakapan</h3>
-                <p class="text-xs text-on-surface-variant font-medium mt-1">Kirim pesan untuk menguji respons AI bot.</p>
+        <div class="bg-surface-container-low rounded-2xl border border-outline-variant/10 overflow-hidden" style="min-height: 500px;">
+          <div class="flex" style="height: 500px;">
+            <!-- Contact List -->
+            <div class="w-72 border-r border-outline-variant/10 flex flex-col bg-surface">
+              <div class="p-3 border-b border-outline-variant/10">
+                <input v-model="contactSearch" type="text" placeholder="Cari nomor..."
+                       class="w-full px-3 py-2 rounded-xl bg-surface-container border border-outline-variant/10 text-on-surface font-medium text-xs focus:outline-none focus:border-primary transition-colors" />
               </div>
-              <button @click="fetchHistory"
-                      class="px-3 py-2 rounded-xl bg-surface-container text-on-surface-variant font-bold text-xs uppercase tracking-wider hover:bg-surface-container-high transition-all flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">refresh</span>
-                Refresh
-              </button>
-            </div>
-          </div>
-          <div class="p-4 md:p-6">
-            <!-- Inline Chat -->
-            <div class="bg-surface rounded-xl border border-outline-variant/5 p-4 mb-6">
-              <h4 class="text-xs font-black uppercase tracking-widest text-on-surface-variant mb-3">Chat Langsung</h4>
-              <div class="space-y-3 max-h-[400px] overflow-y-auto mb-4" ref="chatContainer">
-                <div v-for="(msg, idx) in chatMessages" :key="idx"
-                     class="flex gap-3 p-3 rounded-xl"
-                     :class="msg.role === 'user' ? 'bg-primary/5 border border-primary/10' : 'bg-surface-container border border-outline-variant/5'">
-                  <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                       :class="msg.role === 'user' ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'">
-                    <span class="material-symbols-outlined text-sm">{{ msg.role === 'user' ? 'person' : 'smart_toy' }}</span>
+              <div class="flex-1 overflow-y-auto">
+                <div v-if="contacts.length === 0" class="p-4 text-center">
+                  <p class="text-xs text-on-surface-variant">Belum ada kontak</p>
+                </div>
+                <div v-for="contact in filteredContacts" :key="contact.phone"
+                     @click="selectContact(contact)"
+                     class="flex items-center gap-3 p-3 cursor-pointer hover:bg-surface-container-high transition-colors border-b border-outline-variant/5"
+                     :class="selectedContact?.phone === contact.phone ? 'bg-surface-container-high' : ''">
+                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-primary text-sm">person</span>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="text-[10px] font-black uppercase tracking-widest"
-                            :class="msg.role === 'user' ? 'text-primary' : 'text-secondary'">
-                        {{ msg.role === 'user' ? 'Anda' : 'Bot' }}
-                      </span>
-                      <span class="text-[10px] text-on-surface-variant/50">{{ formatDate(msg.timestamp) }}</span>
-                    </div>
-                    <p class="text-sm text-on-surface font-medium whitespace-pre-wrap">{{ msg.content }}</p>
+                    <p class="text-sm font-bold text-on-surface truncate">{{ contact.phone }}</p>
+                    <p class="text-[10px] text-on-surface-variant truncate">{{ contact.lastMessage || 'Belum ada pesan' }}</p>
                   </div>
+                  <span class="text-[10px] text-on-surface-variant/50 flex-shrink-0">{{ formatTime(contact.lastTimestamp) }}</span>
                 </div>
-                <div v-if="chatLoading" class="flex gap-3 p-3 rounded-xl bg-surface-container border border-outline-variant/5">
-                  <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-secondary/20 text-secondary">
-                    <span class="material-symbols-outlined text-sm animate-spin">autorenew</span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm text-on-surface-variant">Bot sedang mengetik...</p>
-                  </div>
-                </div>
-                <div v-if="chatMessages.length === 0 && !chatLoading" class="text-center py-6">
-                  <span class="material-symbols-outlined text-3xl text-on-surface-variant mb-2">chat</span>
-                  <p class="text-sm text-on-surface-variant font-medium">Belum ada percakapan</p>
-                  <p class="text-xs text-on-surface-variant/50 mt-1">Kirim pesan untuk menguji respons AI bot</p>
-                </div>
-              </div>
-              <div class="flex gap-2">
-                <input v-model="chatInput" type="text" placeholder="Ketik pesan..."
-                       class="flex-1 px-4 py-3 rounded-xl bg-surface border border-outline-variant/10 text-on-surface font-medium text-sm focus:outline-none focus:border-primary transition-colors"
-                       @keyup.enter="sendChatMessage" />
-                <button @click="sendChatMessage"
-                        :disabled="chatLoading || !chatInput.trim()"
-                        class="px-4 py-3 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">send</span>
-                  Kirim
-                </button>
               </div>
             </div>
 
-            <!-- Chat History Log -->
-            <h4 class="text-xs font-black uppercase tracking-widest text-on-surface-variant mb-3">Log Riwayat</h4>
-            <div v-if="historyLoading" class="flex justify-center py-12">
-              <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <div v-else-if="chatHistory.length === 0" class="text-center py-12">
-              <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-3">chat</span>
-              <p class="text-on-surface-variant font-medium">Belum ada riwayat chat</p>
-              <p class="text-xs text-on-surface-variant/50 mt-1">Kirim pesan ke bot untuk melihat riwayat di sini</p>
-            </div>
-            <div v-else class="space-y-3 max-h-[400px] overflow-y-auto">
-              <div v-for="(msg, idx) in filteredHistory" :key="idx"
-                   class="flex gap-3 p-3 rounded-xl"
-                   :class="msg.role === 'user' ? 'bg-primary/5 border border-primary/10' : 'bg-surface-container border border-outline-variant/5'">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                     :class="msg.role === 'user' ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'">
-                  <span class="material-symbols-outlined text-sm">{{ msg.role === 'user' ? 'person' : 'smart_toy' }}</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-[10px] font-black uppercase tracking-widest"
-                          :class="msg.role === 'user' ? 'text-primary' : 'text-secondary'">
-                      {{ msg.role === 'user' ? 'Pengguna' : 'Bot' }}
-                    </span>
-                    <span class="text-[10px] text-on-surface-variant/50">{{ formatDate(msg.timestamp) }}</span>
-                  </div>
-                  <p class="text-sm text-on-surface font-medium whitespace-pre-wrap">{{ msg.content }}</p>
+            <!-- Chat Area -->
+            <div class="flex-1 flex flex-col">
+              <div v-if="!selectedContact" class="flex-1 flex items-center justify-center">
+                <div class="text-center">
+                  <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">chat</span>
+                  <p class="text-sm text-on-surface-variant font-medium">Pilih kontak untuk mulai chat</p>
+                  <p class="text-xs text-on-surface-variant/50 mt-1">Pilih dari daftar atau ketik nomor baru</p>
                 </div>
               </div>
+              <template v-else>
+                <!-- Chat Header -->
+                <div class="p-3 border-b border-outline-variant/10 flex items-center gap-3 bg-surface">
+                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary text-sm">person</span>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-bold text-on-surface">{{ selectedContact.phone }}</p>
+                    <p class="text-[10px] text-on-surface-variant">{{ selectedContact.isOnline ? 'Online' : 'Terakhir terlihat' }}</p>
+                  </div>
+                  <button @click="clearChat" class="text-on-surface-variant hover:text-error transition-colors">
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" ref="chatContainer">
+                  <div v-for="(msg, idx) in selectedContact.messages" :key="idx"
+                       class="flex gap-2"
+                       :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+                    <div class="max-w-[70%] rounded-2xl px-4 py-2"
+                         :class="msg.role === 'user'
+                           ? 'bg-primary text-on-primary rounded-br-md'
+                           : 'bg-surface-container text-on-surface rounded-bl-md'">
+                      <p class="text-sm font-medium whitespace-pre-wrap">{{ msg.content }}</p>
+                      <p class="text-[10px] mt-1 opacity-50">{{ formatTime(msg.timestamp) }}</p>
+                    </div>
+                  </div>
+                  <div v-if="chatLoading" class="flex gap-2 justify-start">
+                    <div class="bg-surface-container rounded-2xl rounded-bl-md px-4 py-2">
+                      <div class="flex gap-1">
+                        <div class="w-2 h-2 bg-on-surface-variant/30 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                        <div class="w-2 h-2 bg-on-surface-variant/30 rounded-full animate-bounce" style="animation-delay: 0.15s"></div>
+                        <div class="w-2 h-2 bg-on-surface-variant/30 rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Message Input -->
+                <div class="p-3 border-t border-outline-variant/10 bg-surface">
+                  <div class="flex gap-2">
+                    <input v-model="chatInput" type="text" placeholder="Ketik pesan..."
+                           class="flex-1 px-4 py-3 rounded-xl bg-surface-container border border-outline-variant/10 text-on-surface font-medium text-sm focus:outline-none focus:border-primary transition-colors"
+                           @keyup.enter="sendChatMessage" />
+                    <button @click="sendChatMessage"
+                            :disabled="chatLoading || !chatInput.trim()"
+                            class="px-4 py-3 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-sm">send</span>
+                    </button>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -316,12 +302,11 @@ const activeTab = ref('settings')
 const showConnectModal = ref(false)
 const qrCodeUrl = ref('')
 const chatInput = ref('')
-const chatMessages = ref([])
 const chatLoading = ref(false)
 const chatContainer = ref(null)
 const historyLoading = ref(false)
-const chatHistory = ref([])
-const historyBotFilter = ref('')
+const contactSearch = ref('')
+const selectedContact = ref(null)
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.speccamp.site/api'
 const API_SECRET_KEY = 'a3acdd0514fdd0956349281b552bb7de84a2929fd5d20afd5b6554dc3f50da07'
@@ -330,9 +315,11 @@ const currentModel = computed(() => {
   return bot.value.aiModel ? bot.value.aiModel.split('/').pop() : '-'
 })
 
-const filteredHistory = computed(() => {
-  if (!historyBotFilter.value) return chatHistory.value
-  return chatHistory.value.filter(msg => msg.deviceToken === historyBotFilter.value)
+const contacts = ref([])
+
+const filteredContacts = computed(() => {
+  if (!contactSearch.value) return contacts.value
+  return contacts.value.filter(c => c.phone.includes(contactSearch.value))
 })
 
 const fetchBot = async (deviceToken) => {
@@ -401,11 +388,21 @@ const saveBot = async () => {
   }
 }
 
+const selectContact = (contact) => {
+  selectedContact.value = contact
+}
+
+const clearChat = () => {
+  if (selectedContact.value) {
+    selectedContact.value.messages = []
+  }
+}
+
 const sendChatMessage = async () => {
-  if (!chatInput.value.trim() || chatLoading.value) return
+  if (!chatInput.value.trim() || chatLoading.value || !selectedContact.value) return
   const message = chatInput.value.trim()
   chatInput.value = ''
-  chatMessages.value.push({ role: 'user', content: message, timestamp: new Date().toISOString() })
+  selectedContact.value.messages.push({ role: 'user', content: message, timestamp: new Date().toISOString() })
   chatLoading.value = true
   await nextTick()
   if (chatContainer.value) {
@@ -418,16 +415,16 @@ const sendChatMessage = async () => {
         'Content-Type': 'application/json',
         'x-api-key': API_SECRET_KEY
       },
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ message, phone: selectedContact.value.phone })
     })
     const data = await response.json()
     if (data.success && data.data) {
-      chatMessages.value.push({ role: 'bot', content: data.data.response, timestamp: new Date().toISOString() })
+      selectedContact.value.messages.push({ role: 'bot', content: data.data.response, timestamp: new Date().toISOString() })
     } else {
-      chatMessages.value.push({ role: 'bot', content: 'Maaf, terjadi kesalahan.', timestamp: new Date().toISOString() })
+      selectedContact.value.messages.push({ role: 'bot', content: 'Maaf, terjadi kesalahan.', timestamp: new Date().toISOString() })
     }
   } catch (error) {
-    chatMessages.value.push({ role: 'bot', content: 'Gagal terhubung ke server.', timestamp: new Date().toISOString() })
+    selectedContact.value.messages.push({ role: 'bot', content: 'Gagal terhubung ke server.', timestamp: new Date().toISOString() })
   } finally {
     chatLoading.value = false
     await nextTick()
@@ -445,13 +442,41 @@ const fetchHistory = async () => {
     })
     const data = await response.json()
     if (data.success) {
-      chatHistory.value = data.data || []
+      const history = data.data || []
+      const contactMap = {}
+      history.forEach(msg => {
+        const phone = msg.phone || 'unknown'
+        if (!contactMap[phone]) {
+          contactMap[phone] = {
+            phone,
+            lastMessage: msg.content,
+            lastTimestamp: msg.timestamp,
+            isOnline: false,
+            messages: []
+          }
+        }
+        contactMap[phone].messages.push({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp
+        })
+      })
+      contacts.value = Object.values(contactMap).sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp))
     }
   } catch (error) {
     console.error('Failed to fetch history:', error)
   } finally {
     historyLoading.value = false
   }
+}
+
+const formatTime = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 const formatDate = (dateStr) => {
