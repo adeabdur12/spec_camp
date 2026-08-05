@@ -111,6 +111,15 @@
           </div>
         </Teleport>
 
+        <!-- Toast Notification -->
+        <Teleport to="body">
+          <div v-if="toast.show" class="fixed top-4 right-4 z-[200] px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all"
+               :class="toast.type === 'success' ? 'bg-primary text-on-primary' : 'bg-error text-on-error'">
+            <span class="material-symbols-outlined text-sm">{{ toast.type === 'success' ? 'check_circle' : 'error' }}</span>
+            <span class="text-sm font-bold">{{ toast.message }}</span>
+          </div>
+        </Teleport>
+
         <!-- Settings Form -->
         <div class="bg-surface-container-low rounded-2xl border border-outline-variant/10 overflow-hidden">
           <div class="p-4 md:p-6 border-b border-outline-variant/10">
@@ -172,8 +181,11 @@
             </div>
             <div class="flex justify-end gap-2 pt-2">
               <button @click="saveBot"
-                      class="px-6 py-3 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10">
-                Simpan Perubahan
+                      :disabled="saving"
+                      class="px-6 py-3 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10 disabled:opacity-50 disabled:active:scale-100 flex items-center gap-2">
+                <span v-if="saving" class="material-symbols-outlined text-sm animate-spin">autorenew</span>
+                <span v-else class="material-symbols-outlined text-sm">save</span>
+                {{ saving ? 'Menyimpan...' : 'Simpan Perubahan' }}
               </button>
             </div>
           </div>
@@ -298,6 +310,7 @@ const bot = ref({
 })
 
 const loading = ref(true)
+const saving = ref(false)
 const activeTab = ref('settings')
 const showConnectModal = ref(false)
 const qrCodeUrl = ref('')
@@ -307,6 +320,7 @@ const chatContainer = ref(null)
 const historyLoading = ref(false)
 const contactSearch = ref('')
 const selectedContact = ref(null)
+const toast = ref({ show: false, type: 'success', message: '' })
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.speccamp.site/api'
 const API_SECRET_KEY = 'a3acdd0514fdd0956349281b552bb7de84a2929fd5d20afd5b6554dc3f50da07'
@@ -370,6 +384,7 @@ const refreshQR = async () => {
 }
 
 const saveBot = async () => {
+  saving.value = true
   try {
     const response = await fetch(`${API_BASE}/whatsapp/bots/${bot.value.deviceToken}`, {
       method: 'PUT',
@@ -382,10 +397,23 @@ const saveBot = async () => {
     const data = await response.json()
     if (data.success) {
       bot.value = data.data
+      showToast('success', 'Perubahan berhasil disimpan')
+    } else {
+      showToast('error', data.message || 'Gagal menyimpan perubahan')
     }
   } catch (error) {
     console.error('Failed to save bot:', error)
+    showToast('error', 'Gagal terhubung ke server')
+  } finally {
+    saving.value = false
   }
+}
+
+const showToast = (type, message) => {
+  toast.value = { show: true, type, message }
+  setTimeout(() => {
+    toast.value.show = false
+  }, 3000)
 }
 
 const selectContact = (contact) => {
