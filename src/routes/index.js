@@ -20,7 +20,6 @@ import SearchBooking from '../views/SearchBooking.vue'
 import Reports from '../views/admin/Reports/Index.vue'
 import CRM from '../views/admin/CRM/Index.vue'
 import WhatsappBot from '../views/admin/WhatsappBot/Index.vue'
-import WhatsappBot from '../views/admin/WhatsappBot/Index.vue'
 
 const routes = [
   {
