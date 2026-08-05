@@ -333,7 +333,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import DashboardLayout from '@/components/admin/DashboardLayout.vue'
+import DashboardLayout from '../../../components/admin/DashboardLayout.vue'
 
 const bots = ref([])
 const loading = ref(true)
