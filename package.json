@@ -12,6 +12,7 @@
   "dependencies": {
     "apexcharts": "^5.14.0",
     "axios": "^1.17.0",
+    "html5-qrcode": "^2.3.8",
     "vue": "^3.4.21",
     "vue-router": "^4.6.4",
     "vue3-apexcharts": "^1.11.1"
