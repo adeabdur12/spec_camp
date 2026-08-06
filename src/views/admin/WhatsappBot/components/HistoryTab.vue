@@ -72,6 +72,7 @@
                      : 'bg-surface-container text-on-surface rounded-bl-md'">
                 <p class="text-sm font-medium whitespace-pre-wrap">{{ msg.content }}</p>
                 <p class="text-[10px] mt-1 opacity-50">{{ formatTime(msg.timestamp) }}</p>
+                {{ msg }}
               </div>
             </div>
             <div v-if="chatLoading" class="flex gap-2 justify-start">
