@@ -68,7 +68,7 @@
 <p class="text-sm font-medium whitespace-pre-wrap">{{ msg.content }}</p>
                  <p class="text-[10px] mt-1 opacity-50 flex items-center gap-1">
                    <span>{{ formatTime(msg.timestamp) }}</span>
-                   <span v-if="msg.role === 'user'" class="material-symbols-outlined text-xs opacity-50">done</span>
+                    <span v-if="msg.role === 'user'" class="material-symbols-outlined text-xs">done</span>
                  </p>
               </div>
             </div>
@@ -155,6 +155,19 @@ const contactSearch = ref('')
 const newContactPhone = ref('')
 const showNewChatDialog = ref(false)
 
+const showToast = (type, message) => {
+  const toast = document.createElement('div')
+  toast.className = `fixed top-4 right-4 z-[200] px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all ${type === 'success' ? 'bg-primary text-on-primary' : 'bg-error text-on-error'}`
+  toast.innerHTML = `
+    <span class="material-symbols-outlined text-sm">${type === 'success' ? 'check_circle' : 'error'}</span>
+    <span class="text-sm font-bold">${message}</span>
+  `
+  document.body.appendChild(toast)
+  setTimeout(() => {
+    toast.remove()
+  }, 3000)
+}
+
 const filteredContacts = computed(() => {
   if (!contactSearch.value) return contacts.value
   return contacts.value.filter(c => c.phone.includes(contactSearch.value))
@@ -162,7 +175,7 @@ const filteredContacts = computed(() => {
 
 const fetchHistory = async () => {
   try {
-    const response = await fetch(`${API_BASE}/whatsapp/history`, {
+    const response = await fetch(`${API_BASE}/whatsapp/history?deviceToken=${props.bot?.deviceToken || ''}`, {
       headers: { 'x-api-key': API_SECRET_KEY }
     })
     const data = await response.json()
@@ -264,22 +277,26 @@ const sendChatMessage = async () => {
   if (chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
   }
-try {
-     const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/send`, {
-       method: 'POST',
-       headers: {
-         'Content-Type': 'application/json',
-         'x-api-key': API_SECRET_KEY
-       },
-       body: JSON.stringify({ number: phone, message })
-     })
-     const data = await response.json()
-     if (!data.success) {
-       selectedContact.value.messages.push({ role: 'bot', content: 'Gagal mengirim pesan.', timestamp: new Date().toISOString() })
-     }
-   } catch (error) {
-     selectedContact.value.messages.push({ role: 'bot', content: 'Gagal terhubung ke server.', timestamp: new Date().toISOString() })
-   } finally {
+  try {
+    const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_SECRET_KEY
+      },
+      body: JSON.stringify({ number: phone, message })
+    })
+    const data = await response.json()
+    if (!data.success) {
+      selectedContact.value.messages.push({ role: 'bot', content: 'Gagal mengirim pesan.', timestamp: new Date().toISOString() })
+      showToast('error', 'Gagal mengirim pesan')
+    } else {
+      showToast('success', 'Pesan terkirim')
+    }
+  } catch (error) {
+    selectedContact.value.messages.push({ role: 'bot', content: 'Gagal terhubung ke server.', timestamp: new Date().toISOString() })
+    showToast('error', 'Gagal terhubung ke server')
+  } finally {
     chatLoading.value = false
     await nextTick()
     if (chatContainer.value) {
