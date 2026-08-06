@@ -19,7 +19,6 @@ import BookingPage from '../views/BookingPage.vue'
 import SearchBooking from '../views/SearchBooking.vue'
 import Reports from '../views/admin/Reports/Index.vue'
 import CRM from '../views/admin/CRM/Index.vue'
-import WhatsappBot from '../views/admin/WhatsappBot/Index.vue'
 
 const routes = [
   {
@@ -126,9 +125,28 @@ const routes = [
   },
   {
     path: '/admin/whatsapp-bot',
-    name: 'whatsapp-bot',
-    component: WhatsappBot,
+    component: () => import('../views/admin/WhatsappBot/Index.vue'),
+    children: [
+      {
+        path: '',
+        redirect: '/admin/whatsapp-bot/settings'
+      },
+      {
+        path: 'settings',
+        name: 'whatsapp-bot-settings',
+        component: () => import('../views/admin/WhatsappBot/components/SettingsTab.vue')
+      },
+      {
+        path: 'history',
+        name: 'whatsapp-bot-history',
+        component: () => import('../views/admin/WhatsappBot/components/HistoryTab.vue')
+      }
+    ],
     meta: { requiresAuth: true, permission: 'manage_settings' }
+  },
+  {
+    path: '/settings',
+    redirect: '/admin/settings'
   }
 ]
 
