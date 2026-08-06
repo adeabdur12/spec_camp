@@ -65,8 +65,11 @@
                    :class="msg.role === 'user'
                      ? 'bg-primary text-on-primary rounded-br-md'
                      : 'bg-surface-container text-on-surface rounded-bl-md'">
-                <p class="text-sm font-medium whitespace-pre-wrap">{{ msg.content }}</p>
-                <p class="text-[10px] mt-1 opacity-50">{{ formatTime(msg.timestamp) }}</p>
+<p class="text-sm font-medium whitespace-pre-wrap">{{ msg.content }}</p>
+                 <p class="text-[10px] mt-1 opacity-50 flex items-center gap-1">
+                   <span>{{ formatTime(msg.timestamp) }}</span>
+                   <span v-if="msg.role === 'user'" class="material-symbols-outlined text-xs opacity-50">done</span>
+                 </p>
               </div>
             </div>
             <div v-if="chatLoading" class="flex gap-2 justify-start">
@@ -261,24 +264,22 @@ const sendChatMessage = async () => {
   if (chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
   }
-  try {
-    const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_SECRET_KEY
-      },
-      body: JSON.stringify({ number: phone, message })
-    })
-    const data = await response.json()
-    if (data.success) {
-      selectedContact.value.messages.push({ role: 'bot', content: 'Pesan terkirim ✓', timestamp: new Date().toISOString() })
-    } else {
-      selectedContact.value.messages.push({ role: 'bot', content: 'Gagal mengirim pesan.', timestamp: new Date().toISOString() })
-    }
-  } catch (error) {
-    selectedContact.value.messages.push({ role: 'bot', content: 'Gagal terhubung ke server.', timestamp: new Date().toISOString() })
-  } finally {
+try {
+     const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/send`, {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/json',
+         'x-api-key': API_SECRET_KEY
+       },
+       body: JSON.stringify({ number: phone, message })
+     })
+     const data = await response.json()
+     if (!data.success) {
+       selectedContact.value.messages.push({ role: 'bot', content: 'Gagal mengirim pesan.', timestamp: new Date().toISOString() })
+     }
+   } catch (error) {
+     selectedContact.value.messages.push({ role: 'bot', content: 'Gagal terhubung ke server.', timestamp: new Date().toISOString() })
+   } finally {
     chatLoading.value = false
     await nextTick()
     if (chatContainer.value) {
