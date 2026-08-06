@@ -13,27 +13,31 @@
               </button>
             </div>
           </div>
-          <div class="p-6 space-y-4">
-            <div v-if="qrCodeUrl" class="flex flex-col items-center gap-4">
-              <p class="text-sm text-on-surface-variant font-medium">Scan QR code di WhatsApp untuk menghubungkan device.</p>
-              <img :src="qrCodeUrl" alt="QR Code" class="w-48 h-48 border border-outline-variant/10 rounded-xl" />
-              <p class="text-xs text-on-surface-variant/50">Device: device_admin_spec</p>
-            </div>
-            <div v-else class="flex flex-col items-center gap-4">
-              <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p class="text-sm text-on-surface-variant font-medium">Memuat QR code...</p>
-            </div>
-            <div class="flex gap-2 pt-2">
-              <button @click="showConnectModal = false"
-                      class="flex-1 px-4 py-3 bg-surface-container text-on-surface-variant font-semibold text-sm rounded-xl hover:bg-surface-container-high transition-all">
-                Tutup
-              </button>
-              <button @click="refreshQR"
-                      class="flex-1 px-4 py-3 bg-primary text-on-primary font-semibold text-sm rounded-xl hover:opacity-90 active:scale-95 transition-all">
-                Refresh QR
-              </button>
-            </div>
-          </div>
+      <div class="p-6 space-y-4">
+             <div v-if="qrCodeUrl" class="flex flex-col items-center gap-4">
+               <p class="text-sm text-on-surface-variant font-medium">Scan QR code di WhatsApp untuk menghubungkan device.</p>
+               <img :src="qrCodeUrl" alt="QR Code" class="w-48 h-48 border border-outline-variant/10 rounded-xl" />
+               <p class="text-xs text-on-surface-variant/50">Device: device_admin_spec</p>
+               <div v-if="pollingStatus" class="flex items-center gap-2 text-xs text-on-surface-variant">
+                 <div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                 {{ pollingStatus }}
+               </div>
+             </div>
+             <div v-else class="flex flex-col items-center gap-4">
+               <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+               <p class="text-sm text-on-surface-variant font-medium">Memuat QR code...</p>
+             </div>
+             <div class="flex gap-2 pt-2">
+               <button @click="closeModal"
+                       class="flex-1 px-4 py-3 bg-surface-container text-on-surface-variant font-semibold text-sm rounded-xl hover:bg-surface-container-high transition-all">
+                 Tutup
+               </button>
+               <button @click="refreshQR"
+                       class="flex-1 px-4 py-3 bg-primary text-on-primary font-semibold text-sm rounded-xl hover:opacity-90 active:scale-95 transition-all">
+                 Refresh QR
+               </button>
+             </div>
+           </div>
         </div>
       </div>
     </Teleport>
@@ -140,6 +144,8 @@ const emit = defineEmits(['save', 'update:bot'])
 const showConnectModal = ref(false)
 const qrCodeUrl = ref('')
 const toast = ref({ show: false, type: 'success', message: '' })
+const pollingStatus = ref('')
+const pollingInterval = ref(null)
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.speccamp.site/api'
 const API_SECRET_KEY = 'a3acdd0514fdd0956349281b552bb7de84a2929fd5d20afd5b6554dc3f50da07'
@@ -158,9 +164,41 @@ const aiInstructions = createField('aiInstructions')
 const maxTokens = createField('maxTokens')
 const temperature = createField('temperature')
 
+const startPolling = () => {
+  if (pollingInterval.value) clearInterval(pollingInterval.value)
+  pollingStatus.value = 'Memeriksa status koneksi...'
+  pollingInterval.value = setInterval(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/whatsapp/bots/device_admin_spec/status`, {
+        headers: { 'x-api-key': API_SECRET_KEY }
+      })
+      const data = await response.json()
+      if (data.success && data.data?.isActive) {
+        if (pollingInterval.value) clearInterval(pollingInterval.value)
+        pollingInterval.value = null
+        pollingStatus.value = ''
+        showConnectModal.value = false
+        emit('update:bot', { ...props.bot, isActive: true })
+        showToast('success', 'WhatsApp berhasil terhubung!')
+      }
+    } catch (error) {
+      console.error('Polling error:', error)
+    }
+  }, 3000)
+}
+
+const stopPolling = () => {
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value)
+    pollingInterval.value = null
+  }
+  pollingStatus.value = ''
+}
+
 const connectWhatsApp = async () => {
   showConnectModal.value = true
   qrCodeUrl.value = ''
+  startPolling()
   try {
     const response = await fetch(`${API_BASE}/whatsapp/bots/device_admin_spec/qr`, {
       headers: { 'x-api-key': API_SECRET_KEY }
@@ -187,6 +225,11 @@ const refreshQR = async () => {
   } catch (error) {
     console.error('Failed to refresh QR code:', error)
   }
+}
+
+const closeModal = () => {
+  stopPolling()
+  showConnectModal.value = false
 }
 
 const showToast = (type, message) => {

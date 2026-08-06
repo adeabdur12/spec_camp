@@ -29,13 +29,23 @@
 
       <!-- Chat Area -->
       <div class="flex-1 flex flex-col">
-        <div v-if="!selectedContact" class="flex-1 flex items-center justify-center">
-          <div class="text-center">
-            <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">chat</span>
-            <p class="text-sm text-on-surface-variant font-medium">Pilih kontak untuk mulai chat</p>
-            <p class="text-xs text-on-surface-variant/50 mt-1">Pilih dari daftar atau ketik nomor baru</p>
-          </div>
-        </div>
+         <div v-if="!selectedContact" class="flex-1 flex flex-col items-center justify-center p-4">
+           <div class="text-center mb-4">
+             <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">chat</span>
+             <p class="text-sm text-on-surface-variant font-medium">Pilih kontak untuk mulai chat</p>
+             <p class="text-xs text-on-surface-variant/50 mt-1">Pilih dari daftar atau ketik nomor baru</p>
+           </div>
+           <div class="flex gap-2 w-full max-w-xs">
+             <input v-model="newContactPhone" type="text" placeholder="Nomor telepon..."
+                    class="flex-1 px-4 py-3 rounded-xl bg-surface-container border border-outline-variant/10 text-on-surface font-medium text-sm focus:outline-none focus:border-primary transition-colors"
+                    @keyup.enter="startNewChat" />
+             <button @click="startNewChat"
+                     :disabled="!newContactPhone.trim()"
+                     class="px-4 py-3 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1">
+               <span class="material-symbols-outlined text-sm">add</span>
+             </button>
+           </div>
+         </div>
         <template v-else>
           <!-- Chat Header -->
           <div class="p-3 border-b border-outline-variant/10 flex items-center gap-3 bg-surface">
@@ -117,6 +127,7 @@ const chatInput = ref('')
 const chatLoading = ref(false)
 const chatContainer = ref(null)
 const contactSearch = ref('')
+const newContactPhone = ref('')
 
 const filteredContacts = computed(() => {
   if (!contactSearch.value) return contacts.value
@@ -160,6 +171,26 @@ const selectContact = (contact) => {
   selectedContact.value = contact
 }
 
+const startNewChat = () => {
+  const phone = newContactPhone.value.trim()
+  if (!phone) return
+  const existing = contacts.value.find(c => c.phone === phone)
+  if (existing) {
+    selectedContact.value = existing
+  } else {
+    const newContact = {
+      phone,
+      lastMessage: '',
+      lastTimestamp: new Date().toISOString(),
+      isOnline: false,
+      messages: []
+    }
+    contacts.value.unshift(newContact)
+    selectedContact.value = newContact
+  }
+  newContactPhone.value = ''
+}
+
 const clearChat = () => {
   if (selectedContact.value) {
     selectedContact.value.messages = []
@@ -169,6 +200,7 @@ const clearChat = () => {
 const sendChatMessage = async () => {
   if (!chatInput.value.trim() || chatLoading.value || !selectedContact.value) return
   const message = chatInput.value.trim()
+  const phone = selectedContact.value.phone
   chatInput.value = ''
   selectedContact.value.messages.push({ role: 'user', content: message, timestamp: new Date().toISOString() })
   chatLoading.value = true
@@ -177,19 +209,19 @@ const sendChatMessage = async () => {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
   }
   try {
-    const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/test`, {
+    const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': API_SECRET_KEY
       },
-      body: JSON.stringify({ message, phone: selectedContact.value.phone })
+      body: JSON.stringify({ number: phone, message })
     })
     const data = await response.json()
-    if (data.success && data.data) {
-      selectedContact.value.messages.push({ role: 'bot', content: data.data.response, timestamp: new Date().toISOString() })
+    if (data.success) {
+      selectedContact.value.messages.push({ role: 'bot', content: 'Pesan terkirim ✓', timestamp: new Date().toISOString() })
     } else {
-      selectedContact.value.messages.push({ role: 'bot', content: 'Maaf, terjadi kesalahan.', timestamp: new Date().toISOString() })
+      selectedContact.value.messages.push({ role: 'bot', content: 'Gagal mengirim pesan.', timestamp: new Date().toISOString() })
     }
   } catch (error) {
     selectedContact.value.messages.push({ role: 'bot', content: 'Gagal terhubung ke server.', timestamp: new Date().toISOString() })
