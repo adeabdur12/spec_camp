@@ -3,9 +3,14 @@
     <div class="flex" style="height: 500px;">
       <!-- Contact List -->
       <div class="w-72 border-r border-outline-variant/10 flex flex-col bg-surface">
-        <div class="p-3 border-b border-outline-variant/10">
+        <div class="p-3 border-b border-outline-variant/10 flex items-center gap-2">
           <input v-model="contactSearch" type="text" placeholder="Cari nomor..."
-                 class="w-full px-3 py-2 rounded-xl bg-surface-container border border-outline-variant/10 text-on-surface font-medium text-xs focus:outline-none focus:border-primary transition-colors" />
+                 class="flex-1 px-3 py-2 rounded-xl bg-surface-container border border-outline-variant/10 text-on-surface font-medium text-xs focus:outline-none focus:border-primary transition-colors" />
+          <button @click="showNewChatDialog = true"
+                  class="px-3 py-2 bg-primary text-on-primary rounded-xl font-semibold text-xs hover:opacity-90 active:scale-95 transition-all flex items-center gap-1 flex-shrink-0">
+            <span class="material-symbols-outlined text-sm">chat</span>
+            <span class="hidden sm:inline">Baru</span>
+          </button>
         </div>
         <div class="flex-1 overflow-y-auto">
           <div v-if="contacts.length === 0" class="p-4 text-center">
@@ -29,23 +34,13 @@
 
       <!-- Chat Area -->
       <div class="flex-1 flex flex-col">
-         <div v-if="!selectedContact" class="flex-1 flex flex-col items-center justify-center p-4">
-           <div class="text-center mb-4">
-             <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">chat</span>
-             <p class="text-sm text-on-surface-variant font-medium">Pilih kontak untuk mulai chat</p>
-             <p class="text-xs text-on-surface-variant/50 mt-1">Pilih dari daftar atau ketik nomor baru</p>
-           </div>
-           <div class="flex gap-2 w-full max-w-xs">
-             <input v-model="newContactPhone" type="text" placeholder="Nomor telepon..."
-                    class="flex-1 px-4 py-3 rounded-xl bg-surface-container border border-outline-variant/10 text-on-surface font-medium text-sm focus:outline-none focus:border-primary transition-colors"
-                    @keyup.enter="startNewChat" />
-             <button @click="startNewChat"
-                     :disabled="!newContactPhone.trim()"
-                     class="px-4 py-3 bg-primary text-on-primary rounded-xl font-semibold text-sm hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1">
-               <span class="material-symbols-outlined text-sm">add</span>
-             </button>
-           </div>
-         </div>
+        <div v-if="!selectedContact" class="flex-1 flex flex-col items-center justify-center p-4">
+          <div class="text-center">
+            <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">chat</span>
+            <p class="text-sm text-on-surface-variant font-medium">Pilih kontak untuk mulai chat</p>
+            <p class="text-xs text-on-surface-variant/50 mt-1">Pilih dari daftar atau klik tombol Baru</p>
+          </div>
+        </div>
         <template v-else>
           <!-- Chat Header -->
           <div class="p-3 border-b border-outline-variant/10 flex items-center gap-3 bg-surface">
@@ -72,7 +67,6 @@
                      : 'bg-surface-container text-on-surface rounded-bl-md'">
                 <p class="text-sm font-medium whitespace-pre-wrap">{{ msg.content }}</p>
                 <p class="text-[10px] mt-1 opacity-50">{{ formatTime(msg.timestamp) }}</p>
-                {{ msg }}
               </div>
             </div>
             <div v-if="chatLoading" class="flex gap-2 justify-start">
@@ -102,6 +96,33 @@
         </template>
       </div>
     </div>
+
+    <!-- New Chat Dialog -->
+    <Teleport to="body">
+      <div v-if="showNewChatDialog" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" @click.self="showNewChatDialog = false">
+        <div class="bg-surface-container rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl border border-outline-variant/10">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">chat</span>
+            <h3 class="text-sm font-bold text-on-surface">Mulai Chat Baru</h3>
+          </div>
+          <p class="text-xs text-on-surface-variant mb-4">Masukkan nomor telepon untuk memulai chat baru</p>
+          <input v-model="newContactPhone" type="text" placeholder="Nomor telepon..."
+                 class="w-full px-4 py-3 rounded-xl bg-surface border border-outline-variant/10 text-on-surface font-medium text-sm focus:outline-none focus:border-primary transition-colors mb-4"
+                 @keyup.enter="confirmNewChat" />
+          <div class="flex gap-2 justify-end">
+            <button @click="showNewChatDialog = false"
+                    class="px-4 py-2 rounded-xl font-semibold text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+              Batal
+            </button>
+            <button @click="confirmNewChat"
+                    :disabled="!newContactPhone.trim()"
+                    class="px-4 py-2 rounded-xl font-semibold text-sm bg-primary text-on-primary hover:opacity-90 transition-all disabled:opacity-50">
+              Mulai Chat
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -129,6 +150,7 @@ const chatLoading = ref(false)
 const chatContainer = ref(null)
 const contactSearch = ref('')
 const newContactPhone = ref('')
+const showNewChatDialog = ref(false)
 
 const filteredContacts = computed(() => {
   if (!contactSearch.value) return contacts.value
@@ -149,17 +171,26 @@ const fetchHistory = async () => {
         if (!contactMap[phone]) {
           contactMap[phone] = {
             phone,
-            lastMessage: msg.content,
-            lastTimestamp: msg.timestamp,
+            lastMessage: msg.message,
+            lastTimestamp: msg.createdAt,
             isOnline: false,
             messages: []
           }
         }
-        contactMap[phone].messages.push({
-          role: msg.role,
-          content: msg.content,
-          timestamp: msg.timestamp
-        })
+        if (msg.message) {
+          contactMap[phone].messages.push({
+            role: 'user',
+            content: msg.message,
+            timestamp: msg.createdAt
+          })
+        }
+        if (msg.response) {
+          contactMap[phone].messages.push({
+            role: 'bot',
+            content: msg.response,
+            timestamp: msg.createdAt
+          })
+        }
       })
       contacts.value = Object.values(contactMap).sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp))
     }
@@ -175,6 +206,27 @@ const selectContact = (contact) => {
 const startNewChat = () => {
   const phone = newContactPhone.value.trim()
   if (!phone) return
+  const existing = contacts.value.find(c => c.phone === phone)
+  if (existing) {
+    selectedContact.value = existing
+  } else {
+    const newContact = {
+      phone,
+      lastMessage: '',
+      lastTimestamp: new Date().toISOString(),
+      isOnline: false,
+      messages: []
+    }
+    contacts.value.unshift(newContact)
+    selectedContact.value = newContact
+  }
+  newContactPhone.value = ''
+}
+
+const confirmNewChat = () => {
+  const phone = newContactPhone.value.trim()
+  if (!phone) return
+  showNewChatDialog.value = false
   const existing = contacts.value.find(c => c.phone === phone)
   if (existing) {
     selectedContact.value = existing
