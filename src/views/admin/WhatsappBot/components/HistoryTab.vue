@@ -266,10 +266,22 @@ const clearChat = () => {
   }
 }
 
+const normalizeWhatsAppNumber = (phone) => {
+  let num = phone.replace(/\D/g, '')
+  if (num.startsWith('0')) {
+    num = '62' + num.slice(1)
+  } else if (num.startsWith('62')) {
+    num = num
+  } else if (num.startsWith('8') && num.length <= 12) {
+    num = '62' + num
+  }
+  return num
+}
+
 const sendChatMessage = async () => {
   if (!chatInput.value.trim() || chatLoading.value || !selectedContact.value) return
   const message = chatInput.value.trim()
-  const phone = selectedContact.value.phone
+  const phone = normalizeWhatsAppNumber(selectedContact.value.phone)
   chatInput.value = ''
   selectedContact.value.messages.push({ role: 'user', content: message, timestamp: new Date().toISOString() })
   chatLoading.value = true
