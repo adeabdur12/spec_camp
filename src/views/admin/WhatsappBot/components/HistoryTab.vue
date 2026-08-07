@@ -303,6 +303,9 @@ const sendChatMessage = async () => {
       selectedContact.value.messages.push({ role: 'bot', content: 'Gagal mengirim pesan.', timestamp: new Date().toISOString() })
       showToast('error', 'Gagal mengirim pesan')
     } else {
+      if (data.data?.response) {
+        selectedContact.value.messages.push({ role: 'bot', content: data.data.response, timestamp: new Date().toISOString() })
+      }
       showToast('success', 'Pesan terkirim')
     }
   } catch (error) {
