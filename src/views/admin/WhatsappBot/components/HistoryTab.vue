@@ -20,11 +20,14 @@
                @click="selectContact(contact)"
                class="flex items-center gap-3 p-3 cursor-pointer hover:bg-surface-container-high transition-colors border-b border-outline-variant/5"
                :class="selectedContact?.phone === contact.phone ? 'bg-surface-container-high' : ''">
-            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <div class="flex items-center gap-3">
               <span class="material-symbols-outlined text-primary text-sm">person</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-on-surface truncate">{{ contact.phone }}</p>
+              <div class="flex items-center gap-1.5">
+                <p class="text-sm font-bold text-on-surface truncate">{{ contact.phone }}</p>
+                <span v-if="isPhonePaused(contact.phone)" class="material-symbols-outlined text-secondary text-xs" title="Auto-reply dijeda">pause_circle</span>
+              </div>
               <p class="text-[10px] text-on-surface-variant truncate">{{ contact.lastMessage || 'Belum ada pesan' }}</p>
             </div>
             <span class="text-[10px] text-on-surface-variant/50 flex-shrink-0">{{ formatTime(contact.lastTimestamp) }}</span>
@@ -51,6 +54,14 @@
               <p class="text-sm font-bold text-on-surface">{{ selectedContact.phone }}</p>
               <p class="text-[10px] text-on-surface-variant">{{ selectedContact.isOnline ? 'Online' : 'Terakhir terlihat' }}</p>
             </div>
+            <button @click="togglePause(selectedContact.phone)"
+                    :class="isPhonePaused(selectedContact.phone)
+                      ? 'text-secondary hover:bg-secondary/10'
+                      : 'text-on-surface-variant hover:bg-surface-container-high'"
+                    class="p-2 rounded-lg transition-colors"
+                    :title="isPhonePaused(selectedContact.phone) ? 'Aktifkan kembali auto-reply' : 'Jeda auto-reply'">
+              <span class="material-symbols-outlined text-sm">{{ isPhonePaused(selectedContact.phone) ? 'play_circle' : 'pause_circle' }}</span>
+            </button>
             <button @click="clearChat" class="text-on-surface-variant hover:text-error transition-colors">
               <span class="material-symbols-outlined text-sm">delete</span>
             </button>
@@ -154,6 +165,7 @@ const chatContainer = ref(null)
 const contactSearch = ref('')
 const newContactPhone = ref('')
 const showNewChatDialog = ref(false)
+const pausedPhones = ref([])
 
 const showToast = (type, message) => {
   const toast = document.createElement('div')
@@ -172,6 +184,60 @@ const filteredContacts = computed(() => {
   if (!contactSearch.value) return contacts.value
   return contacts.value.filter(c => c.phone.includes(contactSearch.value))
 })
+
+const fetchPausedPhones = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/paused-phones`, {
+      headers: { 'x-api-key': API_SECRET_KEY }
+    })
+    const data = await response.json()
+    if (data.success) {
+      pausedPhones.value = data.data || []
+    }
+  } catch (error) {
+    console.error('Failed to fetch paused phones:', error)
+  }
+}
+
+const isPhonePaused = (phone) => {
+  const clean = phone.replace(/[^0-9]/g, '')
+  return pausedPhones.value.some(p => p.replace(/[^0-9]/g, '') === clean)
+}
+
+const togglePause = async (phone) => {
+  const clean = phone.replace(/[^0-9]/g, '')
+  const paused = isPhonePaused(phone)
+  try {
+    if (paused) {
+      const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/paused-phones/${clean}`, {
+        method: 'DELETE',
+        headers: { 'x-api-key': API_SECRET_KEY }
+      })
+      const data = await response.json()
+      if (data.success) {
+        pausedPhones.value = data.data || []
+        showToast('success', `Auto-reply diaktifkan untuk ${phone}`)
+      }
+    } else {
+      const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/paused-phones`, {
+        method: 'POST',
+        headers: {
+          'x-api-key': API_SECRET_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ phone: clean })
+      })
+      const data = await response.json()
+      if (data.success) {
+        pausedPhones.value = data.data || []
+        showToast('success', `Auto-reply dijeda untuk ${phone}`)
+      }
+    }
+  } catch (error) {
+    console.error('Toggle pause error:', error)
+    showToast('error', 'Gagal mengubah status pause')
+  }
+}
 
 const fetchHistory = async () => {
   try {
@@ -215,8 +281,16 @@ const fetchHistory = async () => {
   }
 }
 
-const selectContact = (contact) => {
+const selectContact = async (contact) => {
   selectedContact.value = contact
+  await nextTick()
+  scrollToBottom()
+}
+
+const scrollToBottom = () => {
+  if (chatContainer.value) {
+    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+  }
 }
 
 const startNewChat = () => {
@@ -239,7 +313,7 @@ const startNewChat = () => {
   newContactPhone.value = ''
 }
 
-const confirmNewChat = () => {
+const confirmNewChat = async () => {
   const phone = newContactPhone.value.trim()
   if (!phone) return
   showNewChatDialog.value = false
@@ -258,11 +332,30 @@ const confirmNewChat = () => {
     selectedContact.value = newContact
   }
   newContactPhone.value = ''
+  await nextTick()
+  scrollToBottom()
 }
 
-const clearChat = () => {
-  if (selectedContact.value) {
-    selectedContact.value.messages = []
+const clearChat = async () => {
+  if (!selectedContact.value) return
+  const phone = selectedContact.value.phone
+  try {
+    const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/history/${phone}`, {
+      method: 'DELETE',
+      headers: { 'x-api-key': API_SECRET_KEY }
+    })
+    const data = await response.json()
+    if (data.success) {
+      selectedContact.value.messages = []
+      contacts.value = contacts.value.filter(c => c.phone !== phone)
+      selectedContact.value = null
+      showToast('success', 'Riwayat chat berhasil dihapus')
+    } else {
+      showToast('error', 'Gagal menghapus riwayat chat')
+    }
+  } catch (error) {
+    console.error('Delete history error:', error)
+    showToast('error', 'Gagal menghapus riwayat chat')
   }
 }
 
@@ -286,9 +379,7 @@ const sendChatMessage = async () => {
   selectedContact.value.messages.push({ role: 'user', content: message, timestamp: new Date().toISOString() })
   chatLoading.value = true
   await nextTick()
-  if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-  }
+  scrollToBottom()
   try {
     const response = await fetch(`${API_BASE}/whatsapp/bots/${props.bot.deviceToken}/send`, {
       method: 'POST',
@@ -314,9 +405,7 @@ const sendChatMessage = async () => {
   } finally {
     chatLoading.value = false
     await nextTick()
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-    }
+    scrollToBottom()
   }
 }
 
@@ -343,5 +432,6 @@ const formatDate = (dateStr) => {
 
 onMounted(() => {
   fetchHistory()
+  fetchPausedPhones()
 })
 </script>
