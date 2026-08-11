@@ -71,54 +71,75 @@
       </div>
 
       <template v-else-if="stats">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
             <span class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Total Omzet</span>
             <div class="text-2xl font-bold text-primary">{{ formatCurrency(stats.totalRevenue) }}</div>
             <div class="text-emerald-700 text-xs font-bold">{{ stats.count }} Transaksi</div>
           </div>
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-blue-600 text-xs font-bold uppercase tracking-widest">Inventory Mimount</span>
-            <div class="text-2xl font-bold text-blue-600">{{ formatCurrency(mimountInventoryBase) }}</div>
-            <div class="text-blue-500/50 text-xs font-bold">Harga dasar untuk Mimount</div>
-          </div>
-          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-emerald-600 text-xs font-bold uppercase tracking-widest">Markup Inventory</span>
-            <div class="text-2xl font-bold text-emerald-600">{{ formatCurrency(inventoryMarkup) }}</div>
-            <div class="text-emerald-500/50 text-xs font-bold">Bagian Spec Camp dari inventory</div>
-          </div>
-          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-blue-600 text-xs font-bold uppercase tracking-widest">Layanan Mimount</span>
-            <div class="text-2xl font-bold text-blue-600">{{ formatCurrency(stats.mimountServiceCost) }}</div>
-            <div class="text-blue-500/50 text-xs font-bold">100% untuk Mimount</div>
-          </div>
-          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-emerald-600 text-xs font-bold uppercase tracking-widest">Layanan Spec Camp</span>
-            <div class="text-2xl font-bold text-emerald-600">{{ formatCurrency(stats.specCampServiceCost) }}</div>
-            <div class="text-emerald-500/50 text-xs font-bold">100% untuk Spec Camp</div>
-          </div>
-          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-purple-600 text-xs font-bold uppercase tracking-widest">Layanan Eksternal</span>
-            <div class="text-2xl font-bold text-purple-600">{{ formatCurrency(stats.eksternalServiceCost) }}</div>
-            <div class="text-purple-500/50 text-xs font-bold">Dipotong sebelum bagi hasil</div>
-          </div>
-          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-blue-600 text-xs font-bold uppercase tracking-widest">Untuk Mimount</span>
-            <div class="text-2xl font-bold text-blue-600">{{ formatCurrency(stats.totalMimountTotal) }}</div>
-            <div class="text-blue-500/50 text-xs font-bold">Termasuk share paket + alat</div>
-          </div>
-          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
             <span class="text-red-600 text-xs font-bold uppercase tracking-widest">Pajak 10%</span>
             <div class="text-2xl font-bold text-red-600">{{ formatCurrency(reportTax) }}</div>
+            <div class="text-red-500/50 text-xs font-bold">Ditanggung Spec Camp</div>
           </div>
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
             <span class="text-orange-600 text-xs font-bold uppercase tracking-widest">Retribusi 5%</span>
             <div class="text-2xl font-bold text-orange-600">{{ formatCurrency(reportLocalFee) }}</div>
+            <div class="text-orange-500/50 text-xs font-bold">Ditanggung Spec Camp</div>
           </div>
-          <div class="bg-emerald-950 p-5 rounded-xl text-emerald-50 space-y-2">
-            <span class="text-emerald-300/60 text-xs font-bold uppercase tracking-widest">Spec Camp (Net)</span>
-            <div class="text-2xl font-bold text-emerald-400">{{ formatCurrency(reportSpecCampNet) }}</div>
-            <div class="text-emerald-300/40 text-xs font-bold">Pendapatan bersih setelah pajak</div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="bg-blue-50 border border-blue-200 p-5 rounded-xl space-y-3">
+            <span class="text-blue-700 text-xs font-bold uppercase tracking-widest">Porsi Mimount</span>
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <span class="text-blue-700/60 text-xs font-bold">Layanan Mimount</span>
+                <span class="text-blue-900 text-sm font-bold">{{ formatCurrency(stats.mimountServiceCost) }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-blue-700/60 text-xs font-bold">Sewa Alat Mimount</span>
+                <span class="text-blue-900 text-sm font-bold">{{ formatCurrency(mimountInventoryBase) }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-blue-700/60 text-xs font-bold">Porsi Tiket Masuk</span>
+                <span class="text-blue-900 text-sm font-bold">{{ formatCurrency(porsiTiketMimount) }}</span>
+              </div>
+              <div class="flex justify-between items-center pt-2 border-t border-blue-200">
+                <span class="text-blue-900 text-xs font-extrabold uppercase">Total Porsi Mimount</span>
+                <span class="text-blue-900 text-lg font-extrabold">{{ formatCurrency(totalPorsiMimount) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-xl space-y-3">
+            <span class="text-emerald-700 text-xs font-bold uppercase tracking-widest">Porsi Spec Camp</span>
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <span class="text-emerald-700/60 text-xs font-bold">Markup Inventory</span>
+                <span class="text-emerald-900 text-sm font-bold">{{ formatCurrency(inventoryMarkup) }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-emerald-700/60 text-xs font-bold">Layanan Spec Camp</span>
+                <span class="text-emerald-900 text-sm font-bold">{{ formatCurrency(stats.specCampServiceCost) }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-emerald-700/60 text-xs font-bold">Porsi Tiket Masuk</span>
+                <span class="text-emerald-900 text-sm font-bold">{{ formatCurrency(porsiTiketSpecCamp) }}</span>
+              </div>
+              <div class="flex justify-between items-center pt-2 border-t border-emerald-200">
+                <span class="text-emerald-900 text-xs font-extrabold uppercase">Total Porsi Spec Camp</span>
+                <span class="text-emerald-900 text-lg font-extrabold">{{ formatCurrency(totalPorsiSpecCamp) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
+            <span class="text-purple-600 text-xs font-bold uppercase tracking-widest">Layanan Eksternal</span>
+            <div class="text-2xl font-bold text-purple-600">{{ formatCurrency(stats.eksternalServiceCost) }}</div>
+            <div class="text-purple-500/50 text-xs font-bold">Dipotong sebelum bagi hasil</div>
           </div>
           <div :class="currentSettlement ? 'bg-emerald-50 border-emerald-200/50' : 'bg-amber-50 border-amber-200/50'" class="p-5 rounded-xl border space-y-2">
             <span :class="currentSettlement ? 'text-emerald-900/60' : 'text-amber-900/60'" class="text-xs font-bold uppercase tracking-widest">Settlement</span>
@@ -285,6 +306,7 @@ const exportSingleCSV = () => {
   let totalRevenue = 0
   let totalInvCost = 0
   let totalMimountTotal = 0
+  let totalMimountShare = 0
   let totalSpecCampShare = 0
   let totalMimountSvc = 0
   let totalSpecCampSvc = 0
@@ -295,6 +317,7 @@ const exportSingleCSV = () => {
     totalRevenue += bookingTotal
     totalInvCost += Number(b.inventoryCost || 0)
     totalMimountTotal += Number(b.mimountTotal || 0)
+    totalMimountShare += Number(b.mimountShare || 0)
     totalSpecCampShare += Number(b.specCampShare || 0)
 
     // Booking header row
@@ -362,17 +385,29 @@ const exportSingleCSV = () => {
   const fee = Math.round(adjustedSpecCampShare * 0.05)
   const net = Math.max(0, adjustedSpecCampShare - tax - fee)
 
+  const porsiTiketSpecCampSingle = totalSpecCampShare - totalSpecCampSvc
+
   rows.push([])
   rows.push(['RINGKASAN', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
   rows.push(['Total Omzet', '', '', '', '', '', Number(totalRevenue), '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push([])
+  rows.push(['PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['  Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(totalMimountSvc), '', '', '', '', ''])
+  rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(mimountInventoryBase), '', '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(totalMimountShare), '', '', '', '', ''])
   rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(adjustedMimountTotal), '', '', '', '', ''])
+  rows.push([])
+  rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', Number(specCampInventoryMarkup), '', '', '', ''])
+  rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', Number(totalSpecCampSvc), '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', Number(porsiTiketSpecCampSingle), '', '', '', ''])
   rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', Number(adjustedSpecCampShare), '', '', '', ''])
-  rows.push(['  - Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', Number(specCampInventoryMarkup), '', '', '', ''])
-  rows.push(['  - Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(tax), '', '', '', ''])
-  rows.push(['  - Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(fee), '', '', '', ''])
+  rows.push([])
+  rows.push(['POTONGAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['  Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(tax), '', '', '', ''])
+  rows.push(['  Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(fee), '', '', '', ''])
   rows.push(['Net Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', Number(net), '', '', '', ''])
-  rows.push(['Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(totalMimountSvc), '', '', '', '', ''])
-  rows.push(['Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', Number(totalSpecCampSvc), '', '', '', ''])
+  rows.push([])
   rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', Number(totalEksternalSvc), '', '', ''])
 
   const csv = rows.map(r => r.map(v => {
@@ -409,7 +444,7 @@ const exportMultiMonthCSV = async () => {
   })
 
   const rows = []
-  let grandTotal = { revenue: 0, invCost: 0, mimountTotal: 0, specCampShare: 0, mimountSvc: 0, specCampSvc: 0, eksternalSvc: 0 }
+  let grandTotal = { revenue: 0, invCost: 0, mimountTotal: 0, mimountShare: 0, specCampShare: 0, mimountSvc: 0, specCampSvc: 0, eksternalSvc: 0 }
 
   const startLabel = months.find(m => m.value === periodMonth.value)?.label || ''
   const endLabel = months.find(m => m.value === exportEndMonth.value)?.label || ''
@@ -426,6 +461,7 @@ const exportMultiMonthCSV = async () => {
     let monthRevenue = 0
     let monthInvCost = 0
     let monthMimountTotal = 0
+    let monthMimountShare = 0
     let monthSpecCampShare = 0
     let monthMimountSvc = 0
     let monthSpecCampSvc = 0
@@ -440,6 +476,7 @@ const exportMultiMonthCSV = async () => {
       monthRevenue += bookingTotal
       monthInvCost += Number(b.inventoryCost || 0)
       monthMimountTotal += Number(b.mimountTotal || 0)
+      monthMimountShare += Number(b.mimountShare || 0)
       monthSpecCampShare += Number(b.specCampShare || 0)
 
       rows.push([
@@ -503,26 +540,37 @@ const exportMultiMonthCSV = async () => {
     const tax = Math.round(adjustedSpecCampShare * 0.1)
     const fee = Math.round(adjustedSpecCampShare * 0.05)
     const net = Math.max(0, adjustedSpecCampShare - tax - fee)
+    const monthPorsiTiketSpecCamp = monthSpecCampShare - monthSpecCampSvc
 
     grandTotal.revenue += monthRevenue
     grandTotal.invCost += monthInvCost
     grandTotal.mimountTotal += monthMimountTotal
     grandTotal.specCampShare += monthSpecCampShare
+    grandTotal.mimountShare += monthMimountShare
     grandTotal.mimountSvc += monthMimountSvc
     grandTotal.specCampSvc += monthSpecCampSvc
     grandTotal.eksternalSvc += monthEksternalSvc
 
     rows.push([])
     rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', monthRevenue, '', '', '', '', '', '', '', '', '', ''])
-    rows.push(['  Total Inventory', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    rows.push(['  Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', adjustedMimountTotal, '', '', '', ''])
-    rows.push(['  Porsi Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', adjustedSpecCampShare, '', '', ''])
-    rows.push(['  Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', specCampInventoryMarkup, '', '', ''])
-    rows.push(['  - Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(tax), '', '', ''])
-    rows.push(['  - Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(fee), '', '', ''])
-    rows.push(['  Net Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', net, '', '', ''])
-    rows.push(['  Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', monthMimountSvc, '', '', '', ''])
-    rows.push(['  Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', monthSpecCampSvc, '', '', ''])
+    rows.push([])
+    rows.push(['  PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    rows.push(['    Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', monthMimountSvc, '', '', '', '', ''])
+    rows.push(['    Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', mimountInventoryBase, '', '', '', '', ''])
+    rows.push(['    Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', monthMimountShare, '', '', '', '', ''])
+    rows.push(['  Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', adjustedMimountTotal, '', '', '', '', ''])
+    rows.push([])
+    rows.push(['  PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    rows.push(['    Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', specCampInventoryMarkup, '', '', '', ''])
+    rows.push(['    Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', monthSpecCampSvc, '', '', '', ''])
+    rows.push(['    Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', monthPorsiTiketSpecCamp, '', '', '', ''])
+    rows.push(['  Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', adjustedSpecCampShare, '', '', '', ''])
+    rows.push([])
+    rows.push(['  POTONGAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    rows.push(['    Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(tax), '', '', '', ''])
+    rows.push(['    Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(fee), '', '', '', ''])
+    rows.push(['  Net Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', net, '', '', '', ''])
+    rows.push([])
     rows.push(['  Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', monthEksternalSvc, '', '', ''])
   })
 
@@ -534,16 +582,28 @@ const exportMultiMonthCSV = async () => {
   const totalFee = Math.round(totalAdjustedSpecCamp * 0.05)
   const totalNet = Math.max(0, totalAdjustedSpecCamp - totalTax - totalFee)
 
+  const grandTotalPorsiTiketSpecCamp = grandTotal.specCampShare - grandTotal.specCampSvc
+
   rows.push([])
   rows.push(['GRAND TOTAL', '', '', '', '', '', grandTotal.revenue, '', '', '', '', '', '', '', '', '', ''])
-  rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', totalAdjustedMimount, '', '', '', ''])
-  rows.push(['Total Porsi Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', totalAdjustedSpecCamp, '', '', ''])
-  rows.push(['Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', totalSpecCampInventoryMarkup, '', '', ''])
-  rows.push(['Total Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', -Number(totalTax), '', '', ''])
-  rows.push(['Total Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', -Number(totalFee), '', '', ''])
-  rows.push(['Total Net Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', totalNet, '', '', ''])
-  rows.push(['Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', grandTotal.mimountSvc, '', '', '', ''])
-  rows.push(['Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', grandTotal.specCampSvc, '', '', ''])
+  rows.push([])
+  rows.push(['PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['  Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', grandTotal.mimountSvc, '', '', '', '', ''])
+  rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', totalMimountInventoryBase, '', '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', grandTotal.mimountShare, '', '', '', '', ''])
+  rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', totalAdjustedMimount, '', '', '', '', ''])
+  rows.push([])
+  rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', totalSpecCampInventoryMarkup, '', '', '', ''])
+  rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', grandTotal.specCampSvc, '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', grandTotalPorsiTiketSpecCamp, '', '', '', ''])
+  rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', totalAdjustedSpecCamp, '', '', '', ''])
+  rows.push([])
+  rows.push(['POTONGAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['  Total Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(totalTax), '', '', '', ''])
+  rows.push(['  Total Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(totalFee), '', '', '', ''])
+  rows.push(['Total Net Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', totalNet, '', '', '', ''])
+  rows.push([])
   rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', grandTotal.eksternalSvc, '', '', ''])
 
   const csv = rows.map(r => r.map(v => {
@@ -578,6 +638,10 @@ const reportLocalFee = computed(() => Math.round((stats.value?.totalSpecCampShar
 const reportSpecCampNet = computed(() => Math.max(0, (stats.value?.totalSpecCampShare || 0) - reportTax.value - reportLocalFee.value))
 const inventoryMarkup = computed(() => Math.round((stats.value?.totalInventoryCost || 0) - (stats.value?.totalInventoryCost || 0) / 1.2))
 const mimountInventoryBase = computed(() => Math.round((stats.value?.totalInventoryCost || 0) / 1.2))
+const porsiTiketMimount = computed(() => stats.value?.totalMimountShare || 0)
+const totalPorsiMimount = computed(() => porsiTiketMimount.value + mimountInventoryBase.value + (stats.value?.mimountServiceCost || 0))
+const porsiTiketSpecCamp = computed(() => Math.max(0, (stats.value?.totalSpecCampShare || 0) - inventoryMarkup.value - (stats.value?.specCampServiceCost || 0)))
+const totalPorsiSpecCamp = computed(() => stats.value?.totalSpecCampShare || 0)
 
 const sortedDailyStats = computed(() => {
   if (!stats.value || !stats.value.daily) return {}
