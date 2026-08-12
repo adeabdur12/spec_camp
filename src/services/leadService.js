@@ -75,5 +75,15 @@ export const leadService = {
   getNotes: async (leadId) => {
     const res = await api.get(`/leads/${leadId}/notes`)
     return res.data
+  },
+
+  updateNote: async (noteId, data) => {
+    const res = await api.put(`/leads/notes/${noteId}`, data)
+    return res.data
+  },
+
+  deleteNote: async (noteId) => {
+    const res = await api.delete(`/leads/notes/${noteId}`)
+    return res.data
   }
 }

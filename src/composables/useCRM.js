@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { leadService } from '../services/leadService'
 
 export function useCRM() {
@@ -31,6 +31,7 @@ export function useCRM() {
   const confirmTitle = ref('')
   const confirmMessage = ref('')
   const itemToDelete = ref(null)
+  const formError = ref('')
 
   // Form
   const initialForm = {
@@ -45,6 +46,8 @@ export function useCRM() {
     contactPerson: '',
     contactRole: '',
     googleMapsUrl: '',
+    facebookUrl: '',
+    instagramUrl: '',
     status: 'belum_dihubungi',
     priority: 'medium',
     estimatedPax: '',
@@ -72,6 +75,7 @@ export function useCRM() {
       }
     } catch (err) {
       console.error('Gagal mengambil data leads:', err)
+      if (leads.value.length === 0) leads.value = []
     } finally {
       loading.value = false
     }
@@ -96,6 +100,7 @@ export function useCRM() {
   }
 
   const openModal = (lead = null) => {
+    formError.value = ''
     if (lead) {
       editingLead.value = lead
       form.value = {
@@ -110,6 +115,8 @@ export function useCRM() {
         contactPerson: lead.contactPerson || '',
         contactRole: lead.contactRole || '',
         googleMapsUrl: lead.googleMapsUrl || '',
+        facebookUrl: lead.facebookUrl || '',
+        instagramUrl: lead.instagramUrl || '',
         status: lead.status || 'belum_dihubungi',
         priority: lead.priority || 'medium',
         estimatedPax: lead.estimatedPax || '',
@@ -127,22 +134,25 @@ export function useCRM() {
   const closeModal = () => {
     showModal.value = false
     editingLead.value = null
+    formError.value = ''
   }
 
   const saveLead = async () => {
     saving.value = true
+    formError.value = ''
     try {
+      const payload = { ...form.value, estimatedPax: form.value.estimatedPax ? Number(form.value.estimatedPax) : null, nextFollowUpDate: form.value.nextFollowUpDate || null }
       if (editingLead.value) {
-        await leadService.update(editingLead.value.id, form.value)
+        await leadService.update(editingLead.value.id, payload)
       } else {
-        await leadService.create(form.value)
+        await leadService.create(payload)
       }
       await fetchLeads()
       await fetchStats()
       closeModal()
     } catch (err) {
-      console.error('Gagal menyimpan lead:', err)
-      throw err
+      const msg = err?.response?.data?.message || err?.message || 'Gagal menyimpan lead'
+      formError.value = msg
     } finally {
       saving.value = false
     }
@@ -197,7 +207,16 @@ export function useCRM() {
   }
 
   // Watchers
-  watch([search, statusFilter, categoryFilter, priorityFilter], () => {
+  let searchTimer = null
+  watch(search, () => {
+    clearTimeout(searchTimer)
+    searchTimer = setTimeout(() => {
+      currentPage.value = 1
+      fetchLeads()
+    }, 400)
+  })
+
+  watch([statusFilter, categoryFilter, priorityFilter], () => {
     currentPage.value = 1
     fetchLeads()
   })
@@ -206,6 +225,10 @@ export function useCRM() {
     fetchLeads()
     fetchStats()
     fetchFollowUps()
+  })
+
+  onUnmounted(() => {
+    clearTimeout(searchTimer)
   })
 
   return {
@@ -232,6 +255,7 @@ export function useCRM() {
     confirmTitle,
     confirmMessage,
     form,
+    formError,
     fetchLeads,
     fetchStats,
     fetchFollowUps,

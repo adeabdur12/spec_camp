@@ -100,6 +100,20 @@
           </div>
         </div>
 
+        <!-- Social Media -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1 block">Facebook URL</label>
+            <input v-model="form.facebookUrl" type="url" placeholder="https://facebook.com/..."
+                   class="w-full px-3 py-2.5 bg-surface-container-low rounded-lg border-0 text-sm focus:ring-2 focus:ring-primary/30" />
+          </div>
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1 block">Instagram URL</label>
+            <input v-model="form.instagramUrl" type="url" placeholder="https://instagram.com/..."
+                   class="w-full px-3 py-2.5 bg-surface-container-low rounded-lg border-0 text-sm focus:ring-2 focus:ring-primary/30" />
+          </div>
+        </div>
+
         <!-- Status & Priority -->
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -155,7 +169,12 @@
       </div>
 
       <!-- Footer -->
-      <div class="p-4 border-t border-outline-variant/10 flex justify-end gap-2 sticky bottom-0 bg-surface-container-lowest rounded-b-2xl">
+      <div class="p-4 border-t border-outline-variant/10 flex flex-col gap-2 sticky bottom-0 bg-surface-container-lowest rounded-b-2xl">
+        <div v-if="error" class="flex items-center gap-2 px-3 py-2 bg-error/10 text-error rounded-lg text-xs font-semibold">
+          <span class="material-symbols-outlined text-base">error</span>
+          {{ error }}
+        </div>
+        <div class="flex justify-end gap-2">
         <button @click="$emit('close')"
                 class="px-4 py-2.5 bg-surface-container-high text-on-surface-variant rounded-xl text-xs font-bold hover:bg-surface-container-highest transition-all">
           Batal
@@ -165,8 +184,9 @@
           {{ saving ? 'Menyimpan...' : (editing ? 'Simpan Perubahan' : 'Buat Lead') }}
         </button>
       </div>
+      </div>
     </div>
-  </div>
+    </div>
   </Teleport>
 </template>
 
@@ -174,7 +194,8 @@
 defineProps({
   form: { type: Object, required: true },
   editing: { type: Boolean, default: false },
-  saving: { type: Boolean, default: false }
+  saving: { type: Boolean, default: false },
+  error: { type: String, default: '' }
 })
 
 defineEmits(['close', 'save'])

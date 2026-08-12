@@ -89,42 +89,62 @@
             </div>
           </div>
 
-          <!-- Lead Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            <LeadCard v-for="lead in leads" :key="lead.id" :lead="lead"
-                      @click="openDrawer(lead)"
-                      @edit="openModal(lead)"
-                      @delete="deleteLead(lead)"
-                      @whatsapp="openWhatsApp(lead.whatsapp || lead.phone)" />
-          </div>
-
-          <div v-if="leads.length === 0 && !loading" class="text-center py-12 text-on-surface-variant">
-            <span class="material-symbols-outlined text-5xl mb-3 block">person_search</span>
-            <p class="font-semibold">Belum ada data leads</p>
-            <p class="text-sm mt-1">Tambah lead baru atau import dari file Excel</p>
-          </div>
-
-          <!-- Pagination -->
-          <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between bg-surface-container-low rounded-xl p-3 gap-2">
-            <p class="text-xs text-on-surface-variant">
-              {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, totalItems) }} / {{ totalItems }}
-            </p>
-            <div class="flex gap-1">
-              <button @click="prevPage" :disabled="currentPage <= 1"
-                      class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 hover:bg-surface-container-high">
-                Sebelumnya
-              </button>
-              <button v-for="p in Math.min(totalPages, 5)" :key="p" @click="goToPage(p)"
-                      class="w-8 h-8 rounded-lg text-xs font-bold transition-all"
-                      :class="p === currentPage ? 'bg-primary text-on-primary' : 'hover:bg-surface-container-high'">
-                {{ p }}
-              </button>
-              <button @click="nextPage" :disabled="currentPage >= totalPages"
-                      class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 hover:bg-surface-container-high">
-                Selanjutnya
-              </button>
+          <!-- Lead Cards / Skeleton -->
+          <template v-if="loading">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div v-for="n in 6" :key="'skel-'+n" class="bg-surface-container-lowest rounded-xl p-4 animate-pulse">
+                <div class="flex gap-3">
+                  <div class="w-2 rounded-l-xl bg-surface-container-high shrink-0"></div>
+                  <div class="flex-1 space-y-2 pl-1">
+                    <div class="h-4 bg-surface-container-high rounded w-3/4"></div>
+                    <div class="h-3 bg-surface-container-high rounded w-1/2"></div>
+                    <div class="h-3 bg-surface-container-high rounded w-2/3"></div>
+                    <div class="flex gap-2 pt-1">
+                      <div class="h-6 w-10 bg-surface-container-high rounded-lg"></div>
+                      <div class="h-6 w-10 bg-surface-container-high rounded-lg"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </template>
+          <template v-else>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <LeadCard v-for="lead in leads" :key="lead.id" :lead="lead"
+                        @click="openDrawer(lead)"
+                        @edit="openModal(lead)"
+                        @delete="deleteLead(lead)"
+                        @whatsapp="openWhatsApp(lead.whatsapp || lead.phone)" />
+            </div>
+
+            <div v-if="leads.length === 0 && !loading" class="text-center py-12 text-on-surface-variant">
+              <span class="material-symbols-outlined text-5xl mb-3 block">person_search</span>
+              <p class="font-semibold">Belum ada data leads</p>
+              <p class="text-sm mt-1">Tambah lead baru atau import dari file Excel</p>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between bg-surface-container-low rounded-xl p-3 gap-2">
+              <p class="text-xs text-on-surface-variant">
+                {{ (currentPage - 1) * itemsPerPage + 1 }}-{{ Math.min(currentPage * itemsPerPage, totalItems) }} / {{ totalItems }}
+              </p>
+              <div class="flex gap-1">
+                <button @click="prevPage" :disabled="currentPage <= 1"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 hover:bg-surface-container-high">
+                  Sebelumnya
+                </button>
+                <button v-for="p in Math.min(totalPages, 5)" :key="p" @click="goToPage(p)"
+                        class="w-8 h-8 rounded-lg text-xs font-bold transition-all"
+                        :class="p === currentPage ? 'bg-primary text-on-primary' : 'hover:bg-surface-container-high'">
+                  {{ p }}
+                </button>
+                <button @click="nextPage" :disabled="currentPage >= totalPages"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 hover:bg-surface-container-high">
+                  Selanjutnya
+                </button>
+              </div>
+            </div>
+          </template>
         </template>
 
         <!-- Follow-up Tab -->
@@ -134,7 +154,7 @@
       </template>
 
       <!-- Modals -->
-      <LeadFormModal v-if="showModal" :form="form" :editing="!!editingLead" :saving="saving"
+      <LeadFormModal v-if="showModal" :form="form" :editing="!!editingLead" :saving="saving" :error="formError"
                      @close="closeModal" @save="saveLead" />
 
       <ImportExcelModal v-if="showImportModal" @close="showImportModal = false" @imported="onImported" />
@@ -184,6 +204,7 @@ const {
   confirmTitle,
   confirmMessage,
   form,
+  formError,
   fetchLeads,
   fetchStats,
   fetchFollowUps,
