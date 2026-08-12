@@ -71,15 +71,15 @@
           <div class="flex-1 overflow-y-auto p-4 space-y-3" ref="chatContainer">
             <div v-for="(msg, idx) in selectedContact.messages" :key="idx"
                  class="flex gap-2"
-                 :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+                 :class="msg.role === 'outgoing' ? 'justify-end' : 'justify-start'">
               <div class="max-w-[70%] rounded-2xl px-4 py-2"
-                   :class="msg.role === 'user'
+                   :class="msg.role === 'outgoing'
                      ? 'bg-primary text-on-primary rounded-br-md'
                      : 'bg-surface-container text-on-surface rounded-bl-md'">
 <p class="text-sm font-medium whitespace-pre-wrap">{{ msg.content }}</p>
                  <p class="text-[10px] mt-1 opacity-50 flex items-center gap-1">
                    <span>{{ formatTime(msg.timestamp) }}</span>
-                    <span v-if="msg.role === 'user'" class="material-symbols-outlined text-xs">done</span>
+                    <span v-if="msg.role === 'outgoing'" class="material-symbols-outlined text-xs">done</span>
                  </p>
               </div>
             </div>
@@ -261,14 +261,14 @@ const fetchHistory = async () => {
         }
         if (msg.message) {
           contactMap[phone].messages.push({
-            role: 'user',
+            role: 'incoming',
             content: msg.message,
             timestamp: msg.createdAt
           })
         }
         if (msg.response) {
           contactMap[phone].messages.push({
-            role: 'bot',
+            role: 'outgoing',
             content: msg.response,
             timestamp: msg.createdAt
           })
@@ -376,7 +376,7 @@ const sendChatMessage = async () => {
   const message = chatInput.value.trim()
   const phone = normalizeWhatsAppNumber(selectedContact.value.phone)
   chatInput.value = ''
-  selectedContact.value.messages.push({ role: 'user', content: message, timestamp: new Date().toISOString() })
+  selectedContact.value.messages.push({ role: 'outgoing', content: message, timestamp: new Date().toISOString() })
   chatLoading.value = true
   await nextTick()
   scrollToBottom()
@@ -391,16 +391,13 @@ const sendChatMessage = async () => {
     })
     const data = await response.json()
     if (!data.success) {
-      selectedContact.value.messages.push({ role: 'bot', content: 'Gagal mengirim pesan.', timestamp: new Date().toISOString() })
-      showToast('error', 'Gagal mengirim pesan')
+      selectedContact.value.messages.pop()
+      showToast('error', data.message || 'Gagal mengirim pesan')
     } else {
-      if (data.data?.response) {
-        selectedContact.value.messages.push({ role: 'bot', content: data.data.response, timestamp: new Date().toISOString() })
-      }
       showToast('success', 'Pesan terkirim')
     }
   } catch (error) {
-    selectedContact.value.messages.push({ role: 'bot', content: 'Gagal terhubung ke server.', timestamp: new Date().toISOString() })
+    selectedContact.value.messages.pop()
     showToast('error', 'Gagal terhubung ke server')
   } finally {
     chatLoading.value = false
