@@ -241,7 +241,7 @@ const togglePause = async (phone) => {
 
 const fetchHistory = async () => {
   try {
-    const response = await fetch(`${API_BASE}/whatsapp/history?deviceToken=${props.bot?.deviceToken || ''}`, {
+    const response = await fetch(`${API_BASE}/whatsapp/history?deviceToken=${props.bot?.deviceToken || ''}&limit=1000`, {
       headers: { 'x-api-key': API_SECRET_KEY }
     })
     const data = await response.json()
@@ -253,7 +253,7 @@ const fetchHistory = async () => {
         if (!contactMap[phone]) {
           contactMap[phone] = {
             phone,
-            lastMessage: msg.message,
+            lastMessage: msg.message || msg.response || '',
             lastTimestamp: msg.createdAt,
             isOnline: false,
             messages: []
@@ -274,7 +274,12 @@ const fetchHistory = async () => {
           })
         }
       })
-      contacts.value = Object.values(contactMap).sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp))
+      contacts.value = Object.values(contactMap)
+        .map(contact => ({
+          ...contact,
+          messages: contact.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+        }))
+        .sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp))
     }
   } catch (error) {
     console.error('Failed to fetch history:', error)
