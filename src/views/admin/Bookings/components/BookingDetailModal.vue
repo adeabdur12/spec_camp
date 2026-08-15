@@ -41,6 +41,8 @@
             <div class="grid grid-cols-2 gap-2 text-xs">
               <span class="text-on-surface-variant">Paket:</span>
               <span class="font-bold text-right">{{ booking.PackageEvent?.name || '-' }}</span>
+              <span class="text-on-surface-variant">Harga Paket:</span>
+              <span class="font-bold text-right">{{ formatCurrency(booking.PackageEvent?.pricePerPax) }} /pax</span>
               <span class="text-on-surface-variant">Tanggal:</span>
               <span class="font-bold text-right">{{ booking.checkInDate }} s/d {{ booking.checkOutDate }}</span>
               <span class="text-on-surface-variant">Jumlah Tamu:</span>
