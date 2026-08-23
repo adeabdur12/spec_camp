@@ -75,7 +75,7 @@
               <label class="block text-xs font-black uppercase tracking-widest text-on-surface-variant mb-2">Model AI</label>
               <select v-model="aiModel"
                       class="w-full px-4 py-3 rounded-xl bg-surface border border-outline-variant/10 text-on-surface font-medium text-sm focus:outline-none focus:border-primary transition-colors">
-                <option value="Qwen/Qwen2.5-7B-Instruct">Qwen 2.5 7B Instruct</option>
+                <option value="Qwen/Qwen3-4B-Instruct-2507">Qwen 2.5 7B Instruct</option>
                 <option value="google/gemma-2-2b-it">Gemma 2B</option>
               </select>
             </div>
