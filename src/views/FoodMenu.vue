@@ -1,15 +1,16 @@
 <template>
   <div class="bg-surface min-h-screen font-body antialiased">
     <!-- Header -->
-    <header class="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl">
-      <div class="px-5 py-4 flex items-center gap-3 max-w-lg mx-auto">
-        <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
-          <img src="/logo/logo.svg" alt="SPEC" class="w-6 h-6 object-contain brightness-0 invert" />
+    <header class="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10">
+      <div class="px-5 py-4 flex items-center justify-between max-w-lg mx-auto">
+        <div class="flex items-center gap-3">
+          <img src="/logo/logo.svg" alt="SPEC CAMP Logo" class="h-10 w-auto" />
+          <div>
+            <span class="font-headline text-xl font-black text-primary tracking-tight">SPEC CAMP</span>
+            <p class="text-[11px] text-on-surface-variant uppercase tracking-wider leading-tight">Sukabumi Prestige Equestrian Center</p>
+          </div>
         </div>
-        <div>
-          <h1 class="font-headline text-base font-bold text-primary leading-tight">Saung SPEC</h1>
-          <p class="text-[11px] text-on-surface-variant">Camping Ground & Equestrian</p>
-        </div>
+        <span class="font-headline text-sm font-bold text-secondary">Saung SPEC</span>
       </div>
     </header>
 
