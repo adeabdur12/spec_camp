@@ -15,15 +15,26 @@
 
     <!-- Category Tabs -->
     <div class="sticky top-[60px] z-40 bg-surface-container-low/80 backdrop-blur-lg border-b border-outline-variant/10">
-      <div class="px-5 py-2.5 flex gap-2 max-w-lg mx-auto overflow-x-auto no-scrollbar">
-        <button v-for="cat in categories" :key="cat.value"
-                @click="activeCategory = cat.value"
-                :class="['px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all',
-                         activeCategory === cat.value
-                           ? 'bg-primary text-on-primary shadow-sm shadow-primary/20'
-                           : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high']">
-          {{ cat.emoji }} {{ cat.label }}
-        </button>
+      <div class="px-5 pt-2.5 max-w-lg mx-auto">
+        <div class="relative mb-2.5">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-lg">search</span>
+          <input v-model="searchQuery" type="text" placeholder="Cari menu..."
+                 class="w-full bg-surface-container pl-9 pr-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm placeholder:text-on-surface-variant/40" />
+          <button v-if="searchQuery" @click="searchQuery = ''"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface-variant transition-colors">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+        <div class="flex gap-2 pb-2.5 overflow-x-auto no-scrollbar">
+          <button v-for="cat in categories" :key="cat.value"
+                  @click="activeCategory = cat.value"
+                  :class="['px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all',
+                           activeCategory === cat.value
+                             ? 'bg-primary text-on-primary shadow-sm shadow-primary/20'
+                             : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high']">
+            {{ cat.emoji }} {{ cat.label }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -119,6 +130,7 @@ const categories = [
 ]
 
 const activeCategory = ref('all')
+const searchQuery = ref('')
 
 const activeCatLabel = computed(() => {
   const cat = categories.find(c => c.value === activeCategory.value)
@@ -126,8 +138,15 @@ const activeCatLabel = computed(() => {
 })
 
 const filteredItems = computed(() => {
-  if (activeCategory.value === 'all') return items.value
-  return items.value.filter(i => i.category === activeCategory.value)
+  let result = items.value
+  if (activeCategory.value !== 'all') {
+    result = result.filter(i => i.category === activeCategory.value)
+  }
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase()
+    result = result.filter(i => i.name.toLowerCase().includes(q) || (i.description && i.description.toLowerCase().includes(q)))
+  }
+  return result
 })
 
 const cartCount = computed(() => Object.values(cart.value).reduce((sum, q) => sum + q, 0))
