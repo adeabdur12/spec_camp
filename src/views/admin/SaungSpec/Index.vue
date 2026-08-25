@@ -13,6 +13,23 @@
         </button>
       </div>
 
+      <div class="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/10 shadow-sm flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-base text-primary">link</span>
+          <span class="font-medium">Link Publik:</span>
+        </div>
+        <div class="flex-1 flex items-center gap-2 bg-surface-container rounded-xl px-4 py-2 min-w-0">
+          <span class="text-sm text-on-surface truncate font-mono" id="publicUrl">{{ publicUrl }}</span>
+          <button @click="copyUrl" class="shrink-0 bg-primary/10 hover:bg-primary hover:text-white text-primary p-1.5 rounded-lg transition-all active:scale-95" title="Salin link">
+            <span class="material-symbols-outlined text-base">{{ copied ? 'check' : 'content_copy' }}</span>
+          </button>
+        </div>
+        <a :href="publicUrl" target="_blank" rel="noopener noreferrer"
+           class="shrink-0 bg-surface-container hover:bg-primary hover:text-white text-on-surface-variant px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1.5 justify-center">
+          <span class="material-symbols-outlined text-[14px]">open_in_new</span> Buka
+        </a>
+      </div>
+
       <div v-if="loading" class="flex justify-center py-20">
         <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
@@ -93,6 +110,29 @@ import DashboardLayout from '../../../components/admin/DashboardLayout.vue'
 import ConfirmModal from '../../../components/admin/ConfirmModal.vue'
 import SaungSpecFormModal from './components/SaungSpecFormModal.vue'
 import { saungSpecMenuService } from '../../../services/saungSpecMenuService'
+
+const publicUrl = `${window.location.origin}/menu`
+const copied = ref(false)
+
+const copyUrl = async () => {
+  try {
+    await navigator.clipboard.writeText(publicUrl)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch {
+    const el = document.getElementById('publicUrl')
+    if (el) {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      window.getSelection().removeAllRanges()
+      window.getSelection().addRange(range)
+      document.execCommand('copy')
+      window.getSelection().removeAllRanges()
+      copied.value = true
+      setTimeout(() => { copied.value = false }, 2000)
+    }
+  }
+}
 
 const loading = ref(true)
 const saving = ref(false)
