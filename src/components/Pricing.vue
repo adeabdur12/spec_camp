@@ -2,113 +2,144 @@
   <section id="pricing" class="py-24 bg-surface-container-low">
     <div class="px-6 md:px-12 max-w-7xl mx-auto">
       <div class="mb-16">
-        <h2 class="font-headline text-4xl font-black text-primary mb-2">Harga Paket Perkemahan & Area</h2>
-        <p class="text-on-surface-variant">Pilih spot terbaikmu di tengah dataran tinggi Sukabumi.</p>
-      </div>
-      <div class="grid md:grid-cols-2 gap-12">
-        <div v-for="area in areas" :key="area.title" class="bg-surface-container-highest rounded-3xl overflow-hidden group shadow-sm border border-outline-variant/20">
-          <div class="h-64 relative overflow-hidden">
-            <img :alt="area.title" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" :src="area.image"/>
-            <div :class="['absolute top-6 left-6 px-4 py-1 rounded-full text-xs font-bold uppercase', area.badgeClass]">
-              {{ area.badge }}
-            </div>
-          </div>
-          <div class="p-8">
-            <h3 class="font-headline text-2xl font-bold text-primary mb-6">{{ area.title }}</h3>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead class="border-b border-outline-variant/30">
-                  <tr class="text-left text-secondary font-bold uppercase tracking-wider">
-                    <th class="pb-3">Hari</th>
-                    <th class="pb-3 text-center">Ekonomis</th>
-                    <th class="pb-3 text-right">Full</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-outline-variant/10">
-                  <tr v-for="price in area.prices" :key="price.day">
-                    <td class="py-4 font-medium text-on-surface">{{ price.day }}</td>
-                    <td class="py-4 text-center font-bold text-primary">{{ formatPrice(price.ekonomi) }}</td>
-                    <td class="py-4 text-right font-bold text-primary">{{ formatPrice(price.full) }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <h2 class="font-headline text-4xl font-black text-primary mb-2">Paket Perkemahan & Area</h2>
+        <p class="text-on-surface-variant">Pilih paket terbaikmu di tengah dataran tinggi Sukabumi.</p>
       </div>
 
-      <!-- Facility Lists -->
-      <div class="mt-16 bg-white rounded-[2rem] p-8 md:p-12 shadow-sm overflow-x-auto">
-        <h4 class="font-headline text-2xl font-bold text-primary mb-8 text-center uppercase tracking-widest">Fasilitas Area A, B & C</h4>
-        <div class="grid md:grid-cols-2 gap-8">
-          <div class="bg-surface-container-low p-6 rounded-2xl">
-            <h5 class="font-bold text-secondary uppercase mb-4 border-b border-outline-variant pb-2">Paket Ekonomis</h5>
-            <ul class="space-y-3 text-sm text-on-surface-variant">
-              <li v-for="item in facilityLists.ekonomis" :key="item.text" :class="['flex items-center gap-2', item.class || '']">
-                <span class="material-symbols-outlined text-lg">{{ item.icon }}</span>
-                {{ item.text }}
-              </li>
-            </ul>
-          </div>
-          <div class="bg-primary-container p-6 rounded-2xl text-white">
-            <h5 class="font-bold text-secondary-fixed uppercase mb-4 border-b border-white/20 pb-2">Paket Full</h5>
-            <ul class="space-y-3 text-sm text-primary-fixed-dim">
-              <li v-for="item in facilityLists.full" :key="item.text" :class="['flex items-center gap-2', item.class || '']">
-                <span class="material-symbols-outlined text-lg">{{ item.icon }}</span>
-                {{ item.text }}
-              </li>
-            </ul>
+      <div v-if="loading" class="flex justify-center py-20">
+        <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <template v-else>
+        <!-- Camping Packages (non-community) -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          <div v-for="pkg in campingPackages" :key="pkg.id"
+               :class="['rounded-3xl overflow-hidden group shadow-sm border flex flex-col',
+                        pkg.isFeatured ? 'border-secondary bg-surface-container-highest shadow-md' : 'border-outline-variant/20 bg-surface-container-highest']">
+            <div class="h-48 relative overflow-hidden">
+              <img v-if="pkg.imageUrl" :alt="pkg.name" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" :src="pkg.imageUrl"/>
+              <div v-else class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center">
+                <span class="material-symbols-outlined text-white/30 text-6xl">landscape</span>
+              </div>
+              <div v-if="pkg.badgeText" class="absolute top-4 left-4 bg-tertiary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                {{ pkg.badgeText }}
+              </div>
+              <div v-if="pkg.isFeatured" class="absolute top-4 right-4 bg-secondary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                Populer
+              </div>
+            </div>
+            <div class="p-6 flex flex-col flex-1">
+              <h3 class="font-headline text-lg font-bold text-primary mb-2">{{ pkg.name }}</h3>
+              <p v-if="pkg.description" class="text-xs text-on-surface-variant mb-4 line-clamp-2">{{ pkg.description }}</p>
+              <div class="mt-auto">
+                <p class="text-2xl font-black text-primary mb-1">Rp {{ Number(pkg.pricePerPax).toLocaleString('id-ID') }} <span class="text-xs font-normal text-on-surface-variant">/ {{ pkg.perPerson || 'pax' }}</span></p>
+                <p v-if="pkg.minPax > 1" class="text-[10px] text-on-surface-variant/60 mb-4">Min {{ pkg.minPax }} pax</p>
+                <p v-else class="text-[10px] text-on-surface-variant/60 mb-4">&nbsp;</p>
+              </div>
+              <div v-if="pkg.features?.length" class="bg-surface-container-low p-4 rounded-2xl">
+                <p class="text-[10px] font-bold text-secondary uppercase tracking-wider mb-2">Fasilitas:</p>
+                <ul class="space-y-1.5">
+                  <li v-for="(f, i) in pkg.features" :key="i" class="flex items-start gap-2 text-xs text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[14px] text-primary shrink-0 mt-0.5">check</span>
+                    {{ f }}
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        <!-- Tiket Masuk -->
+        <div v-if="ticketPackages.length" class="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm mb-16">
+          <h3 class="font-headline text-2xl font-bold text-primary mb-2 text-center uppercase tracking-widest">Tiket Masuk</h3>
+          <p class="text-center text-on-surface-variant text-sm mb-8">Akses masuk area camping Spec Camp</p>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div v-for="pkg in ticketPackages" :key="pkg.id" class="bg-surface-container-low p-6 rounded-2xl">
+              <h4 class="font-bold text-primary text-lg mb-2">{{ pkg.name }}</h4>
+              <p v-if="pkg.description" class="text-xs text-on-surface-variant mb-3">{{ pkg.description }}</p>
+              <p class="text-2xl font-black text-primary">Rp {{ Number(pkg.pricePerPax).toLocaleString('id-ID') }} <span class="text-xs font-normal text-on-surface-variant">/ orang</span></p>
+              <div v-if="pkg.features?.length" class="mt-4">
+                <ul class="space-y-1.5">
+                  <li v-for="(f, i) in pkg.features" :key="i" class="flex items-center gap-2 text-xs text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[14px] text-primary">check</span>
+                    {{ f }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fasilitas -->
+        <div class="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm overflow-x-auto">
+          <h3 class="font-headline text-2xl font-bold text-primary mb-8 text-center uppercase tracking-widest">Fasilitas Umum</h3>
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-surface-container-low p-6 rounded-2xl">
+              <h5 class="font-bold text-secondary uppercase mb-4 border-b border-outline-variant pb-2">Termasuk Semua Paket</h5>
+              <ul class="space-y-3 text-sm text-on-surface-variant">
+                <li v-for="item in facilityLists.included" :key="item" class="flex items-center gap-2 text-primary">
+                  <span class="material-symbols-outlined text-lg">check</span>
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
+            <div class="bg-primary-container p-6 rounded-2xl text-white">
+              <h5 class="font-bold text-secondary-fixed uppercase mb-4 border-b border-white/20 pb-2">Tambahan (Opsional)</h5>
+              <ul class="space-y-3 text-sm text-primary-fixed-dim">
+                <li v-for="item in facilityLists.extra" :key="item" class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-lg">add</span>
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
   </section>
 </template>
 
 <script setup>
-const formatPrice = (value) => `Rp ${value.toLocaleString('id-ID')}`
+import { ref, computed, onMounted } from 'vue'
+import { packageService } from '../services/packageService'
 
-const areas = [
-  {
-    title: 'Area A (Top View)',
-    badge: 'View Utama',
-    badgeClass: 'bg-tertiary text-white',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuByi39NW8bA4KGVMjTY_7OxauQyemH3TTz0gIeoHBUpVoN2-rg0T6CsSBdY7gr85eHbBdOixpwyZ6sxLtWdkfGuWMYcyuSm8YDOF-HNIurWMWezybYHGYeot1qHUPocPQ8TFNS4qjkTA63E2uVH9oZbUeOcDmxDo7XxnLNAW3_8ypQZtFzd8bo3Aa_0aOemdT2kjatDdyG5qt5iQFFAG2tQVthXDiAndPix9JsTb8k_vJnEg1vIhLtSHf1J3s5uHcBUUaNLIn7qXdlY',
-    prices: [
-      { day: 'Weekday', ekonomi: 350000, full: 450000 },
-      { day: 'Weekend', ekonomi: 450000, full: 600000 }
-    ]
-  },
-  {
-    title: 'Area B & C (Reguler)',
-    badge: 'Reguler',
-    badgeClass: 'bg-primary text-white',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5DgB5LUFdpWZ9s5izPcpkK9scsF9lYDqOeRHSmPo7Kr0IZ8lRnKp6Z7iyQ2PIPmQ4L8vKXS9rWPIULADEIyRbuZdD1KrkA8Xdap4ieUhZPUh76j8-9zBLXp_YgDXGXl9okBzyUSLYLkNVOqCuBDmi6hSyfav-t-ZtLL3htzp6bfQltYoQ5BiQUR2xdgTtAD4-2_m2ELIYWYnQWaNXzamOT7W0tPer3LfpgWBDzyBk4JWrAcdD-zTuwOTQwiUk71cJs4aCh68fykXN',
-    prices: [
-      { day: 'Weekday', ekonomi: 300000, full: 400000 },
-      { day: 'Weekend', ekonomi: 400000, full: 500000 }
-    ]
-  }
-]
+const packages = ref([])
+const loading = ref(true)
+
+const campingPackages = computed(() =>
+  packages.value.filter(p => p.category !== 'ticket')
+)
+
+const ticketPackages = computed(() =>
+  packages.value.filter(p => p.category === 'ticket')
+)
 
 const facilityLists = {
-  ekonomis: [
-    { text: 'Tiket masuk area camping', icon: 'check', class: 'text-primary' },
-    { text: 'Sewa lahan', icon: 'check', class: 'text-primary' },
-    { text: 'Tenda (2-4 orang)', icon: 'check', class: 'text-primary' },
-    { text: 'Toilet & Mushola', icon: 'check', class: 'text-primary' },
-    { text: 'Area api unggun', icon: 'check', class: 'text-primary' },
-    { text: 'Belum termasuk makan', icon: 'close', class: 'text-error' }
+  included: [
+    'Toilet & Mushola',
+    'Area api unggun',
+    'Parkir area dalam',
+    'Air mineral',
+    'Petugas keamanan 24 jam'
   ],
-  full: [
-    { text: 'Tiket masuk area camping', icon: 'check', class: 'text-secondary-fixed' },
-    { text: 'Sewa lahan', icon: 'check', class: 'text-secondary-fixed' },
-    { text: 'Tenda (2-4 orang)', icon: 'check', class: 'text-secondary-fixed' },
-    { text: 'Toilet & Mushola', icon: 'check', class: 'text-secondary-fixed' },
-    { text: 'Area api unggun', icon: 'check', class: 'text-secondary-fixed' },
-    { text: 'Alat tidur (sleeping bag, matras, bantal)', icon: 'check', class: 'text-secondary-fixed' },
-    { text: 'Bonus aktivitas (tracking & games)', icon: 'check', class: 'text-secondary-fixed' },
-    { text: 'Belum termasuk makan', icon: 'close', class: 'text-error-container' }
+  extra: [
+    'Sewa alat camping (tenda, sleeping bag, dll)',
+    'Makanan & minuman (Saung SPEC)',
+    'Paket kayu bakar',
+    'Jasa pemandu tracking',
+    'Team building & games',
+    'Berkuda'
   ]
 }
+
+onMounted(async () => {
+  try {
+    const data = await packageService.getAll()
+    packages.value = data.filter(p => p.isActive)
+  } catch (err) {
+    console.error('Gagal memuat paket:', err)
+  } finally {
+    loading.value = false
+  }
+})
 </script>
