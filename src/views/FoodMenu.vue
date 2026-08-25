@@ -1,96 +1,178 @@
 <template>
-  <div class="bg-background text-on-background font-body antialiased min-h-screen">
-    <Header />
-
-    <!-- Hero -->
-    <section class="pt-24 pb-12 bg-primary-container text-white relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-br from-primary to-primary-container opacity-80"></div>
-      <div class="relative px-6 md:px-12 max-w-5xl mx-auto text-center">
-        <span class="inline-block bg-secondary/30 text-secondary-fixed text-[10px] font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-6">Saung SPEC</span>
-        <h1 class="font-headline text-4xl md:text-5xl font-black mb-4 tracking-tight">Menu Makanan & Minuman</h1>
-        <p class="text-on-primary-container/80 text-sm md:text-base max-w-xl mx-auto">Nikmati berbagai pilihan makanan dan minuman langsung di area camping. Pesan langsung ke admin via WhatsApp.</p>
+  <div class="bg-surface min-h-screen font-body antialiased">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-surface/80 backdrop-blur-xl">
+      <div class="px-5 py-4 flex items-center gap-3 max-w-lg mx-auto">
+        <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+          <img src="/logo/logo.svg" alt="SPEC" class="w-6 h-6 object-contain brightness-0 invert" />
+        </div>
+        <div>
+          <h1 class="font-headline text-base font-bold text-primary leading-tight">Saung SPEC</h1>
+          <p class="text-[11px] text-on-surface-variant">Camping Ground & Equestrian</p>
+        </div>
       </div>
-    </section>
+    </header>
 
-    <!-- Menu Content -->
-    <section class="py-12 md:py-16">
-      <div class="px-6 md:px-12 max-w-5xl mx-auto">
+    <!-- Category Tabs -->
+    <div class="sticky top-[60px] z-40 bg-surface-container-low/80 backdrop-blur-lg border-b border-outline-variant/10">
+      <div class="px-5 py-2.5 flex gap-2 max-w-lg mx-auto overflow-x-auto no-scrollbar">
+        <button v-for="cat in categories" :key="cat.value"
+                @click="activeCategory = cat.value"
+                :class="['px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all',
+                         activeCategory === cat.value
+                           ? 'bg-primary text-on-primary shadow-sm shadow-primary/20'
+                           : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high']">
+          {{ cat.emoji }} {{ cat.label }}
+        </button>
+      </div>
+    </div>
 
-        <div v-if="loading" class="flex justify-center py-20">
-          <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+    <!-- Loading -->
+    <div v-if="loading" class="flex justify-center py-20">
+      <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
 
-        <div v-else-if="items.length === 0" class="text-center py-20">
-          <span class="material-symbols-outlined text-4xl text-on-surface-variant/30 mb-3 block">restaurant</span>
-          <p class="text-on-surface-variant text-sm">Menu belum tersedia saat ini.</p>
-        </div>
+    <!-- Empty -->
+    <div v-else-if="filteredItems.length === 0" class="text-center py-20 px-6">
+      <span class="text-5xl mb-4 block">🍽️</span>
+      <p class="text-on-surface-variant text-sm">Menu belum tersedia.</p>
+    </div>
 
-        <div v-else class="space-y-12">
-          <div v-for="cat in categories" :key="cat.value">
-            <div v-if="getByCategory(cat.value).length > 0">
-              <div class="flex items-center gap-3 mb-6">
-                <span class="text-2xl">{{ cat.emoji }}</span>
-                <h2 class="font-headline text-2xl font-bold text-primary">{{ cat.label }}</h2>
-                <div class="flex-1 h-px bg-outline-variant/20 ml-2"></div>
-              </div>
+    <!-- Menu List -->
+    <main v-else class="pb-28 max-w-lg mx-auto">
+      <div class="px-5 pt-4 pb-2">
+        <h2 class="font-headline text-lg font-bold text-primary">{{ activeCatLabel }}</h2>
+        <p class="text-[11px] text-on-surface-variant">{{ filteredItems.length }} item tersedia</p>
+      </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div v-for="item in getByCategory(cat.value)" :key="item.id"
-                     class="bg-surface-container-lowest rounded-2xl p-5 flex items-start justify-between gap-4 hover:shadow-md transition-shadow">
-                  <div class="flex-1 min-w-0">
-                    <h3 class="text-sm font-bold text-on-surface leading-tight">{{ item.name }}</h3>
-                    <p v-if="item.description" class="text-xs text-on-surface-variant mt-1 line-clamp-2">{{ item.description }}</p>
-                  </div>
-                  <div class="text-right shrink-0">
-                    <p class="text-sm font-bold text-primary whitespace-nowrap">{{ formatCurrency(item.price) }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div class="px-5 space-y-2.5">
+        <div v-for="item in filteredItems" :key="item.id"
+             class="bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+          <div class="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center text-2xl shrink-0">
+            {{ getCatEmoji(item.category) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-sm font-bold text-on-surface leading-tight">{{ item.name }}</h3>
+            <p v-if="item.description" class="text-[11px] text-on-surface-variant mt-0.5 line-clamp-1">{{ item.description }}</p>
+            <p class="text-sm font-bold text-primary mt-1">{{ formatCurrency(item.price) }}</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <template v-if="getQty(item.id) > 0">
+              <button @click="removeItem(item)"
+                      class="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center active:scale-90 transition-transform">
+                <span class="material-symbols-outlined text-lg">remove</span>
+              </button>
+              <span class="w-6 text-center text-sm font-bold text-on-surface">{{ getQty(item.id) }}</span>
+            </template>
+            <button @click="addItem(item)"
+                    class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center active:scale-90 transition-transform shadow-sm shadow-primary/20">
+              <span class="material-symbols-outlined text-lg">add</span>
+            </button>
           </div>
         </div>
-
-        <!-- CTA -->
-        <div class="mt-16 bg-primary-container rounded-3xl p-8 md:p-12 text-center text-white">
-          <h3 class="font-headline text-xl md:text-2xl font-bold mb-3">Pesan Sekarang</h3>
-          <p class="text-on-primary-container/80 text-sm mb-6 max-w-md mx-auto">Langsung chat admin untuk pemesanan makanan & minuman di Saung SPEC.</p>
-          <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer"
-             class="inline-flex items-center gap-2 bg-secondary text-white px-8 py-3 rounded-full font-bold text-sm hover:bg-secondary/80 transition-all active:scale-95 shadow-lg">
-            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            Chat Admin WhatsApp
-          </a>
-        </div>
-
       </div>
-    </section>
+    </main>
 
-    <Footer />
+    <!-- Sticky Cart Bar -->
+    <transition enter-active-class="transition ease-out duration-300" enter-from-class="translate-y-full" enter-to-class="translate-y-0"
+                leave-active-class="transition ease-in duration-200" leave-from-class="translate-y-0" leave-to-class="translate-y-full">
+      <div v-if="cartCount > 0" class="fixed bottom-0 inset-x-0 z-50 p-4 pb-6">
+        <div class="max-w-lg mx-auto bg-primary rounded-2xl p-4 shadow-xl shadow-primary/30 flex items-center gap-4">
+          <div class="flex-1">
+            <p class="text-on-primary/80 text-[11px] font-medium">{{ cartCount }} item dipilih</p>
+            <p class="text-white font-bold text-lg">{{ formatCurrency(cartTotal) }}</p>
+          </div>
+          <button @click="orderViaWhatsApp"
+                  class="bg-secondary text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-secondary/80 transition-all active:scale-95 flex items-center gap-2 shadow-lg">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Pesan
+          </button>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Note banner -->
+    <div v-if="!loading && items.length > 0 && cartCount === 0"
+         class="fixed bottom-0 inset-x-0 z-40 px-4 pb-5">
+      <div class="max-w-lg mx-auto bg-surface-container-highest/90 backdrop-blur-sm rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm">
+        <span class="material-symbols-outlined text-sm text-secondary">info</span>
+        <p class="text-[11px] text-on-surface-variant">Tidak boleh bawa makanan dari luar.</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import Header from '../components/Header.vue'
-import Footer from '../components/Footer.vue'
 import { saungSpecMenuService } from '../services/saungSpecMenuService'
 
 const loading = ref(true)
 const items = ref([])
+const cart = ref({})
 
 const categories = [
+  { value: 'all', label: 'Semua', emoji: '📋' },
   { value: 'makanan', label: 'Makanan', emoji: '🍽️' },
   { value: 'cemilan', label: 'Cemilan', emoji: '🍪' },
   { value: 'rebusan', label: 'Rebusan', emoji: '🫕' },
   { value: 'minuman', label: 'Minuman', emoji: '☕' }
 ]
 
-const getByCategory = (cat) => items.value.filter(i => i.category === cat)
+const activeCategory = ref('all')
 
-const whatsappUrl = computed(() => {
-  const phone = '6281282998685'
-  const text = encodeURIComponent('Halo Kak, saya mau pesan makanan di Saung SPEC.')
-  return `https://wa.me/${phone}?text=${text}`
+const activeCatLabel = computed(() => {
+  const cat = categories.find(c => c.value === activeCategory.value)
+  return cat ? cat.label : 'Semua'
 })
+
+const filteredItems = computed(() => {
+  if (activeCategory.value === 'all') return items.value
+  return items.value.filter(i => i.category === activeCategory.value)
+})
+
+const cartCount = computed(() => Object.values(cart.value).reduce((sum, q) => sum + q, 0))
+
+const cartTotal = computed(() => {
+  return items.value.reduce((sum, item) => {
+    return sum + (cart.value[item.id] || 0) * item.price
+  }, 0)
+})
+
+const getQty = (id) => cart.value[id] || 0
+
+const addItem = (item) => {
+  cart.value[item.id] = (cart.value[item.id] || 0) + 1
+}
+
+const removeItem = (item) => {
+  if (cart.value[item.id] > 1) {
+    cart.value[item.id]--
+  } else {
+    delete cart.value[item.id]
+  }
+}
+
+const getCatEmoji = (cat) => {
+  const emojis = { makanan: '🍽️', cemilan: '🍪', rebusan: '🫕', minuman: '☕' }
+  return emojis[cat] || '🍽️'
+}
+
+const orderViaWhatsApp = () => {
+  const phone = '6281282998685'
+  let lines = ['Halo Kak, saya mau pesan:', '']
+  for (const item of items.value) {
+    const qty = cart.value[item.id]
+    if (qty > 0) {
+      lines.push(`• ${item.name} x${qty} = ${formatCurrency(item.price * qty)}`)
+    }
+  }
+  lines.push('')
+  lines.push(`Total: ${formatCurrency(cartTotal.value)}`)
+  lines.push('')
+  lines.push('(Ketik nama & lokasi untuk konfirmasi)')
+  const text = encodeURIComponent(lines.join('\n'))
+  window.open(`https://wa.me/${phone}?text=${text}`, '_blank')
+}
 
 const fetchItems = async () => {
   loading.value = true
@@ -113,3 +195,8 @@ const formatCurrency = (value) => {
 
 onMounted(fetchItems)
 </script>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
