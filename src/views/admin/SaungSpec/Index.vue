@@ -57,14 +57,12 @@
                   <div :class="['w-10 h-10 rounded-xl flex items-center justify-center text-lg', cat.bgClass]">
                     {{ cat.emoji }}
                   </div>
-                  <div class="flex flex-col items-end gap-1.5">
-                    <span v-if="item.isActive" class="bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
-                      Aktif
-                    </span>
-                    <span v-else class="bg-surface-container text-on-surface-variant text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
-                      Nonaktif
-                    </span>
-                  </div>
+                  <button @click="toggleActive(item)"
+                          class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
+                          :class="item.isActive ? 'bg-primary' : 'bg-outline-variant/40'">
+                    <span class="inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform"
+                          :class="item.isActive ? 'translate-x-[18px]' : 'translate-x-[3px]'"></span>
+                  </button>
                 </div>
 
                 <h4 class="text-base font-bold text-on-surface leading-tight mb-1">{{ item.name }}</h4>
@@ -175,6 +173,15 @@ const fetchItems = async () => {
     console.error('Gagal mengambil menu:', err)
   } finally {
     loading.value = false
+  }
+}
+
+const toggleActive = async (item) => {
+  try {
+    await saungSpecMenuService.update(item.id, { isActive: !item.isActive })
+    item.isActive = !item.isActive
+  } catch (err) {
+    console.error('Gagal mengubah status:', err)
   }
 }
 
