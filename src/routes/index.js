@@ -17,8 +17,10 @@ import Services from '../views/admin/Services/Index.vue'
 import AdminLogin from '../views/Auth/Login.vue'
 import BookingPage from '../views/BookingPage.vue'
 import SearchBooking from '../views/SearchBooking.vue'
+import FoodMenu from '../views/FoodMenu.vue'
 import Reports from '../views/admin/Reports/Index.vue'
 import CRM from '../views/admin/CRM/Index.vue'
+import SaungSpec from '../views/admin/SaungSpec/Index.vue'
 
 const routes = [
   {
@@ -35,6 +37,11 @@ const routes = [
     path: '/search-booking',
     name: 'search-booking',
     component: SearchBooking
+  },
+  {
+    path: '/menu',
+    name: 'menu',
+    component: FoodMenu
   },
   {
     path: '/about',
@@ -86,6 +93,12 @@ const routes = [
     name: 'services',
     component: Services,
     meta: { requiresAuth: true, permission: 'view_service' }
+  },
+  {
+    path: '/admin/saung-spec',
+    name: 'saung-spec',
+    component: SaungSpec,
+    meta: { requiresAuth: true, permission: 'view_saung_spec' }
   },
   {
     path: '/admin/inventory',

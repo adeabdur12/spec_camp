@@ -85,11 +85,12 @@ const allMenuItems = [
     name: 'Master Data',
     group: 'master-data',
     icon: 'database',
-    perm: ['view_package', 'view_inventory', 'view_service'],
+    perm: ['view_package', 'view_inventory', 'view_service', 'view_saung_spec'],
     children: [
       { name: 'Paket & Event', path: '/admin/paket-event', icon: 'local_activity', perm: 'view_package' },
       { name: 'Inventory', path: '/admin/inventory', icon: 'inventory_2', perm: 'view_inventory' },
-      { name: 'Layanan', path: '/admin/services', icon: 'dry_cleaning', perm: 'view_service' }
+      { name: 'Layanan', path: '/admin/services', icon: 'dry_cleaning', perm: 'view_service' },
+      { name: 'Saung SPEC', path: '/admin/saung-spec', icon: 'restaurant', perm: 'view_saung_spec' }
     ]
   },
   { name: 'Pelanggan', path: '/admin/customers', icon: 'badge', perm: 'view_customer' },
