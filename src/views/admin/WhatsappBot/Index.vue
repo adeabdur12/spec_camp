@@ -101,8 +101,8 @@ const bot = ref({
   aiInstructions: '',
   isActive: false,
   welcomeMessage: '',
-  maxTokens: 500,
-  temperature: 0.7
+  maxTokens: 1000,
+  temperature: 0.5
 })
 
 const loading = ref(true)

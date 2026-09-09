@@ -71,21 +71,11 @@
       </div>
 
       <template v-else-if="stats">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
           <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
             <span class="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Total Omzet</span>
             <div class="text-2xl font-bold text-primary">{{ formatCurrency(stats.totalRevenue) }}</div>
             <div class="text-emerald-700 text-xs font-bold">{{ stats.count }} Transaksi</div>
-          </div>
-          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-red-600 text-xs font-bold uppercase tracking-widest">Pajak 10%</span>
-            <div class="text-2xl font-bold text-red-600">{{ formatCurrency(reportTax) }}</div>
-            <div class="text-red-500/50 text-xs font-bold">Ditanggung Spec Camp</div>
-          </div>
-          <div class="bg-surface-container-low p-5 rounded-xl space-y-2">
-            <span class="text-orange-600 text-xs font-bold uppercase tracking-widest">Retribusi 5%</span>
-            <div class="text-2xl font-bold text-orange-600">{{ formatCurrency(reportLocalFee) }}</div>
-            <div class="text-orange-500/50 text-xs font-bold">Ditanggung Spec Camp</div>
           </div>
         </div>
 
@@ -285,6 +275,8 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
 }
 
+const sumifFormula = (itemType, col, dStart, dEnd) => `=SUMIF($H${dStart}:$H${dEnd},"${itemType}",$${col}${dStart}:$${col}${dEnd})`
+
 const exportCSV = async () => {
   if (exportMode.value === 'single') {
     exportSingleCSV()
@@ -303,115 +295,96 @@ const exportSingleCSV = () => {
 
   rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Tanggal Pembayaran', 'Metode Pembayaran', 'Bukti Pembayaran'])
 
-  let totalRevenue = 0
-  let totalInvCost = 0
-  let totalMimountTotal = 0
-  let totalMimountShare = 0
-  let totalSpecCampShare = 0
-  let totalMimountSvc = 0
-  let totalSpecCampSvc = 0
-  let totalEksternalSvc = 0
+  const detailStart = rows.length + 1
 
   transactions.value.forEach(b => {
     const bookingTotal = Number(b.totalPrice || 0)
-    totalRevenue += bookingTotal
-    totalInvCost += Number(b.inventoryCost || 0)
-    totalMimountTotal += Number(b.mimountTotal || 0)
-    totalMimountShare += Number(b.mimountShare || 0)
-    totalSpecCampShare += Number(b.specCampShare || 0)
+    const bookingSpecCampSvc = (b.ExtraServices || [])
+      .filter(s => (s.type || 'spec_camp') === 'spec_camp')
+      .reduce((sum, s) => sum + Number(s.BookingService?.priceAtBooking || s.price || 0) * Number(s.BookingService?.quantity || 1), 0)
 
-    // Booking header row
+    const r = rows.length + 1
     rows.push([
-      b.checkInDate, b.customerName, b.PackageEvent?.name || '-',
-      String(b.pax || 1), String(b.freePax || 0), b.status,
-      bookingTotal, '', '', '', '', '', '', '', '',
-      b.paidAt ? new Date(b.paidAt).toLocaleDateString('id-ID') : '-', b.paymentMethod || '-', b.paymentProof || '-'
+      b.checkInDate || '', b.customerName || '', b.PackageEvent?.name || '-',
+      Number(b.pax || 1), Number(b.freePax || 0), b.status || '',
+      bookingTotal, 'Tiket Masuk', b.PackageEvent?.name || '-', Number(b.pax || 1),
+      '', Number(b.basePrice || 0), Number(b.mimountShare || 0),
+      Math.max(0, Math.round(Number(b.specCampShare || 0) - bookingSpecCampSvc)),
+      'Porsi tiket masuk',
+      b.paidAt ? new Date(b.paidAt).toLocaleDateString('id-ID') : '-',
+      b.paymentMethod || '-', b.paymentProof || '-'
     ])
 
-    // Inventory items detail
     const invItems = b.InventoryItems || []
     invItems.forEach(inv => {
       const price = Number(inv.BookingInventory?.priceAtBooking || inv.price || 0)
       const qty = Number(inv.BookingInventory?.quantity || 1)
-      const subtotal = price * qty
-
+      const ri = rows.length + 1
       rows.push([
-        '', '', '', '', '', '',
-        '', 'Inventory', inv.name, String(qty), price, subtotal,
-        subtotal, 0, 'Sewa alat Mimount',
+        '', '', '', '', '', '', '',
+        'Inventory', inv.name, qty, price,
+        `=J${ri}*K${ri}`,
+        `=ROUND(L${ri}/1.2,0)`,
+        `=L${ri}-M${ri}`,
+        'Sewa alat Mimount',
         '', '', ''
       ])
     })
 
-    // Services detail
     const services = b.ExtraServices || []
     services.forEach(svc => {
       const price = Number(svc.BookingService?.priceAtBooking || svc.price || 0)
       const qty = Number(svc.BookingService?.quantity || 1)
-      const subtotal = price * qty
       const svcType = svc.type || 'spec_camp'
       let paidTo = ''
-      let svcMimount = 0
-      let svcSpecCamp = 0
-
+      let mimPortion = 0
+      let specPortion = 0
+      const rs = rows.length + 1
       if (svcType === 'mimount') {
         paidTo = 'Mimount'
-        svcMimount = subtotal
-        totalMimountSvc += subtotal
+        mimPortion = `=L${rs}`
       } else if (svcType === 'eksternal') {
         paidTo = 'Dipotong (Eksternal)'
-        totalEksternalSvc += subtotal
       } else {
         paidTo = 'Spec Camp'
-        svcSpecCamp = subtotal
-        totalSpecCampSvc += subtotal
+        specPortion = `=L${rs}`
       }
-
       rows.push([
-        '', '', '', '', '', '',
-        '', `Layanan (${svcType})`, svc.name, String(qty), price, subtotal,
-        svcMimount, svcSpecCamp, paidTo,
+        '', '', '', '', '', '', '',
+        `Layanan (${svcType})`, svc.name, qty, price,
+        `=J${rs}*K${rs}`,
+        mimPortion, specPortion, paidTo,
         '', '', ''
       ])
     })
   })
 
-  // Apply same markup adjustment as ReportService.js
-  const mimountInventoryBase = Math.round(totalInvCost / 1.2)
-  const specCampInventoryMarkup = totalInvCost - mimountInventoryBase
-  const adjustedMimountTotal = totalMimountTotal - specCampInventoryMarkup
-  const adjustedSpecCampShare = totalSpecCampShare + specCampInventoryMarkup
-  const tax = Math.round(adjustedSpecCampShare * 0.1)
-  const fee = Math.round(adjustedSpecCampShare * 0.05)
-  const net = Math.max(0, adjustedSpecCampShare - tax - fee)
-
-  const porsiTiketSpecCampSingle = totalSpecCampShare - totalSpecCampSvc
+  const detailEnd = Math.max(rows.length, detailStart)
 
   rows.push([])
   rows.push(['RINGKASAN', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-  rows.push(['Total Omzet', '', '', '', '', '', Number(totalRevenue), '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['Total Omzet', '', '', '', '', '', `=SUM($G${detailStart}:$G${detailEnd})`, '', '', '', '', '', '', '', '', '', '', ''])
   rows.push([])
   rows.push(['PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-  rows.push(['  Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(totalMimountSvc), '', '', '', '', ''])
-  rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(mimountInventoryBase), '', '', '', '', ''])
-  rows.push(['  Total Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(totalMimountShare), '', '', '', '', ''])
-  rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', Number(adjustedMimountTotal), '', '', '', '', ''])
+  const mimFirst = rows.length + 1
+  rows.push(['  Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (mimount)', 'M', detailStart, detailEnd), '', '', '', '', ''])
+  rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'M', detailStart, detailEnd), '', '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'M', detailStart, detailEnd), '', '', '', '', ''])
+  rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUM(M${mimFirst}:M${mimFirst + 2})`, '', '', '', '', ''])
   rows.push([])
   rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-  rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', Number(specCampInventoryMarkup), '', '', '', ''])
-  rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', Number(totalSpecCampSvc), '', '', '', ''])
-  rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', Number(porsiTiketSpecCampSingle), '', '', '', ''])
-  rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', Number(adjustedSpecCampShare), '', '', '', ''])
+  const specFirst = rows.length + 1
+  rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'N', detailStart, detailEnd), '', '', '', ''])
+  rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (spec_camp)', 'N', detailStart, detailEnd), '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'N', detailStart, detailEnd), '', '', '', ''])
+  rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${specFirst}:N${specFirst + 2})`, '', '', '', ''])
   rows.push([])
-  rows.push(['POTONGAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-  rows.push(['  Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(tax), '', '', '', ''])
-  rows.push(['  Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(fee), '', '', '', ''])
-  rows.push(['Net Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', Number(net), '', '', '', ''])
+  rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}`, '', '', '', ''])
   rows.push([])
-  rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', Number(totalEksternalSvc), '', '', ''])
+  rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', ''])
 
   const csv = rows.map(r => r.map(v => {
-    if (typeof v === 'number') return formatRupiah(v)
+    if (typeof v === 'number') return String(v)
     return `"${String(v).replace(/"/g, '""')}"`
   }).join(',')).join('\n')
   const BOM = '\uFEFF'
@@ -444,7 +417,6 @@ const exportMultiMonthCSV = async () => {
   })
 
   const rows = []
-  let grandTotal = { revenue: 0, invCost: 0, mimountTotal: 0, mimountShare: 0, specCampShare: 0, mimountSvc: 0, specCampSvc: 0, eksternalSvc: 0 }
 
   const startLabel = months.find(m => m.value === periodMonth.value)?.label || ''
   const endLabel = months.find(m => m.value === exportEndMonth.value)?.label || ''
@@ -458,44 +430,42 @@ const exportMultiMonthCSV = async () => {
     const [y, m] = monthKey.split('-').map(Number)
     const monthLabel = months.find(mo => mo.value === m)?.label || ''
 
-    let monthRevenue = 0
-    let monthInvCost = 0
-    let monthMimountTotal = 0
-    let monthMimountShare = 0
-    let monthSpecCampShare = 0
-    let monthMimountSvc = 0
-    let monthSpecCampSvc = 0
-    let monthEksternalSvc = 0
-
     rows.push([])
     rows.push([`${monthLabel.toUpperCase()} ${y}`])
     rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Tanggal Pembayaran', 'Metode Pembayaran', 'Bukti Pembayaran'])
 
+    const detailStart = rows.length + 1
+
     grouped[monthKey].forEach(b => {
       const bookingTotal = Number(b.totalPrice || 0)
-      monthRevenue += bookingTotal
-      monthInvCost += Number(b.inventoryCost || 0)
-      monthMimountTotal += Number(b.mimountTotal || 0)
-      monthMimountShare += Number(b.mimountShare || 0)
-      monthSpecCampShare += Number(b.specCampShare || 0)
+      const bookingSpecCampSvc = (b.ExtraServices || [])
+        .filter(s => (s.type || 'spec_camp') === 'spec_camp')
+        .reduce((sum, s) => sum + Number(s.BookingService?.priceAtBooking || s.price || 0) * Number(s.BookingService?.quantity || 1), 0)
 
+      const r = rows.length + 1
       rows.push([
-        b.checkInDate, b.customerName, b.PackageEvent?.name || '-',
-        String(b.pax || 1), String(b.freePax || 0), b.status,
-        bookingTotal, '', '', '', '', '', '', '', '',
-        b.paidAt ? new Date(b.paidAt).toLocaleDateString('id-ID') : '-', b.paymentMethod || '-', b.paymentProof || '-'
+        b.checkInDate || '', b.customerName || '', b.PackageEvent?.name || '-',
+        Number(b.pax || 1), Number(b.freePax || 0), b.status || '',
+        bookingTotal, 'Tiket Masuk', b.PackageEvent?.name || '-', Number(b.pax || 1),
+        '', Number(b.basePrice || 0), Number(b.mimountShare || 0),
+        Math.max(0, Math.round(Number(b.specCampShare || 0) - bookingSpecCampSvc)),
+        'Porsi tiket masuk',
+        b.paidAt ? new Date(b.paidAt).toLocaleDateString('id-ID') : '-',
+        b.paymentMethod || '-', b.paymentProof || '-'
       ])
 
       const invItems = b.InventoryItems || []
       invItems.forEach(inv => {
         const price = Number(inv.BookingInventory?.priceAtBooking || inv.price || 0)
         const qty = Number(inv.BookingInventory?.quantity || 1)
-        const subtotal = price * qty
-
+        const ri = rows.length + 1
         rows.push([
-          '', '', '', '', '', '',
-          '', 'Inventory', inv.name, String(qty), price, subtotal,
-          subtotal, 0, 'Sewa alat Mimount',
+          '', '', '', '', '', '', '',
+          'Inventory', inv.name, qty, price,
+          `=J${ri}*K${ri}`,
+          `=ROUND(L${ri}/1.2,0)`,
+          `=L${ri}-M${ri}`,
+          'Sewa alat Mimount',
           '', '', ''
         ])
       })
@@ -504,110 +474,77 @@ const exportMultiMonthCSV = async () => {
       services.forEach(svc => {
         const price = Number(svc.BookingService?.priceAtBooking || svc.price || 0)
         const qty = Number(svc.BookingService?.quantity || 1)
-        const subtotal = price * qty
         const svcType = svc.type || 'spec_camp'
         let paidTo = ''
-        let svcMimount = 0
-        let svcSpecCamp = 0
-
+        let mimPortion = 0
+        let specPortion = 0
+        const rs = rows.length + 1
         if (svcType === 'mimount') {
           paidTo = 'Mimount'
-          svcMimount = subtotal
-          monthMimountSvc += subtotal
+          mimPortion = `=L${rs}`
         } else if (svcType === 'eksternal') {
           paidTo = 'Dipotong (Eksternal)'
-          monthEksternalSvc += subtotal
         } else {
           paidTo = 'Spec Camp'
-          svcSpecCamp = subtotal
-          monthSpecCampSvc += subtotal
+          specPortion = `=L${rs}`
         }
-
         rows.push([
-          '', '', '', '', '', '',
-          '', `Layanan (${svcType})`, svc.name, String(qty), price, subtotal,
-          svcMimount, svcSpecCamp, paidTo,
+          '', '', '', '', '', '', '',
+          `Layanan (${svcType})`, svc.name, qty, price,
+          `=J${rs}*K${rs}`,
+          mimPortion, specPortion, paidTo,
           '', '', ''
         ])
       })
     })
 
-    // Apply same markup adjustment as ReportService.js
-    const mimountInventoryBase = Math.round(monthInvCost / 1.2)
-    const specCampInventoryMarkup = monthInvCost - mimountInventoryBase
-    const adjustedMimountTotal = monthMimountTotal - specCampInventoryMarkup
-    const adjustedSpecCampShare = monthSpecCampShare + specCampInventoryMarkup
-    const tax = Math.round(adjustedSpecCampShare * 0.1)
-    const fee = Math.round(adjustedSpecCampShare * 0.05)
-    const net = Math.max(0, adjustedSpecCampShare - tax - fee)
-    const monthPorsiTiketSpecCamp = monthSpecCampShare - monthSpecCampSvc
-
-    grandTotal.revenue += monthRevenue
-    grandTotal.invCost += monthInvCost
-    grandTotal.mimountTotal += monthMimountTotal
-    grandTotal.specCampShare += monthSpecCampShare
-    grandTotal.mimountShare += monthMimountShare
-    grandTotal.mimountSvc += monthMimountSvc
-    grandTotal.specCampSvc += monthSpecCampSvc
-    grandTotal.eksternalSvc += monthEksternalSvc
+    const detailEnd = Math.max(rows.length, detailStart)
 
     rows.push([])
-    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', monthRevenue, '', '', '', '', '', '', '', '', '', ''])
+    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', `=SUM($G${detailStart}:$G${detailEnd})`, '', '', '', '', '', '', '', '', '', '', ''])
     rows.push([])
     rows.push(['  PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    rows.push(['    Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', monthMimountSvc, '', '', '', '', ''])
-    rows.push(['    Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', mimountInventoryBase, '', '', '', '', ''])
-    rows.push(['    Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', monthMimountShare, '', '', '', '', ''])
-    rows.push(['  Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', adjustedMimountTotal, '', '', '', '', ''])
+    const mimFirst = rows.length + 1
+    rows.push(['    Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (mimount)', 'M', detailStart, detailEnd), '', '', '', '', ''])
+    rows.push(['    Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'M', detailStart, detailEnd), '', '', '', '', ''])
+    rows.push(['    Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'M', detailStart, detailEnd), '', '', '', '', ''])
+    rows.push(['  Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUM(M${mimFirst}:M${mimFirst + 2})`, '', '', '', '', ''])
     rows.push([])
     rows.push(['  PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    rows.push(['    Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', specCampInventoryMarkup, '', '', '', ''])
-    rows.push(['    Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', monthSpecCampSvc, '', '', '', ''])
-    rows.push(['    Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', monthPorsiTiketSpecCamp, '', '', '', ''])
-    rows.push(['  Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', adjustedSpecCampShare, '', '', '', ''])
+    const specFirst = rows.length + 1
+    rows.push(['    Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'N', detailStart, detailEnd), '', '', '', ''])
+    rows.push(['    Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (spec_camp)', 'N', detailStart, detailEnd), '', '', '', ''])
+    rows.push(['    Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'N', detailStart, detailEnd), '', '', '', ''])
+    rows.push(['  Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${specFirst}:N${specFirst + 2})`, '', '', '', ''])
     rows.push([])
-    rows.push(['  POTONGAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-    rows.push(['    Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(tax), '', '', '', ''])
-    rows.push(['    Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(fee), '', '', '', ''])
-    rows.push(['  Net Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', net, '', '', '', ''])
+    rows.push(['  Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}`, '', '', '', ''])
     rows.push([])
-    rows.push(['  Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', monthEksternalSvc, '', '', ''])
+    rows.push(['  Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', ''])
   })
 
-  const totalMimountInventoryBase = Math.round(grandTotal.invCost / 1.2)
-  const totalSpecCampInventoryMarkup = grandTotal.invCost - totalMimountInventoryBase
-  const totalAdjustedMimount = grandTotal.mimountTotal - totalSpecCampInventoryMarkup
-  const totalAdjustedSpecCamp = grandTotal.specCampShare + totalSpecCampInventoryMarkup
-  const totalTax = Math.round(totalAdjustedSpecCamp * 0.1)
-  const totalFee = Math.round(totalAdjustedSpecCamp * 0.05)
-  const totalNet = Math.max(0, totalAdjustedSpecCamp - totalTax - totalFee)
-
-  const grandTotalPorsiTiketSpecCamp = grandTotal.specCampShare - grandTotal.specCampSvc
-
   rows.push([])
-  rows.push(['GRAND TOTAL', '', '', '', '', '', grandTotal.revenue, '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['GRAND TOTAL', '', '', '', '', '', `=SUMIF($H:$H,"Tiket Masuk",$G:$G)`, '', '', '', '', '', '', '', '', '', '', ''])
   rows.push([])
   rows.push(['PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-  rows.push(['  Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', grandTotal.mimountSvc, '', '', '', '', ''])
-  rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', totalMimountInventoryBase, '', '', '', '', ''])
-  rows.push(['  Total Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', grandTotal.mimountShare, '', '', '', '', ''])
-  rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', totalAdjustedMimount, '', '', '', '', ''])
+  const grandMimFirst = rows.length + 1
+  rows.push(['  Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (mimount)",$M:$M)`, '', '', '', '', ''])
+  rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Inventory",$M:$M)`, '', '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Tiket Masuk",$M:$M)`, '', '', '', '', ''])
+  rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUM(M${grandMimFirst}:M${grandMimFirst + 2})`, '', '', '', '', ''])
   rows.push([])
   rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-  rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', totalSpecCampInventoryMarkup, '', '', '', ''])
-  rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', grandTotal.specCampSvc, '', '', '', ''])
-  rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', grandTotalPorsiTiketSpecCamp, '', '', '', ''])
-  rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', totalAdjustedSpecCamp, '', '', '', ''])
+  const grandSpecFirst = rows.length + 1
+  rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Inventory",$N:$N)`, '', '', '', ''])
+  rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (spec_camp)",$N:$N)`, '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Tiket Masuk",$N:$N)`, '', '', '', ''])
+  rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${grandSpecFirst}:N${grandSpecFirst + 2})`, '', '', '', ''])
   rows.push([])
-  rows.push(['POTONGAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-  rows.push(['  Total Pajak 10%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(totalTax), '', '', '', ''])
-  rows.push(['  Total Retribusi 5%', '', '', '', '', '', '', '', '', '', '', '', '', -Number(totalFee), '', '', '', ''])
-  rows.push(['Total Net Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', totalNet, '', '', '', ''])
+  rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${grandSpecFirst + 3}`, '', '', '', ''])
   rows.push([])
-  rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', grandTotal.eksternalSvc, '', '', ''])
+  rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (eksternal)",$L:$L)`, '', '', ''])
 
   const csv = rows.map(r => r.map(v => {
-    if (typeof v === 'number') return formatRupiah(v)
+    if (typeof v === 'number') return String(v)
     return `"${String(v).replace(/"/g, '""')}"`
   }).join(',')).join('\n')
   const BOM = '\uFEFF'
@@ -633,9 +570,6 @@ const getEndDate = () => {
   return `${periodYear.value}-${String(periodMonth.value).padStart(2, '0')}-${d.getDate()}`
 }
 
-const reportTax = computed(() => Math.round((stats.value?.totalSpecCampShare || 0) * 0.1))
-const reportLocalFee = computed(() => Math.round((stats.value?.totalSpecCampShare || 0) * 0.05))
-const reportSpecCampNet = computed(() => Math.max(0, (stats.value?.totalSpecCampShare || 0) - reportTax.value - reportLocalFee.value))
 const inventoryMarkup = computed(() => Math.round((stats.value?.totalInventoryCost || 0) - (stats.value?.totalInventoryCost || 0) / 1.2))
 const mimountInventoryBase = computed(() => Math.round((stats.value?.totalInventoryCost || 0) / 1.2))
 const porsiTiketMimount = computed(() => stats.value?.totalMimountShare || 0)
@@ -669,11 +603,6 @@ const chartOptions = computed(() => ({
 }))
 
 const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0)
-
-const formatRupiah = (val) => {
-  if (val < 0) return `(${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(-val)})`
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0)
-}
 
 const fetchAllBookings = async (api) => {
   const allData = []

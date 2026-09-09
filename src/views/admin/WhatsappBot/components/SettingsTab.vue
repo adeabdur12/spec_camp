@@ -75,8 +75,12 @@
               <label class="block text-xs font-black uppercase tracking-widest text-on-surface-variant mb-2">Model AI</label>
               <select v-model="aiModel"
                       class="w-full px-4 py-3 rounded-xl bg-surface border border-outline-variant/10 text-on-surface font-medium text-sm focus:outline-none focus:border-primary transition-colors">
-                <option value="Qwen/Qwen3-4B-Instruct-2507">Qwen 2.5 7B Instruct</option>
+                <option value="Qwen/Qwen3-4B-Instruct-2507">Qwen3 4B Instruct (default, stabil)</option>
+                <option value="Qwen/Qwen3-4B-Thinking-2507">Qwen3 4B Thinking (mungkin memunculkan proses berpikir)</option>
                 <option value="google/gemma-2-2b-it">Gemma 2B</option>
+                <option value="zai-org/GLM-4.5">GLM 4.5 (lebih pintar)</option>
+                <option value="deepseek-ai/DeepSeek-R1:fastest">DeepSeek R1 (reasoning)</option>
+                <option value="openai/gpt-oss-120b">GPT-OSS 120B (paling pintar)</option>
               </select>
             </div>
             <div>
