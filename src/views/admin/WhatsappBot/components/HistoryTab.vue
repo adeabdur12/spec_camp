@@ -250,6 +250,7 @@ const fetchHistory = async () => {
       const contactMap = {}
       history.forEach(msg => {
         const phone = msg.phone || 'unknown'
+        const isAdminMsg = msg.intent === 'MANUAL_SEND' || msg.source === 'admin'
         if (!contactMap[phone]) {
           contactMap[phone] = {
             phone,
@@ -261,7 +262,7 @@ const fetchHistory = async () => {
         }
         if (msg.message) {
           contactMap[phone].messages.push({
-            role: 'incoming',
+            role: isAdminMsg ? 'outgoing' : 'incoming',
             content: msg.message,
             timestamp: msg.createdAt
           })
