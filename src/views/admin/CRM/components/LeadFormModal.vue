@@ -114,6 +114,13 @@
           </div>
         </div>
 
+        <!-- TikTok -->
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1 block">TikTok URL</label>
+          <input v-model="form.tiktokUrl" type="url" placeholder="https://tiktok.com/@..."
+                 class="w-full px-3 py-2.5 bg-surface-container-low rounded-lg border-0 text-sm focus:ring-2 focus:ring-primary/30" />
+        </div>
+
         <!-- Status & Priority -->
         <div class="grid grid-cols-2 gap-3">
           <div>
