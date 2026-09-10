@@ -24,8 +24,7 @@
         <h2 class="text-2xl font-black tracking-tight font-headline text-on-surface">Dapatkan komisi dari setiap orang yang kamu ajak camping.</h2>
         <p class="text-sm text-on-surface-variant mt-2 max-w-2xl leading-relaxed">
           Daftar sebagai affiliate, bagikan link booking unik kamu, dan dapatkan komisi tetap per booking yang diselesaikan.
-          Komisi dipotong dari porsi pendapatan <span class="font-bold text-blue-600">Mimount Outdoor</span> dan
-          <span class="font-bold text-emerald-600">Spec Camp</span>. Terdaftar lewat nomor WhatsApp, langsung aktif.
+          Cukup daftar lewat nomor WhatsApp — akun langsung aktif.
         </p>
       </div>
 

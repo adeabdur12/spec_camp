@@ -60,15 +60,15 @@
             <div class="text-xl font-black text-emerald-700">{{ formatCurrency(s.completedTotal) }}</div>
             <div class="text-[10px] text-emerald-700/60 font-medium">{{ s.completedBookings }} booking selesai</div>
           </div>
-          <div class="bg-blue-50 rounded-2xl p-5 space-y-1.5">
-            <span class="text-blue-700/60 text-[10px] font-bold uppercase tracking-widest">Dari Mimount</span>
-            <div class="text-xl font-black text-blue-700">{{ formatCurrency(s.totalMimount) }}</div>
-            <div class="text-[10px] text-blue-700/60 font-medium">Dipotong dari porsi Mimount</div>
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-5 space-y-1.5">
+            <span class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Komisi Menunggu</span>
+            <div class="text-xl font-black text-secondary">{{ formatCurrency(s.total - s.completedTotal) }}</div>
+            <div class="text-[10px] text-on-surface-variant font-medium">Booking belum selesai</div>
           </div>
           <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-5 space-y-1.5">
-            <span class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Dari Spec Camp</span>
-            <div class="text-xl font-black text-emerald-600">{{ formatCurrency(s.totalSpecCamp) }}</div>
-            <div class="text-[10px] text-on-surface-variant font-medium">Dipotong dari porsi Spec Camp</div>
+            <span class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Total Booking</span>
+            <div class="text-xl font-black text-primary">{{ s.totalBookings }}</div>
+            <div class="text-[10px] text-on-surface-variant font-medium">Booking referral kamu</div>
           </div>
         </div>
 
@@ -86,7 +86,7 @@
               </div>
               <div class="text-right">
                 <p class="text-xs font-black text-primary">{{ formatCurrency(m.total) }}</p>
-                <p class="text-[9px] text-on-surface-variant">Mimount {{ formatCurrency(m.mimount) }} • Spec {{ formatCurrency(m.spec) }}</p>
+                <p class="text-[9px] text-on-surface-variant">{{ m.completed }} selesai</p>
               </div>
             </div>
           </div>
@@ -123,7 +123,7 @@
                   <span v-for="cls in statusClass(b.status)" :key="cls" :class="cls" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">{{ translateStatus(b.status) }}</span>
                 </div>
                 <p class="text-xs font-black text-primary">{{ formatCurrency((b.referralMimount || 0) + (b.referralSpecCamp || 0)) }}</p>
-                <p class="text-[9px] text-on-surface-variant">Mimount {{ formatCurrency(b.referralMimount) }} • Spec {{ formatCurrency(b.referralSpecCamp) }}</p>
+                <p class="text-[9px] text-on-surface-variant">Komisi booking ini</p>
               </div>
             </div>
           </div>
@@ -178,8 +178,7 @@ const monthly = computed(() => {
   })
   return Object.keys(grouped).sort().reverse().map(key => {
     const rows = grouped[key].bookings
-    const mimount = rows.reduce((sum, b) => sum + (Number(b.referralMimount) || 0), 0)
-    const spec = rows.reduce((sum, b) => sum + (Number(b.referralSpecCamp) || 0), 0)
+    const total = rows.reduce((sum, b) => sum + (Number(b.referralMimount) || 0) + (Number(b.referralSpecCamp) || 0), 0)
     const [y, m] = key.split('-').map(Number)
     const label = new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
     return {
@@ -187,9 +186,7 @@ const monthly = computed(() => {
       label,
       count: rows.length,
       completed: rows.filter(b => b.status === 'completed').length,
-      mimount,
-      spec,
-      total: mimount + spec
+      total
     }
   })
 })
