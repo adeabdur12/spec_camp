@@ -215,6 +215,8 @@ const openModal = (pkg = null) => {
     editingId.value = pkg.id
     form.value = { 
       ...pkg, 
+      referralMimount: Number(pkg.referralMimount || 0),
+      referralSpecCamp: Number(pkg.referralSpecCamp || 0),
       features: normalizeFeatures(pkg.features),
       packageType: pkg.packageType || '',
       dayType: pkg.dayType || ''
