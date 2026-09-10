@@ -20,7 +20,11 @@ import SearchBooking from '../views/SearchBooking.vue'
 import FoodMenu from '../views/FoodMenu.vue'
 import Reports from '../views/admin/Reports/Index.vue'
 import CRM from '../views/admin/CRM/Index.vue'
+import Referrals from '../views/admin/Referrals/Index.vue'
+import ReferralDetail from '../views/admin/Referrals/Detail.vue'
 import SaungSpec from '../views/admin/SaungSpec/Index.vue'
+import AffiliateAuth from '../views/affiliate/AffiliateAuth.vue'
+import AffiliateDashboard from '../views/affiliate/AffiliateDashboard.vue'
 
 const routes = [
   {
@@ -57,6 +61,18 @@ const routes = [
     path: '/privacy-policy',
     name: 'privacy',
     component: PrivacyPolicy
+  },
+  {
+    path: '/affiliate',
+    name: 'affiliate',
+    component: AffiliateAuth,
+    meta: { requiresAffiliateGuest: true }
+  },
+  {
+    path: '/affiliate/dashboard',
+    name: 'affiliate-dashboard',
+    component: AffiliateDashboard,
+    meta: { requiresAffiliateAuth: true }
   },
   {
     path: '/login',
@@ -137,6 +153,18 @@ const routes = [
     meta: { requiresAuth: true, permission: 'view_lead' }
   },
   {
+    path: '/admin/referrals',
+    name: 'referrals',
+    component: Referrals,
+    meta: { requiresAuth: true, permission: 'view_referral' }
+  },
+  {
+    path: '/admin/referrals/:id',
+    name: 'referral-detail',
+    component: ReferralDetail,
+    meta: { requiresAuth: true, permission: 'view_referral' }
+  },
+  {
     path: '/admin/whatsapp-bot',
     component: () => import('../views/admin/WhatsappBot/Index.vue'),
     children: [
@@ -178,6 +206,15 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   const isAuthenticated = !!token
+  const affToken = localStorage.getItem('aff_token')
+
+  if (to.meta.requiresAffiliateAuth && !affToken) {
+    return next({ name: 'affiliate' })
+  }
+
+  if (to.meta.requiresAffiliateGuest && affToken) {
+    return next({ name: 'affiliate-dashboard' })
+  }
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     return next({ name: 'login' })

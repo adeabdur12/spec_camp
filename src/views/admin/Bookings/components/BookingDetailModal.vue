@@ -53,6 +53,8 @@
               <span class="font-bold text-right">{{ booking.paymentMethod === 'qris' ? 'QRIS' : booking.paymentMethod === 'transfer' ? 'Transfer Bank' : '-' }}</span>
               <span class="text-on-surface-variant">Tanggal Bayar:</span>
               <span class="font-bold text-right">{{ booking.paidAt || '-' }}</span>
+              <span v-if="booking.Referrer" class="text-on-surface-variant">Affiliator:</span>
+              <span v-if="booking.Referrer" class="font-bold text-right text-primary">{{ booking.Referrer.name }}</span>
             </div>
           </div>
 
@@ -99,6 +101,21 @@
               <span class="font-bold text-right text-blue-600">{{ formatCurrency(booking.mimountTotal) }}</span>
               <span class="text-emerald-600">Net Spec Camp:</span>
               <span class="font-bold text-right text-emerald-600">{{ formatCurrency(booking.specCampShare) }}</span>
+            </div>
+            <div v-if="(booking.referralMimount || 0) > 0 || (booking.referralSpecCamp || 0) > 0" class="mt-3 pt-3 border-t border-outline-variant/10 space-y-1.5">
+              <p class="text-[9px] font-bold text-primary uppercase tracking-wider">Komisi Referral {{ booking.Referrer?.name || '' }}</p>
+              <div class="flex justify-between text-xs">
+                <span class="text-on-surface-variant">Dari Mimount</span>
+                <span class="font-bold text-blue-600">- {{ formatCurrency(booking.referralMimount) }}</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-on-surface-variant">Dari Spec Camp</span>
+                <span class="font-bold text-emerald-600">- {{ formatCurrency(booking.referralSpecCamp) }}</span>
+              </div>
+              <div class="flex justify-between text-xs font-black">
+                <span class="text-on-surface uppercase">Total Komisi</span>
+                <span class="text-primary">{{ formatCurrency((booking.referralMimount || 0) + (booking.referralSpecCamp || 0)) }}</span>
+              </div>
             </div>
             <div v-if="booking.status === 'completed'" class="mt-3 pt-3 border-t border-outline-variant/10 flex items-center justify-between">
               <span class="text-xs text-on-surface-variant font-bold">Status Settlement:</span>

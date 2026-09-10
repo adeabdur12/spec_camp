@@ -92,6 +92,9 @@
                   <span class="text-[9px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">
                     Spec Camp: {{ formatCurrency(pkg.pricePerPax - pkg.mimountShare) }}/pax
                   </span>
+                  <span v-if="pkg.referralMimount || pkg.referralSpecCamp" class="text-[9px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded">
+                    Komisi: {{ formatCurrency((pkg.referralMimount || 0) + (pkg.referralSpecCamp || 0)) }}/booking
+                  </span>
                 </div>
               </div>
             </div>
@@ -162,7 +165,9 @@ const revenuePreview = computed(() => {
     specCampShare: grossShare,
     tax,
     localFee,
-    specCampNet
+    specCampNet,
+    referralMimount: Number(form.value.referralMimount) || 0,
+    referralSpecCamp: Number(form.value.referralSpecCamp) || 0
   }
 })
 
@@ -172,6 +177,8 @@ const initialForm = {
   category: 'area',
   pricePerPax: 0,
   mimountShare: 0,
+  referralMimount: 0,
+  referralSpecCamp: 0,
   minPax: 1,
   maxPax: 100,
   areaType: '',

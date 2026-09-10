@@ -115,6 +115,44 @@
                 <span class="text-on-surface">Net Share Spec Camp</span>
                 <span class="text-emerald-600">{{ formatCurrency(revenuePreview.specCampNet) }}</span>
               </div>
+              <div v-if="revenuePreview.referralMimount > 0 || revenuePreview.referralSpecCamp > 0" class="pt-2 mt-1 border-t border-outline-variant/5 space-y-1.5 bg-surface-container-low rounded-lg p-2">
+                <p class="text-[9px] font-black text-primary uppercase tracking-widest">Komisi Referral (per booking)</p>
+                <div class="flex justify-between text-xs">
+                  <span class="text-on-surface-variant">Komisi dari Mimount</span>
+                  <span class="font-medium text-blue-600">- {{ formatCurrency(revenuePreview.referralMimount) }}</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-on-surface-variant">Komisi dari Spec Camp</span>
+                  <span class="font-medium text-emerald-600">- {{ formatCurrency(revenuePreview.referralSpecCamp) }}</span>
+                </div>
+                <div class="flex justify-between text-xs font-bold">
+                  <span class="text-on-surface">Total Komisi per Booking</span>
+                  <span class="text-primary">{{ formatCurrency(revenuePreview.referralMimount + revenuePreview.referralSpecCamp) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-outline-variant/10 pt-4 space-y-4">
+            <h4 class="text-xs font-bold text-primary uppercase tracking-wider">Komisi Referral / Affiliator</h4>
+            <p class="text-[10px] text-on-surface-variant -mt-2">Komisi diberikan per booking saat reservasi dikaitkan ke affiliator. Nilai dipotong dari porsi Mimount & Spec Camp.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-on-surface-variant">Komisi Mimount (per booking)</label>
+                <input v-model.number="form.referralMimount" type="number" required min="0"
+                       class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm"
+                       placeholder="0">
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-on-surface-variant">Komisi Spec Camp (per booking)</label>
+                <input v-model.number="form.referralSpecCamp" type="number" required min="0"
+                       class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm"
+                       placeholder="0">
+              </div>
+            </div>
+            <div v-if="(form.referralMimount || 0) > 0 || (form.referralSpecCamp || 0) > 0" class="bg-surface-container rounded-xl p-3 flex items-center justify-between text-xs">
+              <span class="text-on-surface-variant font-medium">Total komisi affiliator per booking</span>
+              <span class="font-black text-primary">{{ formatCurrency((form.referralMimount || 0) + (form.referralSpecCamp || 0)) }}</span>
             </div>
           </div>
 

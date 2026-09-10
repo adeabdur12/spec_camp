@@ -19,6 +19,12 @@
         </div>
       </div>
 
+      <!---- Referral banner ---->
+      <div v-if="referrerCode" class="mb-6 bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-2 text-xs text-primary font-medium">
+        <span class="material-symbols-outlined text-sm">recommend</span>
+        Pemesanan melalui link affiliasi (<span class="font-bold">{{ referrerCode }}</span>)
+      </div>
+
       <!-- Loading -->
       <div v-if="loading" class="flex justify-center py-20">
         <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -361,12 +367,13 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { packageService } from '../services/packageService'
 import { bookingService } from '../services/bookingService'
 import api from '../services/api'
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(true)
 const error = ref('')
 const packages = ref([])
@@ -374,6 +381,7 @@ const submitting = ref(false)
 const submitError = ref('')
 const success = ref(false)
 const bookingCode = ref('')
+const referrerCode = ref('')
 
 // OTP Verification
 const phoneVerified = ref(false)
@@ -663,6 +671,7 @@ const submitBooking = async () => {
       pax: form.value.pax,
       status: 'pending',
       sendWhatsapp: true,
+      referrerCode: referrerCode.value || undefined,
       extraServices: extraServices.length > 0 ? extraServices : undefined,
       inventoryItems: inventoryItemsPayload.length > 0 ? inventoryItemsPayload : undefined
     })
@@ -689,6 +698,7 @@ const formatCurrency = (value) => {
 }
 
 onMounted(() => {
+  referrerCode.value = String(route.query.ref || '').trim()
   fetchPackages()
   fetchInventory()
   fetchPublicServices()

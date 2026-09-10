@@ -71,6 +71,7 @@
         :customers="customers" 
         :service-list="serviceList"
         :inventory-list="inventoryList"
+        :referrers="referrers"
         @close="closeModal" 
         @save="saveBooking"
       />
@@ -123,6 +124,7 @@ const {
   customers,
   serviceList,
   inventoryList,
+  referrers,
   settlements,
   showModal,
   editingId,

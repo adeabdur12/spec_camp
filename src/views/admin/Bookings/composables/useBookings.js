@@ -12,6 +12,7 @@ export function useBookings() {
   const customers = ref([])
   const serviceList = ref([])
   const inventoryList = ref([])
+  const referrers = ref([])
   const settlements = ref([])
   const showModal = ref(false)
   const editingId = ref(null)
@@ -40,6 +41,7 @@ export function useBookings() {
   const initialForm = {
     type: 'camping',
     packageEventId: '',
+    referrerId: '',
     customerId: '',
     customerName: '',
     phone: '',
@@ -119,6 +121,15 @@ export function useBookings() {
       inventoryList.value = res.data.data || res.data
     } catch (err) {
       console.error('Gagal mengambil inventory:', err)
+    }
+  }
+
+  const fetchReferrers = async () => {
+    try {
+      const res = await api.get('/referrers')
+      referrers.value = res.data.data || res.data
+    } catch (err) {
+      console.error('Gagal mengambil affiliator:', err)
     }
   }
 
@@ -328,6 +339,7 @@ export function useBookings() {
     fetchCustomers()
     fetchServices()
     fetchInventory()
+    fetchReferrers()
     fetchSettlements()
     document.addEventListener('click', closeActionsDropdown)
   })
@@ -345,6 +357,7 @@ export function useBookings() {
     customers,
     serviceList,
     inventoryList,
+    referrers,
     settlements,
     showModal,
     editingId,

@@ -102,6 +102,45 @@
             </div>
           </div>
 
+          <!-- Referral / Affiliator -->
+          <div class="border-t border-outline-variant/10 pt-4">
+            <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-3 font-label">Referral / Affiliator</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-on-surface-variant font-label">Affiliator Pengaju (Opsional)</label>
+                <select v-model="form.referrerId"
+                        class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                  <option value="">-- Tidak Ada --</option>
+                  <option v-for="r in referrers" :key="r.id" :value="r.id">{{ r.name }}{{ r.summary ? '' : '' }}</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <div v-if="referrerPreview.total > 0" class="bg-surface-container rounded-xl p-3 space-y-1">
+                  <p class="text-[9px] font-black text-primary uppercase tracking-widest">Komisi untuk {{ selectedReferrer?.name }}</p>
+                  <div class="flex justify-between text-[10px]">
+                    <span class="text-on-surface-variant">Dari Mimount</span>
+                    <span class="font-bold text-blue-600">- {{ formatCurrency(referrerPreview.mim) }}</span>
+                  </div>
+                  <div class="flex justify-between text-[10px]">
+                    <span class="text-on-surface-variant">Dari Spec Camp</span>
+                    <span class="font-bold text-emerald-600">- {{ formatCurrency(referrerPreview.spec) }}</span>
+                  </div>
+                  <div class="flex justify-between text-[10px] pt-1 border-t border-outline-variant/5">
+                    <span class="font-bold text-on-surface-variant uppercase">Total per Booking</span>
+                    <span class="font-black text-primary">{{ formatCurrency(referrerPreview.total) }}</span>
+                  </div>
+                </div>
+                <div v-else-if="selectedReferrer" class="bg-surface-container rounded-xl p-3 text-[10px] text-on-surface-variant">
+                  Paket ini belum memiliki konfigurasi komisi referral. Tambahkan di Menu <router-link to="/admin/paket-event" class="text-primary font-bold">Paket & Event</router-link>.
+                </div>
+                <div v-else class="bg-surface-container rounded-xl p-3 text-[10px] text-on-surface-variant flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm text-on-surface-variant/40">share</span>
+                  Tidak ada komisi yang dipotong.
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Schedule -->
           <div class="border-t border-outline-variant/10 pt-4">
             <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-3 font-label">Jadwal</h4>
@@ -321,6 +360,10 @@
                     <span class="font-semibold text-blue-700">Untuk Mimount</span>
                     <span class="font-bold text-blue-700">{{ formatCurrency(revenueEstimate.totalMimount) }}</span>
                   </div>
+                  <div v-if="referrerPreview.total > 0" class="flex justify-between text-xs">
+                    <span class="font-semibold text-on-surface-variant">Komisi Referral {{ selectedReferrer?.name }}</span>
+                    <span class="font-bold text-red-500">- {{ formatCurrency(referrerPreview.total) }}</span>
+                  </div>
                   <div class="flex justify-between text-xs">
                     <span class="font-semibold text-emerald-700">Net Spec Camp</span>
                     <span class="font-bold text-emerald-700">{{ formatCurrency(revenueEstimate.specCampNet) }}</span>
@@ -361,7 +404,8 @@ const props = defineProps({
   packages: Array,
   customers: Array,
   serviceList: Array,
-  inventoryList: Array
+  inventoryList: Array,
+  referrers: Array
 })
 
 const emit = defineEmits(['close', 'save'])
@@ -372,6 +416,19 @@ const uploadError = ref('')
 const selectedPackage = computed(() => {
   if (!props.form.packageEventId) return null
   return props.packages.find(p => p.id === props.form.packageEventId)
+})
+
+const selectedReferrer = computed(() => {
+  if (!props.form.referrerId) return null
+  return props.referrers.find(r => String(r.id) === String(props.form.referrerId))
+})
+
+const referrerPreview = computed(() => {
+  const pkg = selectedPackage.value
+  if (!pkg || !selectedReferrer.value) return { mim: 0, spec: 0, total: 0 }
+  const mim = Number(pkg.referralMimount || 0)
+  const spec = Number(pkg.referralSpecCamp || 0)
+  return { mim, spec, total: mim + spec }
 })
 
 const extraServicesSummary = computed(() => {

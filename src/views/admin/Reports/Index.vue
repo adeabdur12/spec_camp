@@ -99,6 +99,14 @@
                 <span class="text-blue-900 text-xs font-extrabold uppercase">Total Porsi Mimount</span>
                 <span class="text-blue-900 text-lg font-extrabold">{{ formatCurrency(totalPorsiMimount) }}</span>
               </div>
+              <div v-if="(stats.totalReferralMimount || 0) > 0" class="flex justify-between items-center">
+                <span class="text-red-500 text-xs font-bold">Komisi Referral (dipotong)</span>
+                <span class="text-red-500 text-sm font-bold">- {{ formatCurrency(stats.totalReferralMimount) }}</span>
+              </div>
+              <div v-if="(stats.totalReferralMimount || 0) > 0" class="flex justify-between items-center pt-1 border-t border-blue-100">
+                <span class="text-blue-900 text-xs font-extrabold uppercase">Net Porsi Mimount</span>
+                <span class="text-blue-900 text-lg font-extrabold">{{ formatCurrency(totalPorsiMimount - (stats.totalReferralMimount || 0)) }}</span>
+              </div>
             </div>
           </div>
 
@@ -121,6 +129,14 @@
                 <span class="text-emerald-900 text-xs font-extrabold uppercase">Total Porsi Spec Camp</span>
                 <span class="text-emerald-900 text-lg font-extrabold">{{ formatCurrency(totalPorsiSpecCamp) }}</span>
               </div>
+              <div v-if="(stats.totalReferralSpecCamp || 0) > 0" class="flex justify-between items-center">
+                <span class="text-red-500 text-xs font-bold">Komisi Referral (dipotong)</span>
+                <span class="text-red-500 text-sm font-bold">- {{ formatCurrency(stats.totalReferralSpecCamp) }}</span>
+              </div>
+              <div v-if="(stats.totalReferralSpecCamp || 0) > 0" class="flex justify-between items-center pt-1 border-t border-emerald-100">
+                <span class="text-emerald-900 text-xs font-extrabold uppercase">Net Porsi Spec Camp</span>
+                <span class="text-emerald-900 text-lg font-extrabold">{{ formatCurrency(totalPorsiSpecCamp - (stats.totalReferralSpecCamp || 0)) }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -140,6 +156,11 @@
             <div :class="currentSettlement ? 'text-emerald-700/60' : 'text-amber-700/60'" class="text-xs font-bold">
               {{ currentSettlement ? 'Pembayaran tercatat' : 'Dibayarkan bulan depan' }}
             </div>
+          </div>
+          <div v-if="totalReferralKomisi > 0" class="bg-red-50 border border-red-200/50 p-5 rounded-xl space-y-2">
+            <span class="text-red-600 text-xs font-bold uppercase tracking-widest">Komisi Referral</span>
+            <div class="text-2xl font-bold text-red-600">{{ formatCurrency(totalReferralKomisi) }}</div>
+            <div class="text-red-500/60 text-xs font-bold">{{ stats.referralBookingCount || 0 }} booking referral • potong bagian Mimount {{ formatCurrency(stats.totalReferralMimount) }} & Spec Camp {{ formatCurrency(stats.totalReferralSpecCamp) }}</div>
           </div>
         </div>
 
@@ -315,6 +336,17 @@ const exportSingleCSV = () => {
       b.paymentMethod || '-', b.paymentProof || '-'
     ])
 
+    const refMim = Number(b.referralMimount || 0)
+    const refSpec = Number(b.referralSpecCamp || 0)
+    if (refMim > 0 || refSpec > 0) {
+      rows.push([
+        '', '', '', '', '', '', '',
+        'Komisi Referral', (b.Referrer?.name || 'Referral') + ` (via ${b.Referrer?.code || '-'})`, '', '',
+        -refMim - refSpec, -refMim, -refSpec,
+        'Komisi affiliator', '', '', ''
+      ])
+    }
+
     const invItems = b.InventoryItems || []
     invItems.forEach(inv => {
       const price = Number(inv.BookingInventory?.priceAtBooking || inv.price || 0)
@@ -371,6 +403,8 @@ const exportSingleCSV = () => {
   rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'M', detailStart, detailEnd), '', '', '', '', ''])
   rows.push(['  Total Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'M', detailStart, detailEnd), '', '', '', '', ''])
   rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUM(M${mimFirst}:M${mimFirst + 2})`, '', '', '', '', ''])
+  rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'M', detailStart, detailEnd), '', '', '', '', ''])
+  rows.push(['Net Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=M${mimFirst + 3}+M${mimFirst + 4}`, '', '', '', '', ''])
   rows.push([])
   rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
   const specFirst = rows.length + 1
@@ -379,7 +413,8 @@ const exportSingleCSV = () => {
   rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'N', detailStart, detailEnd), '', '', '', ''])
   rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${specFirst}:N${specFirst + 2})`, '', '', '', ''])
   rows.push([])
-  rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}`, '', '', '', ''])
+  rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'N', detailStart, detailEnd), '', '', ''])
+  rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}+N${specFirst + 5}`, '', '', '', ''])
   rows.push([])
   rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', ''])
 
@@ -454,6 +489,17 @@ const exportMultiMonthCSV = async () => {
         b.paymentMethod || '-', b.paymentProof || '-'
       ])
 
+      const refMimM = Number(b.referralMimount || 0)
+      const refSpecM = Number(b.referralSpecCamp || 0)
+      if (refMimM > 0 || refSpecM > 0) {
+        rows.push([
+          '', '', '', '', '', '', '',
+          'Komisi Referral', (b.Referrer?.name || 'Referral') + ` (via ${b.Referrer?.code || '-'})`, '', '',
+          -refMimM - refSpecM, -refMimM, -refSpecM,
+          'Komisi affiliator', '', '', ''
+        ])
+      }
+
       const invItems = b.InventoryItems || []
       invItems.forEach(inv => {
         const price = Number(inv.BookingInventory?.priceAtBooking || inv.price || 0)
@@ -509,6 +555,8 @@ const exportMultiMonthCSV = async () => {
     rows.push(['    Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'M', detailStart, detailEnd), '', '', '', '', ''])
     rows.push(['    Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'M', detailStart, detailEnd), '', '', '', '', ''])
     rows.push(['  Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUM(M${mimFirst}:M${mimFirst + 2})`, '', '', '', '', ''])
+    rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'M', detailStart, detailEnd), '', '', '', '', ''])
+    rows.push(['  Net Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=M${mimFirst + 3}+M${mimFirst + 4}`, '', '', '', '', ''])
     rows.push([])
     rows.push(['  PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
     const specFirst = rows.length + 1
@@ -517,7 +565,8 @@ const exportMultiMonthCSV = async () => {
     rows.push(['    Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'N', detailStart, detailEnd), '', '', '', ''])
     rows.push(['  Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${specFirst}:N${specFirst + 2})`, '', '', '', ''])
     rows.push([])
-    rows.push(['  Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}`, '', '', '', ''])
+    rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'N', detailStart, detailEnd), '', '', ''])
+    rows.push(['  Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}+N${specFirst + 4}`, '', '', '', ''])
     rows.push([])
     rows.push(['  Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', ''])
   })
@@ -531,6 +580,8 @@ const exportMultiMonthCSV = async () => {
   rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Inventory",$M:$M)`, '', '', '', '', ''])
   rows.push(['  Total Porsi Tiket Masuk Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Tiket Masuk",$M:$M)`, '', '', '', '', ''])
   rows.push(['Total Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUM(M${grandMimFirst}:M${grandMimFirst + 2})`, '', '', '', '', ''])
+  rows.push(['Total Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Komisi Referral",$M:$M)`, '', '', '', '', ''])
+  rows.push(['Net Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=M${grandMimFirst + 3}+M${grandMimFirst + 4}`, '', '', '', '', ''])
   rows.push([])
   rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
   const grandSpecFirst = rows.length + 1
@@ -538,8 +589,8 @@ const exportMultiMonthCSV = async () => {
   rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (spec_camp)",$N:$N)`, '', '', '', ''])
   rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Tiket Masuk",$N:$N)`, '', '', '', ''])
   rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${grandSpecFirst}:N${grandSpecFirst + 2})`, '', '', '', ''])
-  rows.push([])
-  rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${grandSpecFirst + 3}`, '', '', '', ''])
+  rows.push(['Total Komisi Referral Spec Camp (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Komisi Referral",$N:$N)`, '', '', ''])
+  rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${grandSpecFirst + 3}+N${grandSpecFirst + 4}`, '', '', '', ''])
   rows.push([])
   rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (eksternal)",$L:$L)`, '', '', ''])
 
@@ -576,6 +627,7 @@ const porsiTiketMimount = computed(() => stats.value?.totalMimountShare || 0)
 const totalPorsiMimount = computed(() => porsiTiketMimount.value + mimountInventoryBase.value + (stats.value?.mimountServiceCost || 0))
 const porsiTiketSpecCamp = computed(() => Math.max(0, (stats.value?.totalSpecCampShare || 0) - inventoryMarkup.value - (stats.value?.specCampServiceCost || 0)))
 const totalPorsiSpecCamp = computed(() => stats.value?.totalSpecCampShare || 0)
+const totalReferralKomisi = computed(() => (stats.value?.totalReferralMimount || 0) + (stats.value?.totalReferralSpecCamp || 0))
 
 const sortedDailyStats = computed(() => {
   if (!stats.value || !stats.value.daily) return {}
