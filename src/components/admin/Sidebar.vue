@@ -81,7 +81,7 @@ const allMenuItems = [
   { name: 'Dashboard', path: '/admin', icon: 'dashboard', perm: 'view_dashboard' },
   { name: 'Pemesanan', path: '/admin/bookings', icon: 'calendar_month', perm: 'view_booking' },
   { name: 'CRM Marketing', path: '/admin/crm', icon: 'hub', perm: 'view_lead' },
-  { name: 'Referral & Komisi', path: '/admin/referrals', icon: 'referral', perm: 'view_referral' },
+  { name: 'Referral & Komisi', path: '/admin/referrals', icon: 'groups', perm: 'view_referral' },
   {
     name: 'Master Data',
     group: 'master-data',
