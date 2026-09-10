@@ -211,6 +211,11 @@
                       </option>
                     </select>
                   </div>
+                  <div class="w-24">
+                    <input v-model.number="svc.price" type="number" min="0"
+                           class="w-full bg-surface-container-lowest px-3 py-2 rounded-lg border border-outline-variant/10 focus:ring-2 focus:ring-primary/20 text-xs text-center"
+                           placeholder="Harga">
+                  </div>
                   <div class="w-20">
                     <input v-model.number="svc.quantity" type="number" required min="1"
                            class="w-full bg-surface-container-lowest px-3 py-2 rounded-lg border border-outline-variant/10 focus:ring-2 focus:ring-primary/20 text-xs text-center"
@@ -246,6 +251,11 @@
                         {{ item.name }} ({{ formatCurrency(item.price) }})
                       </option>
                     </select>
+                  </div>
+                  <div class="w-24">
+                    <input v-model.number="inv.price" type="number" min="0"
+                           class="w-full bg-surface-container-lowest px-3 py-2 rounded-lg border border-outline-variant/10 focus:ring-2 focus:ring-primary/20 text-xs text-center"
+                           placeholder="Harga">
                   </div>
                   <div class="w-20">
                     <input v-model.number="inv.quantity" type="number" required min="1"
@@ -367,9 +377,10 @@ const selectedPackage = computed(() => {
 const extraServicesSummary = computed(() => {
   return props.form.extraServices.map(svc => {
     const item = props.serviceList.find(s => s.id === svc.id)
+    const price = (svc.price !== '' && svc.price != null) ? Number(svc.price) : (item ? Number(item.price) : 0)
     return {
       name: item ? item.name : 'Unknown',
-      price: item ? Number(item.price) : 0,
+      price,
       quantity: svc.quantity,
       type: item ? item.type : 'spec_camp'
     }
@@ -379,9 +390,10 @@ const extraServicesSummary = computed(() => {
 const inventorySummary = computed(() => {
   return props.form.inventoryItems.map(inv => {
     const item = props.inventoryList.find(i => i.id === inv.id)
+    const price = (inv.price !== '' && inv.price != null) ? Number(inv.price) : (item ? Number(item.price) : 0)
     return {
       name: item ? item.name : 'Unknown',
-      price: item ? Number(item.price) : 0,
+      price,
       quantity: inv.quantity,
       type: 'mimount'
     }
@@ -425,7 +437,7 @@ const revenueEstimate = computed(() => {
 })
 
 const addExtraServiceRow = () => {
-  props.form.extraServices.push({ id: '', quantity: 1 })
+  props.form.extraServices.push({ id: '', quantity: 1, price: '' })
 }
 
 const removeExtraServiceRow = (index) => {
@@ -433,7 +445,7 @@ const removeExtraServiceRow = (index) => {
 }
 
 const addInventoryRow = () => {
-  props.form.inventoryItems.push({ id: '', quantity: 1 })
+  props.form.inventoryItems.push({ id: '', quantity: 1, price: '' })
 }
 
 const removeInventoryRow = (index) => {

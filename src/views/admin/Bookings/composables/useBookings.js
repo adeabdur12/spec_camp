@@ -149,11 +149,13 @@ export function useBookings() {
         paidAt: booking.paidAt ? new Date(booking.paidAt).toISOString().split('T')[0] : '',
         extraServices: booking.ExtraServices ? booking.ExtraServices.map(s => ({
           id: s.id,
-          quantity: s.BookingService?.quantity || 1
+          quantity: s.BookingService?.quantity || 1,
+          price: s.BookingService?.priceAtBooking != null ? s.BookingService.priceAtBooking : ''
         })) : [],
         inventoryItems: booking.InventoryItems ? booking.InventoryItems.map(i => ({
           id: i.id,
-          quantity: i.BookingInventory?.quantity || 1
+          quantity: i.BookingInventory?.quantity || 1,
+          price: i.BookingInventory?.priceAtBooking != null ? i.BookingInventory.priceAtBooking : ''
         })) : []
       }
     } else {
@@ -286,8 +288,9 @@ export function useBookings() {
     if (newExtras && newExtras.length > 0) {
       newExtras.forEach(svc => {
         const item = serviceList.value.find(s => s.id === svc.id)
-        if (item) {
-          total += Number(item.price) * (Number(svc.quantity) || 1)
+        const price = (svc.price != null && svc.price !== '') ? Number(svc.price) : (item ? Number(item.price) : 0)
+        if (item || price) {
+          total += price * (Number(svc.quantity) || 1)
         }
       })
     }
@@ -295,8 +298,9 @@ export function useBookings() {
     if (newInventory && newInventory.length > 0) {
       newInventory.forEach(inv => {
         const item = inventoryList.value.find(i => i.id === inv.id)
-        if (item) {
-          total += Number(item.price) * (Number(inv.quantity) || 1)
+        const price = (inv.price != null && inv.price !== '') ? Number(inv.price) : (item ? Number(item.price) : 0)
+        if (item || price) {
+          total += price * (Number(inv.quantity) || 1)
         }
       })
     }
