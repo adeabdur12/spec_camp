@@ -110,7 +110,7 @@
                   <span v-else-if="b.status === 'cancelled'" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-error-container text-on-error-container">{{ translateStatus(b.status) }}</span>
                   <span v-else class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant">{{ translateStatus(b.status) }}</span>
               </div>
-              <p class="text-xs font-black text-primary">{{ formatCurrency((b.referralMimount || 0) + (b.referralSpecCamp || 0)) }}</p>
+              <p class="text-xs font-black text-primary">{{ formatCurrency((Number(b.referralMimount) || 0) + (Number(b.referralSpecCamp) || 0)) }}</p>
               <p class="text-[9px] text-on-surface-variant">Mimount {{ formatCurrency(b.referralMimount) }} • Spec {{ formatCurrency(b.referralSpecCamp) }}</p>
             </div>
           </div>

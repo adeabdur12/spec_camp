@@ -426,8 +426,9 @@ const selectedReferrer = computed(() => {
 const referrerPreview = computed(() => {
   const pkg = selectedPackage.value
   if (!pkg || !selectedReferrer.value) return { mim: 0, spec: 0, total: 0 }
-  const mim = Number(pkg.referralMimount || 0)
-  const spec = Number(pkg.referralSpecCamp || 0)
+  const pax = Number(props.form.pax) || 1
+  const mim = Number(pkg.referralMimount || 0) * pax
+  const spec = Number(pkg.referralSpecCamp || 0) * pax
   return { mim, spec, total: mim + spec }
 })
 

@@ -114,7 +114,7 @@
               </div>
               <div class="flex justify-between text-xs font-black">
                 <span class="text-on-surface uppercase">Total Komisi</span>
-                <span class="text-primary">{{ formatCurrency((booking.referralMimount || 0) + (booking.referralSpecCamp || 0)) }}</span>
+                <span class="text-primary">{{ formatCurrency((Number(booking.referralMimount) || 0) + (Number(booking.referralSpecCamp) || 0)) }}</span>
               </div>
             </div>
             <div v-if="booking.status === 'completed'" class="mt-3 pt-3 border-t border-outline-variant/10 flex items-center justify-between">

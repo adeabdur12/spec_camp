@@ -122,7 +122,7 @@
                 <div class="flex items-center justify-end gap-2 mb-1">
                   <span v-for="cls in statusClass(b.status)" :key="cls" :class="cls" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">{{ translateStatus(b.status) }}</span>
                 </div>
-                <p class="text-xs font-black text-primary">{{ formatCurrency((b.referralMimount || 0) + (b.referralSpecCamp || 0)) }}</p>
+                <p class="text-xs font-black text-primary">{{ formatCurrency((Number(b.referralMimount) || 0) + (Number(b.referralSpecCamp) || 0)) }}</p>
                 <p class="text-[9px] text-on-surface-variant">Komisi booking ini</p>
               </div>
             </div>
