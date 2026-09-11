@@ -10,8 +10,7 @@ export const affiliateService = {
   async getMe() {
     return affiliateApi.get('/affiliate/me')
   },
-  async getBookings(status) {
-    const params = status ? { status } : {}
+  async getBookings(params = {}) {
     return affiliateApi.get('/affiliate/bookings', { params })
   }
 }

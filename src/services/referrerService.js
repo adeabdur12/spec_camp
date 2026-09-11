@@ -9,7 +9,11 @@ export const referrerService = {
     return res.data
   },
   getById: async (id) => {
-    const res = await api.get(`/referrers/${id}?includeBookings=1`)
+    const res = await api.get(`/referrers/${id}`)
+    return res.data
+  },
+  getBookings: async (id, params = {}) => {
+    const res = await api.get(`/referrers/${id}/bookings`, { params })
     return res.data
   },
   create: async (data) => {

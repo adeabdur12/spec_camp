@@ -89,31 +89,39 @@
             </button>
           </div>
         </div>
-        <div v-if="!filteredBookings.length" class="p-8 text-center text-sm text-on-surface-variant">Tidak ada booking pada filter ini.</div>
-        <div v-else class="divide-y divide-outline-variant/5">
-          <div v-for="b in filteredBookings" :key="'refbk-' + b.id" class="p-4 flex items-center justify-between gap-3 hover:bg-surface-container/30 transition-colors">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px] shrink-0">
-                {{ getInitials(b.customerName) }}
+        <div v-if="!bookings.length && !bookingsLoading" class="p-8 text-center text-sm text-on-surface-variant">Tidak ada booking pada filter ini.</div>
+        <div v-else>
+          <div class="divide-y divide-outline-variant/5">
+            <div v-for="b in bookings" :key="'refbk-' + b.id" class="p-4 flex items-center justify-between gap-3 hover:bg-surface-container/30 transition-colors">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px] shrink-0">
+                  {{ getInitials(b.customerName) }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-on-surface truncate">{{ b.customerName }}</p>
+                  <p class="text-[10px] text-on-surface-variant">
+                    <span class="text-on-surface-variant/60 font-mono">#{{ b.bookingCode }}</span> • {{ b.PackageEvent?.name || 'Tanpa paket' }} • {{ formatDate(b.checkInDate) }}
+                  </p>
+                </div>
               </div>
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-on-surface truncate">{{ b.customerName }}</p>
-                <p class="text-[10px] text-on-surface-variant">
-                  <span class="text-on-surface-variant/60 font-mono">#{{ b.bookingCode }}</span> • {{ b.PackageEvent?.name || 'Tanpa paket' }} • {{ formatDate(b.checkInDate) }}
-                </p>
-              </div>
-            </div>
-            <div class="text-right shrink-0">
-              <div class="flex items-center justify-end gap-2 mb-1">
-                <span v-if="b.status === 'completed'" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">{{ translateStatus(b.status) }}</span>
+              <div class="text-right shrink-0">
+                <div class="flex items-center justify-end gap-2 mb-1">
+                  <span v-if="b.status === 'completed'" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">{{ translateStatus(b.status) }}</span>
                   <span v-else-if="b.status === 'confirmed'" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant">{{ translateStatus(b.status) }}</span>
                   <span v-else-if="b.status === 'cancelled'" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-error-container text-on-error-container">{{ translateStatus(b.status) }}</span>
                   <span v-else class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant">{{ translateStatus(b.status) }}</span>
+                </div>
+                <p class="text-xs font-black text-primary">{{ formatCurrency((Number(b.referralMimount) || 0) + (Number(b.referralSpecCamp) || 0)) }}</p>
+                <p class="text-[9px] text-on-surface-variant">Mimount {{ formatCurrency(b.referralMimount) }} • Spec {{ formatCurrency(b.referralSpecCamp) }}</p>
               </div>
-              <p class="text-xs font-black text-primary">{{ formatCurrency((Number(b.referralMimount) || 0) + (Number(b.referralSpecCamp) || 0)) }}</p>
-              <p class="text-[9px] text-on-surface-variant">Mimount {{ formatCurrency(b.referralMimount) }} • Spec {{ formatCurrency(b.referralSpecCamp) }}</p>
             </div>
           </div>
+          <div v-if="bookingsLoading" class="p-4 text-center text-sm text-on-surface-variant">
+            <div class="w-6 h-6 border-3 border-primary border-t-transparent rounded-full animate-spin inline-block"></div>
+          </div>
+          <button v-if="hasMore && !bookingsLoading" @click="loadMore" class="w-full py-3 text-xs font-bold text-primary hover:bg-surface-container transition-colors">
+            Muat Lebih
+          </button>
         </div>
       </div>
     </div>
@@ -121,7 +129,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import DashboardLayout from '../../../components/admin/DashboardLayout.vue'
 import { referrerService } from '../../../services/referrerService'
@@ -132,6 +140,12 @@ const referrer = ref(null)
 const copied = ref(false)
 const statusFilter = ref('all')
 
+const bookings = ref([])
+const bookingsLoading = ref(false)
+const currentPage = ref(1)
+const totalPages = ref(1)
+const PAGE_SIZE = 10
+
 const statusFilterOptions = [
   { value: 'all', label: 'Semua' },
   { value: 'active', label: 'Aktif' },
@@ -139,40 +153,41 @@ const statusFilterOptions = [
 ]
 
 const s = computed(() => referrer.value?.summary || { total: 0, totalMimount: 0, totalSpecCamp: 0, totalBookings: 0, completedBookings: 0, completedTotal: 0 })
+const monthly = computed(() => referrer.value?.monthly || [])
+const hasMore = computed(() => currentPage.value < totalPages.value)
 
-const bookings = computed(() => referrer.value?.bookings || [])
-
-const filteredBookings = computed(() => {
-  if (statusFilter.value === 'completed') return bookings.value.filter(b => b.status === 'completed')
-  if (statusFilter.value === 'active') return bookings.value.filter(b => b.status !== 'completed')
-  return bookings.value
-})
-
-const monthly = computed(() => {
-  const grouped = {}
-  bookings.value.forEach(b => {
-    const d = new Date(b.checkInDate)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    if (!grouped[key]) grouped[key] = { key, bookings: [] }
-    grouped[key].bookings.push(b)
-  })
-  return Object.keys(grouped).sort().reverse().map(key => {
-    const rows = grouped[key].bookings
-    const mimount = rows.reduce((sum, b) => sum + (Number(b.referralMimount) || 0), 0)
-    const spec = rows.reduce((sum, b) => sum + (Number(b.referralSpecCamp) || 0), 0)
-    const [y, m] = key.split('-').map(Number)
-    const label = new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
-    return {
-      key,
-      label,
-      count: rows.length,
-      completed: rows.filter(b => b.status === 'completed').length,
-      mimount,
-      spec,
-      total: mimount + spec
+const fetchBookings = async (reset = false) => {
+  if (reset) {
+    currentPage.value = 1
+    bookings.value = []
+  }
+  bookingsLoading.value = true
+  try {
+    const params = { page: currentPage.value, limit: PAGE_SIZE }
+    if (statusFilter.value !== 'all') params.status = statusFilter.value === 'active' ? 'pending' : statusFilter.value
+    const res = await referrerService.getBookings(route.params.id, params)
+    const data = res.data?.data || []
+    const pag = res.data?.pagination || {}
+    if (reset || currentPage.value === 1) {
+      bookings.value = data
+    } else {
+      bookings.value.push(...data)
     }
-  })
-})
+    totalPages.value = pag.totalPages || 1
+  } catch (e) {
+    console.error('Gagal mengambil bookings:', e)
+  } finally {
+    bookingsLoading.value = false
+  }
+}
+
+const loadMore = () => {
+  if (!hasMore.value || bookingsLoading.value) return
+  currentPage.value++
+  fetchBookings()
+}
+
+watch(statusFilter, () => { fetchBookings(true) })
 
 const affiliateLink = () => {
   return `https://speccamp.site/booking?ref=${referrer.value?.code || referrer.value?.id}`
@@ -219,6 +234,7 @@ onMounted(async () => {
   try {
     const res = await referrerService.getById(route.params.id)
     referrer.value = res.data || null
+    fetchBookings(true)
   } catch (e) {
     console.error('Gagal mengambil dashboard affiliator:', e)
   } finally {

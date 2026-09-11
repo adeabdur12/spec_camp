@@ -104,28 +104,36 @@
               </button>
             </div>
           </div>
-          <div v-if="!filteredBookings.length" class="p-8 text-center text-sm text-on-surface-variant">Tidak ada booking pada filter ini.</div>
-          <div v-else class="divide-y divide-outline-variant/5">
-            <div v-for="b in filteredBookings" :key="b.id" class="p-4 flex items-center justify-between gap-3 hover:bg-surface-container/30 transition-colors">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px] shrink-0">
-                  {{ getInitials(b.customerName) }}
+          <div v-if="!bookings.length && !bookingsLoading" class="p-8 text-center text-sm text-on-surface-variant">Tidak ada booking pada filter ini.</div>
+          <div v-else>
+            <div class="divide-y divide-outline-variant/5">
+              <div v-for="b in bookings" :key="b.id" class="p-4 flex items-center justify-between gap-3 hover:bg-surface-container/30 transition-colors">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px] shrink-0">
+                    {{ getInitials(b.customerName) }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-on-surface truncate">{{ b.customerName }}</p>
+                    <p class="text-[10px] text-on-surface-variant">
+                      <span class="text-on-surface-variant/60 font-mono">#{{ b.bookingCode }}</span> • {{ b.PackageEvent?.name || 'Tanpa paket' }} • {{ formatDate(b.checkInDate) }}
+                    </p>
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-xs font-bold text-on-surface truncate">{{ b.customerName }}</p>
-                  <p class="text-[10px] text-on-surface-variant">
-                    <span class="text-on-surface-variant/60 font-mono">#{{ b.bookingCode }}</span> • {{ b.PackageEvent?.name || 'Tanpa paket' }} • {{ formatDate(b.checkInDate) }}
-                  </p>
+                <div class="text-right shrink-0">
+                  <div class="flex items-center justify-end gap-2 mb-1">
+                    <span v-for="cls in statusClass(b.status)" :key="cls" :class="cls" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">{{ translateStatus(b.status) }}</span>
+                  </div>
+                  <p class="text-xs font-black text-primary">{{ formatCurrency((Number(b.referralMimount) || 0) + (Number(b.referralSpecCamp) || 0)) }}</p>
+                  <p class="text-[9px] text-on-surface-variant">Komisi booking ini</p>
                 </div>
-              </div>
-              <div class="text-right shrink-0">
-                <div class="flex items-center justify-end gap-2 mb-1">
-                  <span v-for="cls in statusClass(b.status)" :key="cls" :class="cls" class="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">{{ translateStatus(b.status) }}</span>
-                </div>
-                <p class="text-xs font-black text-primary">{{ formatCurrency((Number(b.referralMimount) || 0) + (Number(b.referralSpecCamp) || 0)) }}</p>
-                <p class="text-[9px] text-on-surface-variant">Komisi booking ini</p>
               </div>
             </div>
+            <div v-if="bookingsLoading" class="p-4 text-center text-sm text-on-surface-variant">
+              <div class="w-6 h-6 border-3 border-primary border-t-transparent rounded-full animate-spin inline-block"></div>
+            </div>
+            <button v-if="hasMore && !bookingsLoading" @click="loadMore" class="w-full py-3 text-xs font-bold text-primary hover:bg-surface-container transition-colors">
+              Muat Lebih
+            </button>
           </div>
         </div>
       </div>
@@ -134,7 +142,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { affiliateService } from '../../services/affiliateService'
 
@@ -143,6 +151,12 @@ const loading = ref(true)
 const referrer = ref(null)
 const copied = ref(false)
 const statusFilter = ref('all')
+
+const bookings = ref([])
+const bookingsLoading = ref(false)
+const currentPage = ref(1)
+const totalPages = ref(1)
+const PAGE_SIZE = 10
 
 const statusFilterOptions = [
   { value: 'all', label: 'Semua' },
@@ -159,37 +173,42 @@ const affiliate = computed(() => {
 })
 
 const s = computed(() => referrer.value?.summary || { total: 0, totalMimount: 0, totalSpecCamp: 0, totalBookings: 0, completedBookings: 0, completedTotal: 0 })
-const bookings = computed(() => referrer.value?.bookings || [])
+const monthly = computed(() => referrer.value?.monthly || [])
 const link = computed(() => `https://speccamp.site/booking?ref=${referrer.value?.code || referrer.value?.id}`)
+const hasMore = computed(() => currentPage.value < totalPages.value)
 
-const filteredBookings = computed(() => {
-  if (statusFilter.value === 'completed') return bookings.value.filter(b => b.status === 'completed')
-  if (statusFilter.value === 'active') return bookings.value.filter(b => b.status !== 'completed')
-  return bookings.value
-})
-
-const monthly = computed(() => {
-  const grouped = {}
-  bookings.value.forEach(b => {
-    const d = new Date(b.checkInDate)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    if (!grouped[key]) grouped[key] = { key, bookings: [] }
-    grouped[key].bookings.push(b)
-  })
-  return Object.keys(grouped).sort().reverse().map(key => {
-    const rows = grouped[key].bookings
-    const total = rows.reduce((sum, b) => sum + (Number(b.referralMimount) || 0) + (Number(b.referralSpecCamp) || 0), 0)
-    const [y, m] = key.split('-').map(Number)
-    const label = new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
-    return {
-      key,
-      label,
-      count: rows.length,
-      completed: rows.filter(b => b.status === 'completed').length,
-      total
+const fetchBookings = async (reset = false) => {
+  if (reset) {
+    currentPage.value = 1
+    bookings.value = []
+  }
+  bookingsLoading.value = true
+  try {
+    const params = { page: currentPage.value, limit: PAGE_SIZE }
+    if (statusFilter.value !== 'all') params.status = statusFilter.value === 'active' ? 'pending' : statusFilter.value
+    const res = await affiliateService.getBookings(params)
+    const data = res.data?.data || []
+    const pag = res.data?.pagination || {}
+    if (reset || currentPage.value === 1) {
+      bookings.value = data
+    } else {
+      bookings.value.push(...data)
     }
-  })
-})
+    totalPages.value = pag.totalPages || 1
+  } catch (e) {
+    console.error('Gagal mengambil bookings:', e)
+  } finally {
+    bookingsLoading.value = false
+  }
+}
+
+const loadMore = () => {
+  if (!hasMore.value || bookingsLoading.value) return
+  currentPage.value++
+  fetchBookings()
+}
+
+watch(statusFilter, () => { fetchBookings(true) })
 
 const copyLink = async () => {
   const url = link.value
@@ -248,6 +267,7 @@ onMounted(async () => {
     const res = await affiliateService.getMe()
     referrer.value = res.data?.data || null
     if (referrer.value) localStorage.setItem('aff_user', JSON.stringify(referrer.value))
+    fetchBookings(true)
   } catch (e) {
     console.error('Gagal mengambil dashboard affiliate:', e)
   } finally {
