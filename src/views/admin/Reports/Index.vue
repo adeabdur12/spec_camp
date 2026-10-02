@@ -33,10 +33,10 @@
             <span class="material-symbols-outlined text-sm">refresh</span>
             Tampilkan
           </button>
-          <button @click="exportCSV" :disabled="(exportMode === 'single' && !transactions.length) || loading"
+          <button @click="exportExcel" :disabled="(exportMode === 'single' && !transactions.length) || loading"
                   class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-emerald-700 disabled:opacity-40 transition-all flex items-center gap-1.5">
             <span class="material-symbols-outlined text-sm">download</span>
-            CSV
+            Excel
           </button>
         </div>
       </div>
@@ -216,6 +216,7 @@ import { reportService } from '../../../services/reportService'
 import { settlementService } from '../../../services/settlementService'
 import api from '../../../services/api'
 import VueApexCharts from 'vue3-apexcharts'
+import * as XLSX from 'xlsx'
 
 const apexchart = VueApexCharts
 
@@ -298,15 +299,39 @@ const formatDate = (date) => {
 
 const sumifFormula = (itemType, col, dStart, dEnd) => `=SUMIF($H${dStart}:$H${dEnd},"${itemType}",$${col}${dStart}:$${col}${dEnd})`
 
-const exportCSV = async () => {
+const columnWidths = [
+  { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 6 }, { wch: 7 }, { wch: 10 }, { wch: 14 },
+  { wch: 18 }, { wch: 22 }, { wch: 6 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 16 },
+  { wch: 20 }, { wch: 16 }, { wch: 16 }, { wch: 20 }
+]
+
+const writeXlsx = (rows, filename, sheetName = 'Laporan') => {
+  const ws = XLSX.utils.aoa_to_sheet(rows)
+  const range = XLSX.utils.decode_range(ws['!ref'])
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({ r: R, c: C })
+      const cell = ws[addr]
+      if (cell && typeof cell.v === 'string' && cell.v.startsWith('=')) {
+        ws[addr] = { t: 'n', f: cell.v.slice(1) }
+      }
+    }
+  }
+  ws['!cols'] = columnWidths
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, sheetName)
+  XLSX.writeFile(wb, filename)
+}
+
+const exportExcel = async () => {
   if (exportMode.value === 'single') {
-    exportSingleCSV()
+    exportSingleExcel()
   } else {
-    await exportMultiMonthCSV()
+    await exportMultiMonthExcel()
   }
 }
 
-const exportSingleCSV = () => {
+const exportSingleExcel = () => {
   const rows = []
 
   rows.push(['LAPORAN TIKET MASUK SPEC CAMP'])
@@ -418,21 +443,10 @@ const exportSingleCSV = () => {
   rows.push([])
   rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', ''])
 
-  const csv = rows.map(r => r.map(v => {
-    if (typeof v === 'number') return String(v)
-    return `"${String(v).replace(/"/g, '""')}"`
-  }).join(',')).join('\n')
-  const BOM = '\uFEFF'
-  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `laporan-${monthName.value.toLowerCase()}-${periodYear.value}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  writeXlsx(rows, `laporan-${monthName.value.toLowerCase()}-${periodYear.value}.xlsx`, `Laporan ${monthName.value} ${periodYear.value}`)
 }
 
-const exportMultiMonthCSV = async () => {
+const exportMultiMonthExcel = async () => {
   const startDate = `${periodYear.value}-${String(periodMonth.value).padStart(2, '0')}-01`
   const endDate = `${exportEndYear.value}-${String(exportEndMonth.value).padStart(2, '0')}-${new Date(exportEndYear.value, exportEndMonth.value, 0).getDate()}`
 
@@ -566,7 +580,7 @@ const exportMultiMonthCSV = async () => {
     rows.push(['  Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${specFirst}:N${specFirst + 2})`, '', '', '', ''])
     rows.push([])
     rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'N', detailStart, detailEnd), '', '', ''])
-    rows.push(['  Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}+N${specFirst + 4}`, '', '', '', ''])
+    rows.push(['  Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}+N${specFirst + 5}`, '', '', '', ''])
     rows.push([])
     rows.push(['  Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', ''])
   })
@@ -594,18 +608,7 @@ const exportMultiMonthCSV = async () => {
   rows.push([])
   rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (eksternal)",$L:$L)`, '', '', ''])
 
-  const csv = rows.map(r => r.map(v => {
-    if (typeof v === 'number') return String(v)
-    return `"${String(v).replace(/"/g, '""')}"`
-  }).join(',')).join('\n')
-  const BOM = '\uFEFF'
-  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `laporan-${startLabel.toLowerCase()}-${endLabel.toLowerCase()}-${periodYear.value}-${exportEndYear.value}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  writeXlsx(rows, `laporan-${startLabel.toLowerCase()}-${endLabel.toLowerCase()}-${periodYear.value}-${exportEndYear.value}.xlsx`, `Laporan ${startLabel} - ${endLabel}`)
 }
 
 const getStartDate = () => {

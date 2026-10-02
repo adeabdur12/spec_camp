@@ -270,19 +270,14 @@
           <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-6">
             <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-4">Pembayaran</h3>
 
-            <div class="bg-surface-container rounded-xl p-5 space-y-2 mb-4">
-              <p class="text-xs text-on-surface-variant">Transfer ke Rekening</p>
+            <div class="bg-surface-container rounded-xl p-5 mb-4 text-center">
+              <p class="text-xs text-on-surface-variant">Scan QRIS untuk Membayar</p>
               <p class="font-bold text-on-surface text-sm">PT Bumimakmur Jaya Sentosa</p>
               <div class="border-t border-outline-variant/10 pt-3 mt-3">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center shrink-0">
-                    <span class="text-yellow-700 font-black text-xs">M</span>
-                  </div>
-                  <div>
-                    <p class="text-[10px] text-on-surface-variant font-medium">Bank Mandiri</p>
-                    <p class="font-bold text-on-surface text-sm">157-00-3199999-9</p>
-                  </div>
+                <div class="bg-white rounded-xl p-3 inline-block border border-outline-variant/10">
+                  <img src="/qris-spec.png" alt="QRIS Spec Camp" class="w-56 h-56 object-contain">
                 </div>
+                <p class="text-[10px] text-on-surface-variant mt-3">Mendukung semua bank & e-wallet (GoPay, OVO, Dana, ShopeePay, dll)</p>
               </div>
             </div>
 
@@ -294,7 +289,6 @@
                 <select v-model="paymentMethod" required
                         class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
                   <option value="" disabled>Pilih Metode Pembayaran</option>
-                  <option value="transfer">Transfer Bank</option>
                   <option value="qris">QRIS</option>
                 </select>
               </div>
@@ -384,7 +378,7 @@ const uploading = ref(false)
 const uploadError = ref('')
 const fileInput = ref(null)
 const showImagePreview = ref(null)
-const paymentMethod = ref('')
+const paymentMethod = ref('qris')
 
 const whatsappUrl = computed(() => {
   if (!booking.value) return '#'
