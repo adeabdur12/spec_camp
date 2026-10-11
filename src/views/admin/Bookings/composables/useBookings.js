@@ -56,6 +56,8 @@ export function useBookings() {
     paidAt: '',
     paymentMethod: '',
     sendWhatsapp: false,
+    priceEdited: false,
+    mimountSharePerPax: '',
     extraServices: [],
     inventoryItems: []
   }
@@ -150,6 +152,31 @@ export function useBookings() {
     return settlements.value.some(s => s.year === year && s.month === month && s.paidAt)
   }
 
+  const calcComponentTotal = (f) => {
+    let total = 0
+    const pax = Number(f.pax) || 1
+    const freePax = Math.min(Number(f.freePax) || 0, Math.max(0, pax - 1))
+    const effectivePax = pax - freePax
+    if (f.packageEventId && effectivePax) {
+      const pkg = packages.value.find(p => p.id === f.packageEventId)
+      if (pkg) total += Number(pkg.pricePerPax) * effectivePax
+    }
+
+    ;(f.extraServices || []).forEach(svc => {
+      const item = serviceList.value.find(s => s.id === svc.id)
+      const price = (svc.price != null && svc.price !== '') ? Number(svc.price) : (item ? Number(item.price) : 0)
+      if (item || price) total += price * (Number(svc.quantity) || 1)
+    })
+
+    ;(f.inventoryItems || []).forEach(inv => {
+      const item = inventoryList.value.find(i => i.id === inv.id)
+      const price = (inv.price != null && inv.price !== '') ? Number(inv.price) : (item ? Number(item.price) : 0)
+      if (item || price) total += price * (Number(inv.quantity) || 1)
+    })
+
+    return total
+  }
+
   const openModal = (booking = null) => {
     if (booking) {
       editingId.value = booking.id
@@ -174,6 +201,21 @@ export function useBookings() {
       form.value = JSON.parse(JSON.stringify(initialForm))
     }
     form.value.freePax = form.value.freePax || 0
+    if (booking) {
+      // Keep a stored manual price as an override instead of recomputing it away
+      const computed = calcComponentTotal(form.value)
+      form.value.priceEdited = Number(form.value.totalPrice || 0) !== computed
+
+      // Reconstruct a per-booking Mimount share override from the stored total
+      const pax = Number(form.value.pax) || 1
+      const freePax = Math.min(Number(form.value.freePax) || 0, Math.max(0, pax - 1))
+      const effectivePax = pax - freePax
+      const storedPerPax = booking.mimountShare != null ? Number(booking.mimountShare) / effectivePax : null
+      const pkg = packages.value.find(p => p.id === form.value.packageEventId)
+      form.value.mimountSharePerPax = (pkg && storedPerPax != null && Math.abs(storedPerPax - Number(pkg.mimountShare || 0)) >= 0.01)
+        ? Math.round(storedPerPax * 100) / 100
+        : ''
+    }
     showModal.value = true
   }
 
@@ -212,7 +254,8 @@ export function useBookings() {
     statusOpenId.value = null
     
     try {
-      await bookingService.update(booking.id, { ...booking, status: newStatus })
+      // Send only the status so revenue fields (incl. a manual price override) are untouched
+      await bookingService.update(booking.id, { status: newStatus })
       await fetchBookings()
     } catch (err) {
       console.error('Gagal update status:', err)
@@ -285,38 +328,17 @@ export function useBookings() {
     fetchBookings()
   })
 
-  watch([() => form.value.packageEventId, () => form.value.pax, () => form.value.freePax, () => form.value.extraServices, () => form.value.inventoryItems], ([newPkgId, newPax, newFreePax, newExtras, newInventory]) => {
-    let total = 0
-    const freePax = Math.min(newFreePax || 0, Math.max(0, (newPax || 1) - 1))
-    const effectivePax = (newPax || 1) - freePax
-    if (newPkgId && effectivePax) {
-      const pkg = packages.value.find(p => p.id === newPkgId)
-      if (pkg) {
-        total += Number(pkg.pricePerPax) * effectivePax
-      }
-    }
-    
-    if (newExtras && newExtras.length > 0) {
-      newExtras.forEach(svc => {
-        const item = serviceList.value.find(s => s.id === svc.id)
-        const price = (svc.price != null && svc.price !== '') ? Number(svc.price) : (item ? Number(item.price) : 0)
-        if (item || price) {
-          total += price * (Number(svc.quantity) || 1)
-        }
-      })
-    }
-
-    if (newInventory && newInventory.length > 0) {
-      newInventory.forEach(inv => {
-        const item = inventoryList.value.find(i => i.id === inv.id)
-        const price = (inv.price != null && inv.price !== '') ? Number(inv.price) : (item ? Number(item.price) : 0)
-        if (item || price) {
-          total += price * (Number(inv.quantity) || 1)
-        }
-      })
-    }
-    
-    form.value.totalPrice = total
+  watch([
+    () => form.value.packageEventId,
+    () => form.value.pax,
+    () => form.value.freePax,
+    () => form.value.extraServices,
+    () => form.value.inventoryItems,
+    () => form.value.priceEdited
+  ], ([, , , , , priceEdited]) => {
+    // Manual price override wins until the admin clicks "Hitung Ulang"
+    if (priceEdited) return
+    form.value.totalPrice = calcComponentTotal(form.value)
   }, { deep: true })
 
   watch(() => form.value.checkInDate, (date) => {

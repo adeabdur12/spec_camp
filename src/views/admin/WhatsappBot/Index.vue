@@ -97,7 +97,7 @@ const bot = ref({
   deviceToken: 'device_admin_spec',
   name: '',
   phoneNumber: '',
-  aiModel: 'Qwen/Qwen3-4B-Instruct-2507',
+  aiModel: 'glm-5.3-flash',
   aiInstructions: '',
   isActive: false,
   welcomeMessage: '',

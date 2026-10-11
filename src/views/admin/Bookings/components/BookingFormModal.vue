@@ -91,14 +91,43 @@
                        placeholder="0">
               </div>
               <div class="space-y-1.5">
-                <label class="text-xs font-medium text-on-surface-variant font-label">Total Harga (Rp) *</label>
+                <div class="flex items-center justify-between gap-2">
+                  <label class="text-xs font-medium text-on-surface-variant font-label">Total Harga (Rp) *</label>
+                  <button v-if="form.priceEdited" type="button" @click="form.priceEdited = false"
+                          class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg hover:bg-primary/20 transition-colors">
+                    Hitung Ulang
+                  </button>
+                </div>
                 <div class="relative">
-                  <input v-model.number="form.totalPrice" type="number" required
+                  <input v-model.number="form.totalPrice" type="number" required @input="form.priceEdited = true"
                          class="w-full bg-surface-container pl-10 pr-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-bold text-primary"
                          placeholder="0">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-on-surface-variant">Rp</span>
                 </div>
+                <p v-if="form.priceEdited" class="text-[10px] font-bold text-amber-600">
+                  Harga manual — porsi Mimount tetap, selisihnya dibebankan ke Spec Camp.
+                </p>
               </div>
+            </div>
+
+            <!-- Mimount share override -->
+            <div v-if="selectedPackage" class="space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <label class="text-xs font-medium text-on-surface-variant font-label">Porsi Mimount / Pax (Rp)</label>
+                <button v-if="mimountOverrideActive" type="button" @click="form.mimountSharePerPax = ''"
+                        class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg hover:bg-primary/20 transition-colors">
+                  Ikuti Paket
+                </button>
+              </div>
+              <div class="relative">
+                <input v-model.number="form.mimountSharePerPax" type="number" min="0"
+                       class="w-full bg-surface-container pl-10 pr-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-bold text-blue-600"
+                       :placeholder="formatCurrency(Number(selectedPackage.mimountShare || 0))">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-on-surface-variant">Rp</span>
+              </div>
+              <p class="text-[10px] text-on-surface-variant">
+                Standar paket: {{ formatCurrency(selectedPackage.mimountShare) }} / pax<template v-if="mimountOverrideActive"> — override aktif, selisihnya untuk Spec Camp</template>.
+              </p>
             </div>
           </div>
 
@@ -339,6 +368,12 @@
                 <span class="font-bold text-on-surface">{{ formatCurrency(svc.price * svc.quantity) }}</span>
               </div>
 
+              <!-- Manual price adjustment -->
+              <div v-if="form.priceEdited && revenueEstimate.priceDiff" class="flex justify-between items-center text-xs">
+                <span class="text-amber-600 font-medium">Penyesuaian harga manual</span>
+                <span class="font-bold text-amber-600">{{ revenueEstimate.priceDiff > 0 ? '+' : '−' }} {{ formatCurrency(Math.abs(revenueEstimate.priceDiff)) }}</span>
+              </div>
+
               <!-- Total & Split -->
               <div class="pt-2 mt-2 border-t border-outline-variant/10 space-y-1.5">
                 <div class="flex justify-between items-center">
@@ -357,7 +392,7 @@
                 </div>
                 <div class="border-t border-outline-variant/5 space-y-1 pt-1.5">
                   <div class="flex justify-between text-xs">
-                    <span class="font-semibold text-blue-700">Untuk Mimount</span>
+                    <span class="font-semibold text-blue-700">Untuk Mimount<span v-if="mimountOverrideActive"> ({{ formatCurrency(effectiveMimountPerPax) }}/pax)</span></span>
                     <span class="font-bold text-blue-700">{{ formatCurrency(revenueEstimate.totalMimount) }}</span>
                   </div>
                   <div v-if="referrerPreview.total > 0" class="flex justify-between text-xs">
@@ -418,6 +453,20 @@ const selectedPackage = computed(() => {
   return props.packages.find(p => p.id === props.form.packageEventId)
 })
 
+const mimountOverrideActive = computed(() => {
+  const pkg = selectedPackage.value
+  if (!pkg) return false
+  const v = props.form.mimountSharePerPax
+  return v !== '' && v != null && Number(v) !== Number(pkg.mimountShare || 0)
+})
+
+const effectiveMimountPerPax = computed(() => {
+  const v = props.form.mimountSharePerPax
+  if (v !== '' && v != null && Number.isFinite(Number(v))) return Math.max(0, Number(v))
+  const pkg = selectedPackage.value
+  return pkg ? Number(pkg.mimountShare || 0) : 0
+})
+
 const selectedReferrer = computed(() => {
   if (!props.form.referrerId) return null
   return props.referrers.find(r => String(r.id) === String(props.form.referrerId))
@@ -464,7 +513,7 @@ const revenueEstimate = computed(() => {
   const effectivePax = pax - freePax
   const pkg = selectedPackage.value
   const pkgTotal = pkg ? Number(pkg.pricePerPax) * effectivePax : 0
-  const pkgMimount = pkg ? Number(pkg.mimountShare) * effectivePax : 0
+  const pkgMimount = effectiveMimountPerPax.value * effectivePax
 
   const inventoryCost = inventorySummary.value.reduce((sum, i) => sum + (i.price * i.quantity), 0)
   const mimountServices = extraServicesSummary.value.filter(s => s.type === 'mimount').reduce((sum, s) => sum + (s.price * s.quantity), 0)
@@ -473,7 +522,11 @@ const revenueEstimate = computed(() => {
 
   const totalMimount = pkgMimount + inventoryCost + mimountServices
   const totalEksternal = eksternalServices
-  const totalSpecCamp = Math.max(0, pkgTotal + specServices - pkgMimount)
+  const componentTotal = pkgTotal + inventoryCost + mimountServices + specServices + eksternalServices
+  // Manual price override: Mimount keeps its component-based share, the
+  // difference falls on Spec Camp.
+  const priceDiff = props.form.priceEdited ? (Number(props.form.totalPrice) || 0) - componentTotal : 0
+  const totalSpecCamp = Math.max(0, pkgTotal + specServices - pkgMimount + priceDiff)
   const tax = Math.round(totalSpecCamp * 0.1)
   const localFee = Math.round(totalSpecCamp * 0.05)
   const specCampNet = Math.max(0, totalSpecCamp - tax - localFee)
@@ -490,7 +543,9 @@ const revenueEstimate = computed(() => {
     totalSpecCamp,
     tax,
     localFee,
-    specCampNet
+    specCampNet,
+    componentTotal,
+    priceDiff
   }
 })
 

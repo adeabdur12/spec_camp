@@ -75,13 +75,18 @@
               <label class="block text-xs font-black uppercase tracking-widest text-on-surface-variant mb-2">Model AI</label>
               <select v-model="aiModel"
                       class="w-full px-4 py-3 rounded-xl bg-surface border border-outline-variant/10 text-on-surface font-medium text-sm focus:outline-none focus:border-primary transition-colors">
-                <option value="Qwen/Qwen3-4B-Instruct-2507">Qwen3 4B Instruct (default, stabil)</option>
-                <option value="Qwen/Qwen3-4B-Thinking-2507">Qwen3 4B Thinking (mungkin memunculkan proses berpikir)</option>
-                <option value="google/gemma-2-2b-it">Gemma 2B</option>
-                <option value="zai-org/GLM-4.5">GLM 4.5 (lebih pintar)</option>
-                <option value="deepseek-ai/DeepSeek-R1:fastest">DeepSeek R1 (reasoning)</option>
-                <option value="openai/gpt-oss-120b">GPT-OSS 120B (paling pintar)</option>
+                <option value="glm-5.3-flash">GLM-5.3 Flash (default, cepat & hemat)</option>
+                <option value="glm-5.3">GLM-5.3 (lebih pintar)</option>
+                <option value="glm-5.2">GLM-5.2</option>
+                <option value="kimi-k2.7-code">Kimi K2.7 Code</option>
+                <option value="kimi-k2.6">Kimi K2.6</option>
+                <option value="minimax-m2.7">MiniMax M2.7</option>
+                <option value="qwen3.8-flash">Qwen3.8 Flash</option>
+                <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
               </select>
+              <p class="mt-1.5 text-[11px] text-on-surface-variant/70">
+                Model dijalankan via OpenCode (endpoint <span class="font-mono">chat/completions</span>). Kosongkan/menggunakan model lama akan memakai default dari env <span class="font-mono">OPENCODE_MODEL</span>.
+              </p>
             </div>
             <div>
               <label class="block text-xs font-black uppercase tracking-widest text-on-surface-variant mb-2">Status</label>
