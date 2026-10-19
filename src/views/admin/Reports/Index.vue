@@ -33,7 +33,7 @@
             <span class="material-symbols-outlined text-sm">refresh</span>
             Tampilkan
           </button>
-          <button @click="exportExcel" :disabled="(exportMode === 'single' && !transactions.length) || loading"
+          <button @click="exportExcel" :disabled="loading || (exportMode === 'single' && transactions.length === 0) || (exportMode === 'multi' && loading)"
                   class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-emerald-700 disabled:opacity-40 transition-all flex items-center gap-1.5">
             <span class="material-symbols-outlined text-sm">download</span>
             Excel
