@@ -223,38 +223,104 @@
                         placeholder="Catatan khusus tamu..."></textarea>
             </div>
 
-            <!-- Payment Proof Upload -->
-            <div class="mt-4">
-              <div class="flex justify-between items-center mb-3">
-                <h4 class="text-xs font-bold text-primary uppercase tracking-wider font-label">Bukti Pembayaran</h4>
+            <!-- Pembayaran DP -->
+            <div class="mt-4 bg-surface-container-low p-4 rounded-2xl space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-primary uppercase tracking-wider font-label">Pembayaran DP</h4>
+                <label class="flex items-center gap-2 text-xs font-medium text-on-surface-variant cursor-pointer">
+                  <input v-model="form.hasDp" type="checkbox" class="rounded border-outline-variant">
+                  Ada DP
+                </label>
               </div>
-
-              <div v-if="!form.paymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-6 text-center transition-colors cursor-pointer" :class="uploading ? 'opacity-50 pointer-events-none' : 'hover:border-primary/30'" @click="triggerUpload">
-                <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileSelect" :disabled="uploading">
-                <span class="material-symbols-outlined text-2xl text-on-surface-variant/40 mb-1">{{ uploading ? 'hourglass_top' : 'cloud_upload' }}</span>
-                <p class="text-xs font-medium text-on-surface-variant">{{ uploading ? 'Mengupload...' : 'Klik untuk upload bukti bayar' }}</p>
-                <p class="text-[9px] text-on-surface-variant/40 mt-0.5">Maks 5MB, format gambar</p>
-              </div>
-
-              <div v-else>
-                <div class="bg-surface-container rounded-xl overflow-hidden">
-                  <img :src="form.paymentProof" alt="Bukti Pembayaran" class="w-full max-h-48 object-contain p-2">
+              <template v-if="form.hasDp">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-on-surface-variant font-label">Metode Pembayaran DP</label>
+                    <select v-model="form.dpPaymentMethod" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                      <option value="">-- Pilih Metode --</option>
+                      <option value="transfer">Transfer Bank</option>
+                      <option value="qris">QRIS</option>
+                    </select>
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-on-surface-variant font-label">Tanggal Pembayaran DP</label>
+                    <input v-model="form.dpPaidAt" type="date" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                  </div>
                 </div>
-                <div class="flex items-center justify-between mt-2">
-                  <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-                    <span class="material-symbols-outlined text-xs">check_circle</span>
-                    Bukti pembayaran terupload
-                  </p>
-                  <button type="button" @click="removePaymentProof"
-                          class="text-[10px] font-bold text-error hover:text-error/70 transition-colors flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">delete</span>
-                    Hapus
-                  </button>
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-medium text-on-surface-variant font-label">Bukti Pembayaran DP</label>
+                  </div>
+                  <div v-if="!form.dpPaymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-4 text-center cursor-pointer" :class="uploadingDp ? 'opacity-50 pointer-events-none' : 'hover:border-primary/30'" @click="triggerDpUpload">
+                    <input ref="dpFileInput" type="file" accept="image/*" class="hidden" @change="handleDpFileSelect" :disabled="uploadingDp">
+                    <span class="material-symbols-outlined text-xl text-on-surface-variant/40 mb-1">{{ uploadingDp ? 'hourglass_top' : 'cloud_upload' }}</span>
+                    <p class="text-xs text-on-surface-variant">{{ uploadingDp ? 'Mengupload...' : 'Upload bukti DP' }}</p>
+                  </div>
+                  <div v-else>
+                    <div class="bg-surface-container rounded-xl overflow-hidden">
+                      <img :src="form.dpPaymentProof" alt="Bukti DP" class="w-full max-h-40 object-contain p-2">
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                      <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">check_circle</span>
+                        Bukti DP terupload
+                      </p>
+                      <button type="button" @click="removeDpProof" class="text-[10px] font-bold text-error hover:text-error/70 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <p v-if="uploadError" class="mt-2 bg-error-container text-on-error-container p-2 rounded-lg text-[10px] font-medium">{{ uploadError }}</p>
+              </template>
             </div>
+
+            <!-- Pelunasan -->
+            <div class="mt-4 bg-surface-container-low p-4 rounded-2xl space-y-4">
+              <h4 class="text-xs font-bold text-primary uppercase tracking-wider font-label">Pelunasan</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div class="space-y-1.5">
+                  <label class="text-xs font-medium text-on-surface-variant font-label">Metode Pelunasan</label>
+                  <select v-model="form.finalPaymentMethod" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                    <option value="">-- Pilih Metode --</option>
+                    <option value="transfer">Transfer Bank</option>
+                    <option value="qris">QRIS</option>
+                  </select>
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-xs font-medium text-on-surface-variant font-label">Tanggal Pelunasan</label>
+                  <input v-model="form.finalPaidAt" type="date" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                </div>
+
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <label class="text-xs font-medium text-on-surface-variant font-label">Bukti Pelunasan</label>
+                </div>
+                <div v-if="!form.finalPaymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-4 text-center cursor-pointer" :class="uploadingFinal ? 'opacity-50 pointer-events-none' : 'hover:border-primary/30'" @click="triggerFinalUpload">
+                  <input ref="finalFileInput" type="file" accept="image/*" class="hidden" @change="handleFinalFileSelect" :disabled="uploadingFinal">
+                  <span class="material-symbols-outlined text-xl text-on-surface-variant/40 mb-1">{{ uploadingFinal ? 'hourglass_top' : 'cloud_upload' }}</span>
+                  <p class="text-xs text-on-surface-variant">{{ uploadingFinal ? 'Mengupload...' : 'Upload bukti pelunasan' }}</p>
+                </div>
+                <div v-else>
+                  <div class="bg-surface-container rounded-xl overflow-hidden">
+                    <img :src="form.finalPaymentProof" alt="Bukti Pelunasan" class="w-full max-h-40 object-contain p-2">
+                  </div>
+                  <div class="flex items-center justify-between mt-2">
+                    <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                      <span class="material-symbols-outlined text-xs">check_circle</span>
+                      Bukti pelunasan terupload
+                    </p>
+                    <button type="button" @click="removeFinalProof" class="text-[10px] font-bold text-error hover:text-error/70 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-sm">delete</span>
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Extra Services Selection -->
             <div class="border-t border-outline-variant/10 pt-4 mt-4">
               <div class="flex justify-between items-center mb-3">
@@ -428,7 +494,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import api from '../../../../services/api'
 
 const props = defineProps({
@@ -445,7 +511,11 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save'])
 const fileInput = ref(null)
+const dpFileInput = ref(null)
+const finalFileInput = ref(null)
 const uploading = ref(false)
+const uploadingDp = ref(false)
+const uploadingFinal = ref(false)
 const uploadError = ref('')
 
 const selectedPackage = computed(() => {
@@ -583,6 +653,8 @@ const handleCustomerSelect = (event) => {
 }
 
 const triggerUpload = () => fileInput.value?.click()
+const triggerDpUpload = () => dpFileInput.value?.click()
+const triggerFinalUpload = () => finalFileInput.value?.click()
 
 const handleFileSelect = async (e) => {
   const file = e.target.files?.[0]
@@ -606,9 +678,71 @@ const handleFileSelect = async (e) => {
   }
 }
 
+const handleDpFileSelect = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  uploadingDp.value = true
+  uploadError.value = ''
+  try {
+    const formData = new FormData()
+    formData.append('dpProof', file)
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/upload/dp-proof`, {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    if (!data.success) throw new Error(data.message)
+    props.form.dpPaymentProof = data.url
+    props.form.dpPaid = true
+  } catch (e) {
+    uploadError.value = e.message || 'Gagal upload bukti DP.'
+  } finally {
+    uploadingDp.value = false
+  }
+}
+
+const handleFinalFileSelect = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  uploadingFinal.value = true
+  uploadError.value = ''
+  try {
+    const formData = new FormData()
+    formData.append('finalPaymentProof', file)
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/upload/final-payment-proof`, {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    if (!data.success) throw new Error(data.message)
+    props.form.finalPaymentProof = data.url
+    props.form.finalPaid = true
+  } catch (e) {
+    uploadError.value = e.message || 'Gagal upload bukti pelunasan.'
+  } finally {
+    uploadingFinal.value = false
+  }
+}
+
 const removePaymentProof = () => {
   props.form.paymentProof = ''
 }
+const removeDpProof = () => {
+  props.form.dpPaymentProof = ''
+}
+const removeFinalProof = () => {
+  props.form.finalPaymentProof = ''
+}
+
+
+watch(() => props.form.hasDp, (val) => {
+  if (!val) {
+    props.form.dpPaymentMethod = ''
+    props.form.dpPaidAt = ''
+    props.form.dpPaymentProof = ''
+    props.form.dpPaid = false
+  }
+})
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('id-ID', {

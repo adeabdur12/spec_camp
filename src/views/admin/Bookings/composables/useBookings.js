@@ -53,6 +53,17 @@ export function useBookings() {
     notes: '',
     totalPrice: 0,
     paymentProof: '',
+    dpAmount: 0,
+    dpPaid: false,
+    dpPaidAt: '',
+    dpPaymentMethod: '',
+    dpPaymentProof: '',
+    hasDp: false,
+    finalPaymentAmount: 0,
+    finalPaid: false,
+    finalPaidAt: '',
+    finalPaymentMethod: '',
+    finalPaymentProof: '',
     paidAt: '',
     paymentMethod: '',
     sendWhatsapp: false,
@@ -185,6 +196,9 @@ export function useBookings() {
         checkInDate: booking.checkInDate ? new Date(booking.checkInDate).toISOString().split('T')[0] : '',
         checkOutDate: booking.checkOutDate ? new Date(booking.checkOutDate).toISOString().split('T')[0] : '',
         paidAt: booking.paidAt ? new Date(booking.paidAt).toISOString().split('T')[0] : '',
+        dpPaidAt: booking.dpPaidAt ? new Date(booking.dpPaidAt).toISOString().split('T')[0] : '',
+        finalPaidAt: booking.finalPaidAt ? new Date(booking.finalPaidAt).toISOString().split('T')[0] : '',
+        hasDp: !!(booking.dpPaymentProof || booking.dpPaidAt || booking.dpPaymentMethod),
         extraServices: booking.ExtraServices ? booking.ExtraServices.map(s => ({
           id: s.id,
           quantity: s.BookingService?.quantity || 1,
@@ -215,6 +229,15 @@ export function useBookings() {
       form.value.mimountSharePerPax = (pkg && storedPerPax != null && Math.abs(storedPerPax - Number(pkg.mimountShare || 0)) >= 0.01)
         ? Math.round(storedPerPax * 100) / 100
         : ''
+      form.value.hasDp = !!(form.value.dpPaymentProof || form.value.dpPaidAt || form.value.dpPaymentMethod)
+      if (form.value.dpPaymentProof || form.value.dpPaidAt || form.value.dpPaymentMethod) form.value.dpPaid = true
+      if (form.value.finalPaymentProof) form.value.finalPaid = true
+
+
+    } else {
+      form.value.dpPaid = false
+      form.value.finalPaid = false
+      form.value.hasDp = false
     }
     showModal.value = true
   }

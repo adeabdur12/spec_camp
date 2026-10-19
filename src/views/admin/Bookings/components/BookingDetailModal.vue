@@ -49,10 +49,7 @@
               <span class="font-bold text-right">{{ booking.pax }} orang <span v-if="booking.freePax > 0" class="text-emerald-600">({{ booking.freePax }} gratis)</span></span>
               <span class="text-on-surface-variant">Status:</span>
               <span class="font-bold text-right" :class="booking.status === 'confirmed' ? 'text-emerald-600' : booking.status === 'cancelled' ? 'text-red-500' : 'text-amber-600'">{{ translateStatus(booking.status) }}</span>
-              <span class="text-on-surface-variant">Metode Bayar:</span>
-              <span class="font-bold text-right">{{ booking.paymentMethod === 'qris' ? 'QRIS' : booking.paymentMethod === 'transfer' ? 'Transfer Bank' : '-' }}</span>
-              <span class="text-on-surface-variant">Tanggal Bayar:</span>
-              <span class="font-bold text-right">{{ booking.paidAt || '-' }}</span>
+
               <span v-if="booking.Referrer" class="text-on-surface-variant">Affiliator:</span>
               <span v-if="booking.Referrer" class="font-bold text-right text-primary">{{ booking.Referrer.name }}</span>
             </div>
@@ -82,13 +79,42 @@
             </div>
           </div>
 
-          <!-- Payment Proof -->
+
+
+          <!-- Pembayaran DP -->
           <div class="bg-surface-container rounded-xl p-4">
-            <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Bukti Pembayaran</p>
-            <div v-if="booking.paymentProof" class="rounded-lg overflow-hidden border border-outline-variant/10 cursor-pointer" @click="$emit('preview-image', booking.paymentProof)">
-              <img :src="booking.paymentProof" alt="Bukti Pembayaran" class="w-full max-h-64 object-contain bg-white">
+            <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Pembayaran DP</p>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+
+              <span class="text-on-surface-variant">Metode:</span>
+              <span class="font-bold text-right capitalize">{{ booking.dpPaymentMethod || '-' }}</span>
+              <span class="text-on-surface-variant">Tanggal Bayar:</span>
+              <span class="font-bold text-right">{{ booking.dpPaidAt || '-' }}</span>
+              <span class="text-on-surface-variant">Status:</span>
+              <span class="font-bold text-right" :class="booking.dpPaid ? 'text-emerald-600' : 'text-amber-600'">{{ booking.dpPaid ? 'Sudah Dibayar' : 'Belum Dibayar' }}</span>
             </div>
-            <p v-else class="text-xs text-on-surface-variant italic">Belum ada bukti pembayaran</p>
+            <div v-if="booking.dpPaymentProof" class="mt-3 rounded-lg overflow-hidden border border-outline-variant/10 cursor-pointer" @click="$emit('preview-image', booking.dpPaymentProof)">
+              <img :src="booking.dpPaymentProof" alt="Bukti DP" class="w-full max-h-48 object-contain bg-white">
+            </div>
+            <p v-else class="text-xs text-on-surface-variant italic mt-2">Belum ada bukti DP</p>
+          </div>
+
+          <!-- Pelunasan -->
+          <div class="bg-surface-container rounded-xl p-4">
+            <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Pelunasan</p>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+
+              <span class="text-on-surface-variant">Metode:</span>
+              <span class="font-bold text-right capitalize">{{ booking.finalPaymentMethod || '-' }}</span>
+              <span class="text-on-surface-variant">Tanggal Bayar:</span>
+              <span class="font-bold text-right">{{ booking.finalPaidAt || '-' }}</span>
+              <span class="text-on-surface-variant">Status:</span>
+              <span class="font-bold text-right" :class="booking.finalPaid ? 'text-emerald-600' : 'text-amber-600'">{{ booking.finalPaid ? 'Lunas' : 'Belum Lunas' }}</span>
+            </div>
+            <div v-if="booking.finalPaymentProof" class="mt-3 rounded-lg overflow-hidden border border-outline-variant/10 cursor-pointer" @click="$emit('preview-image', booking.finalPaymentProof)">
+              <img :src="booking.finalPaymentProof" alt="Bukti Pelunasan" class="w-full max-h-48 object-contain bg-white">
+            </div>
+            <p v-else class="text-xs text-on-surface-variant italic mt-2">Belum ada bukti pelunasan</p>
           </div>
 
           <!-- Revenue -->
