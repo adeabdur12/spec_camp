@@ -77,7 +77,7 @@
               </label>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-1.5">
                 <label class="text-xs font-medium text-on-surface-variant font-label">Jumlah Orang (Pax) *</label>
                 <input v-model.number="form.pax" type="number" required min="1"
@@ -134,7 +134,7 @@
           <!-- Referral / Affiliator -->
           <div class="border-t border-outline-variant/10 pt-4">
             <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-3 font-label">Referral / Affiliator</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               <div class="space-y-1.5">
                 <label class="text-xs font-medium text-on-surface-variant font-label">Affiliator Pengaju (Opsional)</label>
                 <select v-model="form.referrerId"
@@ -144,7 +144,7 @@
                 </select>
               </div>
               <div class="space-y-1.5">
-                <div v-if="referrerPreview.total > 0" class="bg-surface-container rounded-xl p-3 space-y-1">
+                <div v-if="referrerPreview.total > 0" class="bg-surface-container rounded-xl p-3 space-y-1 h-full flex flex-col justify-center">
                   <p class="text-[9px] font-black text-primary uppercase tracking-widest">Komisi untuk {{ selectedReferrer?.name }}</p>
                   <div class="flex justify-between text-[10px]">
                     <span class="text-on-surface-variant">Dari Mimount</span>
@@ -159,10 +159,10 @@
                     <span class="font-black text-primary">{{ formatCurrency(referrerPreview.total) }}</span>
                   </div>
                 </div>
-                <div v-else-if="selectedReferrer" class="bg-surface-container rounded-xl p-3 text-[10px] text-on-surface-variant">
+                <div v-else-if="selectedReferrer" class="bg-surface-container rounded-xl p-3 text-[10px] text-on-surface-variant h-full flex items-center">
                   Paket ini belum memiliki konfigurasi komisi referral. Tambahkan di Menu <router-link to="/admin/paket-event" class="text-primary font-bold">Paket & Event</router-link>.
                 </div>
-                <div v-else class="bg-surface-container rounded-xl p-3 text-[10px] text-on-surface-variant flex items-center gap-2">
+                <div v-else class="bg-surface-container rounded-xl p-3 text-[10px] text-on-surface-variant flex items-center gap-2 h-full">
                   <span class="material-symbols-outlined text-sm text-on-surface-variant/40">share</span>
                   Tidak ada komisi yang dipotong.
                 </div>
@@ -190,7 +190,7 @@
           <!-- Payment & Status -->
           <div class="border-t border-outline-variant/10 pt-4">
             <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-3 font-label">Status & Pembayaran</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div class="space-y-1.5">
                 <label class="text-xs font-medium text-on-surface-variant font-label">Status Reservasi</label>
                 <select v-model="form.status" required
@@ -201,20 +201,7 @@
                   <option value="cancelled">DIBATALKAN (Cancelled)</option>
                 </select>
               </div>
-              <div class="space-y-1.5">
-                <label class="text-xs font-medium text-on-surface-variant font-label">Tanggal Pembayaran</label>
-                <input v-model="form.paidAt" type="date"
-                       class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
-              </div>
-              <div class="space-y-1.5">
-                <label class="text-xs font-medium text-on-surface-variant font-label">Metode Pembayaran</label>
-                <select v-model="form.paymentMethod"
-                        class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
-                  <option value="">-- Pilih Metode --</option>
-                  <option value="transfer">Transfer Bank</option>
-                  <option value="qris">QRIS</option>
-                </select>
-              </div>
+
             </div>
             <div class="space-y-1.5 mt-4">
               <label class="text-xs font-medium text-on-surface-variant font-label">Catatan Tambahan</label>
@@ -233,42 +220,42 @@
                 </label>
               </div>
               <template v-if="form.hasDp">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-medium text-on-surface-variant font-label">Metode Pembayaran DP</label>
-                    <select v-model="form.dpPaymentMethod" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
-                      <option value="">-- Pilih Metode --</option>
-                      <option value="transfer">Transfer Bank</option>
-                      <option value="qris">QRIS</option>
-                    </select>
-                  </div>
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-medium text-on-surface-variant font-label">Tanggal Pembayaran DP</label>
-                    <input v-model="form.dpPaidAt" type="date" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
-                  </div>
-                </div>
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <label class="text-xs font-medium text-on-surface-variant font-label">Bukti Pembayaran DP</label>
-                  </div>
-                  <div v-if="!form.dpPaymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-4 text-center cursor-pointer" :class="uploadingDp ? 'opacity-50 pointer-events-none' : 'hover:border-primary/30'" @click="triggerDpUpload">
-                    <input ref="dpFileInput" type="file" accept="image/*" class="hidden" @change="handleDpFileSelect" :disabled="uploadingDp">
-                    <span class="material-symbols-outlined text-xl text-on-surface-variant/40 mb-1">{{ uploadingDp ? 'hourglass_top' : 'cloud_upload' }}</span>
-                    <p class="text-xs text-on-surface-variant">{{ uploadingDp ? 'Mengupload...' : 'Upload bukti DP' }}</p>
-                  </div>
-                  <div v-else>
-                    <div class="bg-surface-container rounded-xl overflow-hidden">
-                      <img :src="form.dpPaymentProof" alt="Bukti DP" class="w-full max-h-40 object-contain p-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  <div class="space-y-4">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-medium text-on-surface-variant font-label">Metode Pembayaran DP</label>
+                      <select v-model="form.dpPaymentMethod" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                        <option value="">-- Pilih Metode --</option>
+                        <option value="transfer">Transfer Bank</option>
+                        <option value="qris">QRIS</option>
+                      </select>
                     </div>
-                    <div class="flex items-center justify-between mt-2">
-                      <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-                        <span class="material-symbols-outlined text-xs">check_circle</span>
-                        Bukti DP terupload
-                      </p>
-                      <button type="button" @click="removeDpProof" class="text-[10px] font-bold text-error hover:text-error/70 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">delete</span>
-                        Hapus
-                      </button>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-medium text-on-surface-variant font-label">Tanggal Pembayaran DP</label>
+                      <input v-model="form.dpPaidAt" type="date" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <label class="text-xs font-medium text-on-surface-variant font-label">Bukti Pembayaran DP</label>
+                    <div v-if="!form.dpPaymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-4 text-center cursor-pointer h-32 flex flex-col items-center justify-center" :class="uploadingDp ? 'opacity-50 pointer-events-none' : 'hover:border-primary/30'" @click="triggerDpUpload">
+                      <input ref="dpFileInput" type="file" accept="image/*" class="hidden" @change="handleDpFileSelect" :disabled="uploadingDp">
+                      <span class="material-symbols-outlined text-xl text-on-surface-variant/40 mb-1">{{ uploadingDp ? 'hourglass_top' : 'cloud_upload' }}</span>
+                      <p class="text-xs text-on-surface-variant">{{ uploadingDp ? 'Mengupload...' : 'Upload bukti DP' }}</p>
+                    </div>
+                    <div v-else>
+                      <div class="bg-surface-container rounded-xl overflow-hidden h-32 flex items-center justify-center">
+                        <img :src="form.dpPaymentProof" alt="Bukti DP" class="max-h-32 object-contain">
+                      </div>
+                      <div class="flex items-center justify-between mt-2">
+                        <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                          <span class="material-symbols-outlined text-xs">check_circle</span>
+                          Bukti DP terupload
+                        </p>
+                        <button type="button" @click="removeDpProof" class="text-[10px] font-bold text-error hover:text-error/70 flex items-center gap-1">
+                          <span class="material-symbols-outlined text-sm">delete</span>
+                          Hapus
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -278,44 +265,42 @@
             <!-- Pelunasan -->
             <div class="mt-4 bg-surface-container-low p-4 rounded-2xl space-y-4">
               <h4 class="text-xs font-bold text-primary uppercase tracking-wider font-label">Pelunasan</h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                <div class="space-y-1.5">
-                  <label class="text-xs font-medium text-on-surface-variant font-label">Metode Pelunasan</label>
-                  <select v-model="form.finalPaymentMethod" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
-                    <option value="">-- Pilih Metode --</option>
-                    <option value="transfer">Transfer Bank</option>
-                    <option value="qris">QRIS</option>
-                  </select>
-                </div>
-                <div class="space-y-1.5">
-                  <label class="text-xs font-medium text-on-surface-variant font-label">Tanggal Pelunasan</label>
-                  <input v-model="form.finalPaidAt" type="date" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
-                </div>
-
-              </div>
-              <div>
-                <div class="flex justify-between items-center mb-2">
-                  <label class="text-xs font-medium text-on-surface-variant font-label">Bukti Pelunasan</label>
-                </div>
-                <div v-if="!form.finalPaymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-4 text-center cursor-pointer" :class="uploadingFinal ? 'opacity-50 pointer-events-none' : 'hover:border-primary/30'" @click="triggerFinalUpload">
-                  <input ref="finalFileInput" type="file" accept="image/*" class="hidden" @change="handleFinalFileSelect" :disabled="uploadingFinal">
-                  <span class="material-symbols-outlined text-xl text-on-surface-variant/40 mb-1">{{ uploadingFinal ? 'hourglass_top' : 'cloud_upload' }}</span>
-                  <p class="text-xs text-on-surface-variant">{{ uploadingFinal ? 'Mengupload...' : 'Upload bukti pelunasan' }}</p>
-                </div>
-                <div v-else>
-                  <div class="bg-surface-container rounded-xl overflow-hidden">
-                    <img :src="form.finalPaymentProof" alt="Bukti Pelunasan" class="w-full max-h-40 object-contain p-2">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                <div class="space-y-4">
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-on-surface-variant font-label">Metode Pelunasan</label>
+                    <select v-model="form.finalPaymentMethod" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                      <option value="">-- Pilih Metode --</option>
+                      <option value="transfer">Transfer Bank</option>
+                      <option value="qris">QRIS</option>
+                    </select>
                   </div>
-                  <div class="flex items-center justify-between mt-2">
-                    <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-                      <span class="material-symbols-outlined text-xs">check_circle</span>
-                      Bukti pelunasan terupload
-                    </p>
-                    <button type="button" @click="removeFinalProof" class="text-[10px] font-bold text-error hover:text-error/70 flex items-center gap-1">
-                      <span class="material-symbols-outlined text-sm">delete</span>
-                      Hapus
-                    </button>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-on-surface-variant font-label">Tanggal Pelunasan</label>
+                    <input v-model="form.finalPaidAt" type="date" class="w-full bg-surface-container px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-body">
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-xs font-medium text-on-surface-variant font-label">Bukti Pelunasan</label>
+                  <div v-if="!form.finalPaymentProof" class="border-2 border-dashed border-outline-variant/30 rounded-xl p-4 text-center cursor-pointer h-32 flex flex-col items-center justify-center" :class="uploadingFinal ? 'opacity-50 pointer-events-none' : 'hover:border-primary/30'" @click="triggerFinalUpload">
+                    <input ref="finalFileInput" type="file" accept="image/*" class="hidden" @change="handleFinalFileSelect" :disabled="uploadingFinal">
+                    <span class="material-symbols-outlined text-xl text-on-surface-variant/40 mb-1">{{ uploadingFinal ? 'hourglass_top' : 'cloud_upload' }}</span>
+                    <p class="text-xs text-on-surface-variant">{{ uploadingFinal ? 'Mengupload...' : 'Upload bukti pelunasan' }}</p>
+                  </div>
+                  <div v-else>
+                    <div class="bg-surface-container rounded-xl overflow-hidden h-32 flex items-center justify-center">
+                      <img :src="form.finalPaymentProof" alt="Bukti Pelunasan" class="max-h-32 object-contain">
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                      <p class="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">check_circle</span>
+                        Bukti pelunasan terupload
+                      </p>
+                      <button type="button" @click="removeFinalProof" class="text-[10px] font-bold text-error hover:text-error/70 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                        Hapus
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

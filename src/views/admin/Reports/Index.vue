@@ -339,7 +339,7 @@ const exportSingleExcel = () => {
   rows.push([`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`])
   rows.push([])
 
-  rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Tanggal Pembayaran', 'Metode Pembayaran', 'Bukti Pembayaran'])
+  rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Tgl Pembayaran', 'Sumber Pembayaran', 'Metode', 'Bukti', 'Tgl DP', 'Metode DP', 'Bukti DP', 'Tgl Pelunasan', 'Metode Pelunasan', 'Bukti Pelunasan'])
 
   const detailStart = rows.length + 1
 
@@ -357,8 +357,14 @@ const exportSingleExcel = () => {
       '', Number(b.basePrice || 0), Number(b.mimountShare || 0),
       Math.max(0, Math.round(Number(b.specCampShare || 0) - bookingSpecCampSvc)),
       'Porsi tiket masuk',
-      b.paidAt ? new Date(b.paidAt).toLocaleDateString('id-ID') : '-',
-      b.paymentMethod || '-', b.paymentProof || '-'
+      (getPaymentDate(b)) ? new Date(getPaymentDate(b)).toLocaleDateString('id-ID') : '-',
+      b.paymentMethod || '-', b.paymentProof || '-',
+      b.dpPaidAt || '-',
+      b.dpPaymentMethod || '-',
+      b.dpPaymentProof || '-',
+      b.finalPaidAt || '-',
+      b.finalPaymentMethod || '-',
+      b.finalPaymentProof || '-'
     ])
 
     const refMim = Number(b.referralMimount || 0)
@@ -368,7 +374,7 @@ const exportSingleExcel = () => {
         '', '', '', '', '', '', '',
         'Komisi Referral', (b.Referrer?.name || 'Referral') + ` (via ${b.Referrer?.code || '-'})`, '', '',
         -refMim - refSpec, -refMim, -refSpec,
-        'Komisi affiliator', '', '', ''
+        'Komisi affiliator', '', '', '', '', '', '', '', '', ''
       ])
     }
 
@@ -422,7 +428,7 @@ const exportSingleExcel = () => {
   rows.push(['RINGKASAN', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
   rows.push(['Total Omzet', '', '', '', '', '', `=SUM($G${detailStart}:$G${detailEnd})`, '', '', '', '', '', '', '', '', '', '', ''])
   rows.push([])
-  rows.push(['PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
   const mimFirst = rows.length + 1
   rows.push(['  Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (mimount)', 'M', detailStart, detailEnd), '', '', '', '', ''])
   rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'M', detailStart, detailEnd), '', '', '', '', ''])
@@ -431,17 +437,17 @@ const exportSingleExcel = () => {
   rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'M', detailStart, detailEnd), '', '', '', '', ''])
   rows.push(['Net Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=M${mimFirst + 3}+M${mimFirst + 4}`, '', '', '', '', ''])
   rows.push([])
-  rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
   const specFirst = rows.length + 1
-  rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'N', detailStart, detailEnd), '', '', '', ''])
-  rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (spec_camp)', 'N', detailStart, detailEnd), '', '', '', ''])
-  rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'N', detailStart, detailEnd), '', '', '', ''])
+  rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'N', detailStart, detailEnd), '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (spec_camp)', 'N', detailStart, detailEnd), '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'N', detailStart, detailEnd), '', '', '', '', '', '', '', '', '', ''])
   rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${specFirst}:N${specFirst + 2})`, '', '', '', ''])
   rows.push([])
-  rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'N', detailStart, detailEnd), '', '', ''])
+  rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'N', detailStart, detailEnd), '', '', '', '', '', '', '', '', '', ''])
   rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}+N${specFirst + 5}`, '', '', '', ''])
   rows.push([])
-  rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', ''])
+  rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', '', '', '', '', '', '', '', ''])
 
   writeXlsx(rows, `laporan-${monthName.value.toLowerCase()}-${periodYear.value}.xlsx`, `Laporan ${monthName.value} ${periodYear.value}`)
 }
@@ -452,14 +458,19 @@ const exportMultiMonthExcel = async () => {
 
   const allBookingsRaw = await fetchAllBookings(api)
   const allBookings = allBookingsRaw.filter(b => {
-    if (!b.paidAt) return false
-    const paidDate = String(b.paidAt).slice(0, 10)
-    return paidDate >= startDate && paidDate <= endDate && b.status === 'completed'
-  }).sort((a, b) => new Date(a.paidAt) - new Date(b.paidAt))
+    const payDate = getPaymentDate(b)
+    if (!payDate) return false
+    const paidDateStr = String(payDate).slice(0, 10)
+    return paidDateStr >= startDate && paidDateStr <= endDate && b.status === 'completed'
+  }).sort((a, b) => {
+    const da = new Date(getPaymentDate(a))
+    const db = new Date(getPaymentDate(b))
+    return da - db
+  })
 
   const grouped = {}
   allBookings.forEach(b => {
-    const d = new Date(b.paidAt)
+    const d = new Date(getPaymentDate(b))
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
     if (!grouped[key]) grouped[key] = []
     grouped[key].push(b)
@@ -481,7 +492,7 @@ const exportMultiMonthExcel = async () => {
 
     rows.push([])
     rows.push([`${monthLabel.toUpperCase()} ${y}`])
-    rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Tanggal Pembayaran', 'Metode Pembayaran', 'Bukti Pembayaran'])
+    rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Tgl Pembayaran', 'Sumber Pembayaran', 'Metode', 'Bukti', 'Tgl DP', 'Metode DP', 'Bukti DP', 'Tgl Pelunasan', 'Metode Pelunasan', 'Bukti Pelunasan'])
 
     const detailStart = rows.length + 1
 
@@ -499,8 +510,14 @@ const exportMultiMonthExcel = async () => {
         '', Number(b.basePrice || 0), Number(b.mimountShare || 0),
         Math.max(0, Math.round(Number(b.specCampShare || 0) - bookingSpecCampSvc)),
         'Porsi tiket masuk',
-        b.paidAt ? new Date(b.paidAt).toLocaleDateString('id-ID') : '-',
-        b.paymentMethod || '-', b.paymentProof || '-'
+        (getPaymentDate(b)) ? new Date(getPaymentDate(b)).toLocaleDateString('id-ID') : '-',
+        b.paymentMethod || '-', b.paymentProof || '-',
+        b.dpPaidAt || '-',
+        b.dpPaymentMethod || '-',
+        b.dpPaymentProof || '-',
+        b.finalPaidAt || '-',
+        b.finalPaymentMethod || '-',
+        b.finalPaymentProof || '-'
       ])
 
       const refMimM = Number(b.referralMimount || 0)
@@ -510,7 +527,7 @@ const exportMultiMonthExcel = async () => {
           '', '', '', '', '', '', '',
           'Komisi Referral', (b.Referrer?.name || 'Referral') + ` (via ${b.Referrer?.code || '-'})`, '', '',
           -refMimM - refSpecM, -refMimM, -refSpecM,
-          'Komisi affiliator', '', '', ''
+          'Komisi affiliator', '', '', '', '', '', '', '', '', ''
         ])
       }
 
@@ -561,9 +578,9 @@ const exportMultiMonthExcel = async () => {
     const detailEnd = Math.max(rows.length, detailStart)
 
     rows.push([])
-    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', `=SUM($G${detailStart}:$G${detailEnd})`, '', '', '', '', '', '', '', '', '', '', ''])
+    rows.push([`Subtotal ${monthLabel} ${y}`, '', '', '', '', '', `=SUM($G${detailStart}:$G${detailEnd})`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
     rows.push([])
-    rows.push(['  PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+    rows.push(['  PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
     const mimFirst = rows.length + 1
     rows.push(['    Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (mimount)', 'M', detailStart, detailEnd), '', '', '', '', ''])
     rows.push(['    Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Inventory', 'M', detailStart, detailEnd), '', '', '', '', ''])
@@ -579,7 +596,7 @@ const exportMultiMonthExcel = async () => {
     rows.push(['    Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Tiket Masuk', 'N', detailStart, detailEnd), '', '', '', ''])
     rows.push(['  Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${specFirst}:N${specFirst + 2})`, '', '', '', ''])
     rows.push([])
-    rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'N', detailStart, detailEnd), '', '', ''])
+    rows.push(['  Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Komisi Referral', 'N', detailStart, detailEnd), '', '', '', '', '', '', '', '', '', ''])
     rows.push(['  Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${specFirst + 3}+N${specFirst + 5}`, '', '', '', ''])
     rows.push([])
     rows.push(['  Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', sumifFormula('Layanan (eksternal)', 'L', detailStart, detailEnd), '', '', ''])
@@ -588,7 +605,7 @@ const exportMultiMonthExcel = async () => {
   rows.push([])
   rows.push(['GRAND TOTAL', '', '', '', '', '', `=SUMIF($H:$H,"Tiket Masuk",$G:$G)`, '', '', '', '', '', '', '', '', '', '', ''])
   rows.push([])
-  rows.push(['PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['PENDAPATAN MIMOUNT', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
   const grandMimFirst = rows.length + 1
   rows.push(['  Total Layanan Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (mimount)",$M:$M)`, '', '', '', '', ''])
   rows.push(['  Total Sewa Alat Mimount', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Inventory",$M:$M)`, '', '', '', '', ''])
@@ -597,16 +614,16 @@ const exportMultiMonthExcel = async () => {
   rows.push(['Total Komisi Referral (dipotong)', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Komisi Referral",$M:$M)`, '', '', '', '', ''])
   rows.push(['Net Porsi Mimount', '', '', '', '', '', '', '', '', '', '', '', `=M${grandMimFirst + 3}+M${grandMimFirst + 4}`, '', '', '', '', ''])
   rows.push([])
-  rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['PENDAPATAN SPEC CAMP', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
   const grandSpecFirst = rows.length + 1
   rows.push(['  Total Markup Inventory', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Inventory",$N:$N)`, '', '', '', ''])
   rows.push(['  Total Layanan Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (spec_camp)",$N:$N)`, '', '', '', ''])
   rows.push(['  Total Porsi Tiket Masuk Spec Camp', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Tiket Masuk",$N:$N)`, '', '', '', ''])
-  rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${grandSpecFirst}:N${grandSpecFirst + 2})`, '', '', '', ''])
-  rows.push(['Total Komisi Referral Spec Camp (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Komisi Referral",$N:$N)`, '', '', ''])
-  rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${grandSpecFirst + 3}+N${grandSpecFirst + 4}`, '', '', '', ''])
+  rows.push(['Total Porsi Spec Camp (Kotor)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUM(N${grandSpecFirst}:N${grandSpecFirst + 2})`, '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['Total Komisi Referral Spec Camp (dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Komisi Referral",$N:$N)`, '', '', '', '', '', '', '', '', '', ''])
+  rows.push(['Porsi Spec Camp (Net)', '', '', '', '', '', '', '', '', '', '', '', '', `=N${grandSpecFirst + 3}+N${grandSpecFirst + 4}`, '', '', '', '', '', '', '', '', '', ''])
   rows.push([])
-  rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (eksternal)",$L:$L)`, '', '', ''])
+  rows.push(['Total Layanan Eksternal (Dipotong)', '', '', '', '', '', '', '', '', '', '', '', '', `=SUMIF($H:$H,"Layanan (eksternal)",$L:$L)`, '', '', '', '', '', '', '', '', '', ''])
 
   writeXlsx(rows, `laporan-${startLabel.toLowerCase()}-${endLabel.toLowerCase()}-${periodYear.value}-${exportEndYear.value}.xlsx`, `Laporan ${startLabel} - ${endLabel}`)
 }
@@ -691,10 +708,11 @@ const fetchStats = async () => {
     // Fetch all bookings for transaction list
     const allBookings = await fetchAllBookings(api)
     transactions.value = allBookings.filter(b => {
-      if (!b.paidAt || b.status !== 'completed') return false
-      const paidDate = String(b.paidAt).slice(0, 10)
+      const pd = getPaymentDate(b)
+      if (!pd || b.status !== 'completed') return false
+      const paidDate = String(pd).slice(0, 10)
       return paidDate >= startDate && paidDate <= endDate
-    }).sort((a, b) => new Date(b.paidAt) - new Date(a.paidAt))
+    }).sort((a, b) => new Date(getPaymentDate(b)) - new Date(getPaymentDate(a)))
   } catch (e) {
     console.error(e)
   } finally {

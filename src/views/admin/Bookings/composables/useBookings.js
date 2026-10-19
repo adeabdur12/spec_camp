@@ -196,8 +196,8 @@ export function useBookings() {
         checkInDate: booking.checkInDate ? new Date(booking.checkInDate).toISOString().split('T')[0] : '',
         checkOutDate: booking.checkOutDate ? new Date(booking.checkOutDate).toISOString().split('T')[0] : '',
         paidAt: booking.paidAt ? new Date(booking.paidAt).toISOString().split('T')[0] : '',
-        dpPaidAt: booking.dpPaidAt ? new Date(booking.dpPaidAt).toISOString().split('T')[0] : '',
-        finalPaidAt: booking.finalPaidAt ? new Date(booking.finalPaidAt).toISOString().split('T')[0] : '',
+        dpPaidAt: (booking.dpPaidAt && booking.dpPaidAt !== 'Invalid Date') ? new Date(booking.dpPaidAt).toISOString().split('T')[0] : '',
+        finalPaidAt: (booking.finalPaidAt && booking.finalPaidAt !== 'Invalid Date') ? new Date(booking.finalPaidAt).toISOString().split('T')[0] : '',
         hasDp: !!(booking.dpPaymentProof || booking.dpPaidAt || booking.dpPaymentMethod),
         extraServices: booking.ExtraServices ? booking.ExtraServices.map(s => ({
           id: s.id,
