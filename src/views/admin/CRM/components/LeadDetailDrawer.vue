@@ -65,6 +65,7 @@
           <InfoRow v-if="leadData?.address" icon="location_on" :text="leadData.address" />
           <InfoRow v-if="leadData?.estimatedPax" icon="group" :text="`Est. ${leadData.estimatedPax} pax`" />
           <InfoRow v-if="leadData?.interestedPackage" icon="local_activity" :text="leadData.interestedPackage" />
+          <InfoRow v-if="plannedDateRange" icon="event" :text="plannedDateRange" />
         </div>
 
         <!-- Quick actions -->
@@ -259,6 +260,15 @@ const whatsappUrl = computed(() => {
   const clean = phone.replace(/[^0-9]/g, '')
   const formatted = clean.startsWith('62') ? clean : `62${clean.startsWith('0') ? clean.slice(1) : clean}`
   return `https://wa.me/${formatted}`
+})
+
+const plannedDateRange = computed(() => {
+  const inDate = leadData.value?.plannedCheckInDate
+  const outDate = leadData.value?.plannedCheckOutDate
+  if (inDate && outDate) return `Rencana: ${formatDate(inDate)} - ${formatDate(outDate)}`
+  if (inDate) return `Rencana Check-in: ${formatDate(inDate)}`
+  if (outDate) return `Rencana Check-out: ${formatDate(outDate)}`
+  return ''
 })
 
 const routeUrl = computed(() => {

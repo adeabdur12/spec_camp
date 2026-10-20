@@ -218,6 +218,14 @@ import api from '../../../services/api'
 import VueApexCharts from 'vue3-apexcharts'
 import * as XLSX from 'xlsx'
 
+const assetBase = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '')
+const proofUrl = (p) => {
+  if (!p) return '-'
+  const s = String(p)
+  if (s.startsWith('http')) return s
+  return assetBase + s
+}
+
 const apexchart = VueApexCharts
 
 const now = new Date()
@@ -339,7 +347,7 @@ const exportSingleExcel = () => {
   rows.push([`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`])
   rows.push([])
 
-  rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Tgl Pembayaran', 'Sumber Pembayaran', 'Metode', 'Bukti', 'Tgl DP', 'Metode DP', 'Bukti DP', 'Tgl Pelunasan', 'Metode Pelunasan', 'Bukti Pelunasan'])
+  rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Metode DP', 'Tgl DP', 'Bukti DP', 'Metode Pelunasan', 'Tgl Pelunasan', 'Bukti Pelunasan'])
 
   const detailStart = rows.length + 1
 
@@ -357,14 +365,12 @@ const exportSingleExcel = () => {
       '', Number(b.basePrice || 0), Number(b.mimountShare || 0),
       Math.max(0, Math.round(Number(b.specCampShare || 0) - bookingSpecCampSvc)),
       'Porsi tiket masuk',
-      (getPaymentDate(b)) ? new Date(getPaymentDate(b)).toLocaleDateString('id-ID') : '-',
-      b.paymentMethod || '-', b.paymentProof || '-',
-      b.dpPaidAt || '-',
       b.dpPaymentMethod || '-',
-      b.dpPaymentProof || '-',
-      b.finalPaidAt || '-',
+      b.dpPaidAt ? new Date(b.dpPaidAt).toLocaleDateString('id-ID') : '-',
+      proofUrl(b.dpPaymentProof),
       b.finalPaymentMethod || '-',
-      b.finalPaymentProof || '-'
+      b.finalPaidAt ? new Date(b.finalPaidAt).toLocaleDateString('id-ID') : '-',
+      proofUrl(b.finalPaymentProof)
     ])
 
     const refMim = Number(b.referralMimount || 0)
@@ -374,7 +380,7 @@ const exportSingleExcel = () => {
         '', '', '', '', '', '', '',
         'Komisi Referral', (b.Referrer?.name || 'Referral') + ` (via ${b.Referrer?.code || '-'})`, '', '',
         -refMim - refSpec, -refMim, -refSpec,
-        'Komisi affiliator', '', '', '', '', '', '', '', '', ''
+        'Komisi affiliator', '', '', '', '', '', ''
       ])
     }
 
@@ -390,7 +396,7 @@ const exportSingleExcel = () => {
         `=ROUND(L${ri}/1.2,0)`,
         `=L${ri}-M${ri}`,
         'Sewa alat Mimount',
-        '', '', ''
+        '', '', '', '', '', ''
       ])
     })
 
@@ -417,7 +423,7 @@ const exportSingleExcel = () => {
         `Layanan (${svcType})`, svc.name, qty, price,
         `=J${rs}*K${rs}`,
         mimPortion, specPortion, paidTo,
-        '', '', ''
+        '', '', '', '', '', ''
       ])
     })
   })
@@ -458,19 +464,19 @@ const exportMultiMonthExcel = async () => {
 
   const allBookingsRaw = await fetchAllBookings(api)
   const allBookings = allBookingsRaw.filter(b => {
-    const payDate = getPaymentDate(b)
+    const payDate = (b.finalPaidAt || b.dpPaidAt || b.paidAt || b.createdAt)
     if (!payDate) return false
     const paidDateStr = String(payDate).slice(0, 10)
     return paidDateStr >= startDate && paidDateStr <= endDate && b.status === 'completed'
   }).sort((a, b) => {
     const da = new Date(getPaymentDate(a))
-    const db = new Date(getPaymentDate(b))
+    const db = new Date((b.finalPaidAt || b.dpPaidAt || b.paidAt || b.createdAt))
     return da - db
   })
 
   const grouped = {}
   allBookings.forEach(b => {
-    const d = new Date(getPaymentDate(b))
+    const d = new Date((b.finalPaidAt || b.dpPaidAt || b.paidAt || b.createdAt))
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
     if (!grouped[key]) grouped[key] = []
     grouped[key].push(b)
@@ -492,7 +498,7 @@ const exportMultiMonthExcel = async () => {
 
     rows.push([])
     rows.push([`${monthLabel.toUpperCase()} ${y}`])
-    rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Tgl Pembayaran', 'Sumber Pembayaran', 'Metode', 'Bukti', 'Tgl DP', 'Metode DP', 'Bukti DP', 'Tgl Pelunasan', 'Metode Pelunasan', 'Bukti Pelunasan'])
+    rows.push(['Tanggal', 'Nama', 'Paket', 'Pax', 'Gratis', 'Status', 'Total', 'Item Type', 'Nama Item', 'Qty', 'Harga/Unit', 'Subtotal', 'Porsi Mimount', 'Porsi Spec Camp', 'Keterangan', 'Metode DP', 'Tgl DP', 'Bukti DP', 'Metode Pelunasan', 'Tgl Pelunasan', 'Bukti Pelunasan'])
 
     const detailStart = rows.length + 1
 
@@ -510,14 +516,12 @@ const exportMultiMonthExcel = async () => {
         '', Number(b.basePrice || 0), Number(b.mimountShare || 0),
         Math.max(0, Math.round(Number(b.specCampShare || 0) - bookingSpecCampSvc)),
         'Porsi tiket masuk',
-        (getPaymentDate(b)) ? new Date(getPaymentDate(b)).toLocaleDateString('id-ID') : '-',
-        b.paymentMethod || '-', b.paymentProof || '-',
-        b.dpPaidAt || '-',
         b.dpPaymentMethod || '-',
-        b.dpPaymentProof || '-',
-        b.finalPaidAt || '-',
+        b.dpPaidAt ? new Date(b.dpPaidAt).toLocaleDateString('id-ID') : '-',
+        proofUrl(b.dpPaymentProof),
         b.finalPaymentMethod || '-',
-        b.finalPaymentProof || '-'
+        b.finalPaidAt ? new Date(b.finalPaidAt).toLocaleDateString('id-ID') : '-',
+        proofUrl(b.finalPaymentProof)
       ])
 
       const refMimM = Number(b.referralMimount || 0)
@@ -527,7 +531,7 @@ const exportMultiMonthExcel = async () => {
           '', '', '', '', '', '', '',
           'Komisi Referral', (b.Referrer?.name || 'Referral') + ` (via ${b.Referrer?.code || '-'})`, '', '',
           -refMimM - refSpecM, -refMimM, -refSpecM,
-          'Komisi affiliator', '', '', '', '', '', '', '', '', ''
+          'Komisi affiliator', '', '', '', '', '', ''
         ])
       }
 
@@ -543,7 +547,7 @@ const exportMultiMonthExcel = async () => {
           `=ROUND(L${ri}/1.2,0)`,
           `=L${ri}-M${ri}`,
           'Sewa alat Mimount',
-          '', '', ''
+          '', '', '', '', '', ''
         ])
       })
 
@@ -570,7 +574,7 @@ const exportMultiMonthExcel = async () => {
           `Layanan (${svcType})`, svc.name, qty, price,
           `=J${rs}*K${rs}`,
           mimPortion, specPortion, paidTo,
-          '', '', ''
+          '', '', '', '', '', ''
         ])
       })
     })
@@ -674,6 +678,7 @@ const chartOptions = computed(() => ({
   tooltip: { y: { formatter: (v) => formatCurrency(v) } }
 }))
 
+const getPaymentDate = (b) => { const v = b.finalPaidAt || b.dpPaidAt || b.paidAt || b.createdAt; return v; }
 const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0)
 
 const fetchAllBookings = async (api) => {
@@ -708,11 +713,11 @@ const fetchStats = async () => {
     // Fetch all bookings for transaction list
     const allBookings = await fetchAllBookings(api)
     transactions.value = allBookings.filter(b => {
-      const pd = getPaymentDate(b)
+      const pd = (b.finalPaidAt || b.dpPaidAt || b.paidAt || b.createdAt)
       if (!pd || b.status !== 'completed') return false
       const paidDate = String(pd).slice(0, 10)
       return paidDate >= startDate && paidDate <= endDate
-    }).sort((a, b) => new Date(getPaymentDate(b)) - new Date(getPaymentDate(a)))
+    }).sort((a, b) => new Date((b.finalPaidAt || b.dpPaidAt || b.paidAt || b.createdAt)) - new Date(getPaymentDate(a)))
   } catch (e) {
     console.error(e)
   } finally {

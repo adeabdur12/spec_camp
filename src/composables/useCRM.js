@@ -54,6 +54,8 @@ export function useCRM() {
     estimatedPax: '',
     interestedPackage: '',
     nextFollowUpDate: '',
+    plannedCheckInDate: '',
+    plannedCheckOutDate: '',
     notes: ''
   }
   const form = ref({ ...initialForm })
@@ -124,6 +126,8 @@ export function useCRM() {
         estimatedPax: lead.estimatedPax || '',
         interestedPackage: lead.interestedPackage || '',
         nextFollowUpDate: lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toISOString().split('T')[0] : '',
+        plannedCheckInDate: lead.plannedCheckInDate ? new Date(lead.plannedCheckInDate).toISOString().split('T')[0] : '',
+        plannedCheckOutDate: lead.plannedCheckOutDate ? new Date(lead.plannedCheckOutDate).toISOString().split('T')[0] : '',
         notes: lead.notes || ''
       }
     } else {
@@ -143,7 +147,13 @@ export function useCRM() {
     saving.value = true
     formError.value = ''
     try {
-      const payload = { ...form.value, estimatedPax: form.value.estimatedPax ? Number(form.value.estimatedPax) : null, nextFollowUpDate: form.value.nextFollowUpDate || null }
+      const payload = {
+        ...form.value,
+        estimatedPax: form.value.estimatedPax ? Number(form.value.estimatedPax) : null,
+        nextFollowUpDate: form.value.nextFollowUpDate || null,
+        plannedCheckInDate: form.value.plannedCheckInDate || null,
+        plannedCheckOutDate: form.value.plannedCheckOutDate || null
+      }
       if (editingLead.value) {
         await leadService.update(editingLead.value.id, payload)
       } else {

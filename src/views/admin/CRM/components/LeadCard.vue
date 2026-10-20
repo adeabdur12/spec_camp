@@ -33,14 +33,13 @@
           <span class="material-symbols-outlined text-sm">group</span>
           <span>Est. {{ lead.estimatedPax }} pax</span>
         </div>
-      </div>
-
-      <!-- Follow-up date -->
-      <div v-if="lead.nextFollowUpDate"
-           class="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg w-fit"
-           :class="isOverdue ? 'bg-error/10 text-error' : isToday ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'">
-        <span class="material-symbols-outlined text-sm">event</span>
-        <span class="font-semibold">{{ formatDate(lead.nextFollowUpDate) }}</span>
+        <div v-if="plannedRange" class="flex items-start gap-1.5 text-xs text-on-surface-variant">
+          <span class="material-symbols-outlined text-sm">event_available</span>
+          <span class="truncate">Rencana: {{ plannedRange }}</span>
+        </div>
+        <div v-if="plannedDuration" class="flex items-center gap-1.5 text-xs font-semibold text-primary pl-5">
+          <span>{{ plannedDuration }}</span>
+        </div>
       </div>
 
       <!-- Actions -->
@@ -74,19 +73,33 @@ const props = defineProps({
 
 defineEmits(['click', 'edit', 'delete', 'whatsapp'])
 
-const isOverdue = (() => {
-  if (!props.lead.nextFollowUpDate) return false
-  return new Date(props.lead.nextFollowUpDate) < new Date(new Date().toDateString())
-})()
-
-const isToday = (() => {
-  if (!props.lead.nextFollowUpDate) return false
-  return new Date(props.lead.nextFollowUpDate).toDateString() === new Date().toDateString()
-})()
-
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
 }
+
+const plannedRange = (() => {
+  const inDate = props.lead.plannedCheckInDate
+  const outDate = props.lead.plannedCheckOutDate
+  if (inDate && outDate) return `${formatDate(inDate)} - ${formatDate(outDate)}`
+  if (inDate) return formatDate(inDate)
+  if (outDate) return formatDate(outDate)
+  return ''
+})()
+
+const plannedDuration = (() => {
+  const inDate = props.lead.plannedCheckInDate
+  const outDate = props.lead.plannedCheckOutDate
+  if (!inDate || !outDate) return ''
+  const start = new Date(inDate)
+  const end = new Date(outDate)
+  start.setHours(0, 0, 0, 0)
+  end.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24))
+  if (diffDays < 0) return ''
+  const nights = diffDays
+  const days = diffDays + 1
+  return `${days} hari ${nights} malam`
+})()
 </script>

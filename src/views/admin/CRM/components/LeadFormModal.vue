@@ -160,6 +160,20 @@
           </div>
         </div>
 
+        <!-- Planned Check-in / Check-out -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1 block">Rencana Check-in</label>
+            <input v-model="form.plannedCheckInDate" type="date" @change="onCheckInChange"
+                   class="w-full px-3 py-2.5 bg-surface-container-low rounded-lg border-0 text-sm focus:ring-2 focus:ring-primary/30" />
+          </div>
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1 block">Rencana Check-out</label>
+            <input v-model="form.plannedCheckOutDate" type="date"
+                   class="w-full px-3 py-2.5 bg-surface-container-low rounded-lg border-0 text-sm focus:ring-2 focus:ring-primary/30" />
+          </div>
+        </div>
+
         <!-- Follow-up Date -->
         <div>
           <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1 block">Jadwal Follow-up</label>
@@ -198,7 +212,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   form: { type: Object, required: true },
   editing: { type: Boolean, default: false },
   saving: { type: Boolean, default: false },
@@ -206,4 +220,14 @@ defineProps({
 })
 
 defineEmits(['close', 'save'])
+
+const onCheckInChange = () => {
+  if (!props.form.plannedCheckInDate) return
+  const checkIn = new Date(props.form.plannedCheckInDate)
+  if (isNaN(checkIn.getTime())) return
+  const checkOut = new Date(checkIn)
+  checkOut.setDate(checkOut.getDate() + 1)
+  const pad = (n) => String(n).padStart(2, '0')
+  props.form.plannedCheckOutDate = `${checkOut.getFullYear()}-${pad(checkOut.getMonth() + 1)}-${pad(checkOut.getDate())}`
+}
 </script>
