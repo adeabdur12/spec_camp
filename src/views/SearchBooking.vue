@@ -190,8 +190,8 @@
 
             <div class="border-t border-outline-variant/10 pt-3 mt-3">
               <p class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Bukti Pembayaran</p>
-              <div v-if="booking.paymentProof" class="rounded-lg overflow-hidden border border-outline-variant/10 cursor-pointer" @click="showImagePreview = booking.paymentProof">
-                <img :src="booking.paymentProof" alt="Bukti Pembayaran" class="w-full max-h-64 object-contain bg-white">
+              <div v-if="anyProof" class="rounded-lg overflow-hidden border border-outline-variant/10 cursor-pointer" @click="showImagePreview = anyProof">
+                <img :src="anyProof" alt="Bukti Pembayaran" class="w-full max-h-64 object-contain bg-white">
               </div>
               <p v-else class="text-xs text-on-surface-variant italic">Belum ada bukti pembayaran</p>
             </div>
@@ -272,7 +272,7 @@
 
             <div class="bg-surface-container rounded-xl p-5 mb-4 text-center">
               <p class="text-xs text-on-surface-variant">Scan QRIS untuk Membayar</p>
-              <p class="font-bold text-on-surface text-sm">PT Bumimakmur Jaya Sentosa</p>
+              <p class="font-bold text-on-surface text-sm">KEBUN SPEC KELONTONG</p>
               <div class="border-t border-outline-variant/10 pt-3 mt-3">
                 <div class="bg-white rounded-xl p-3 inline-block border border-outline-variant/10">
                   <img src="/qris-spec.png" alt="QRIS Spec Camp" class="w-56 h-56 object-contain">
@@ -281,9 +281,25 @@
               </div>
             </div>
 
-            <p class="text-xs text-on-surface-variant mb-4">Upload screenshot atau foto bukti transfer agar pesanan segera diproses.</p>
+            <p class="text-xs text-on-surface-variant mb-4">Upload screenshot atau foto bukti transfer — cukup 1 bukti pembayaran (DP atau Pelunasan) agar pesanan segera diproses.</p>
 
-            <div v-if="!booking.paymentProof" class="space-y-4">
+            <div v-if="!anyProof" class="space-y-4">
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-on-surface-variant">Jenis Pembayaran *</label>
+                <div class="flex gap-2">
+                  <button type="button" @click="paymentType = 'final'"
+                          :class="['flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all',
+                                   paymentType === 'final' ? 'bg-primary text-white shadow-md' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high']">
+                    Pelunasan
+                  </button>
+                  <button type="button" @click="paymentType = 'dp'"
+                          :class="['flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all',
+                                   paymentType === 'dp' ? 'bg-primary text-white shadow-md' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high']">
+                    DP
+                  </button>
+                </div>
+              </div>
+
               <div class="space-y-1.5">
                 <label class="text-xs font-medium text-on-surface-variant">Metode Pembayaran *</label>
                 <select v-model="paymentMethod" required
@@ -296,14 +312,14 @@
               <div class="border-2 border-dashed border-outline-variant/30 rounded-xl p-8 text-center hover:border-primary/30 transition-colors cursor-pointer" @click="triggerUpload">
                 <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileSelect">
                 <span class="material-symbols-outlined text-3xl text-on-surface-variant/40 mb-2">cloud_upload</span>
-                <p class="text-sm font-medium text-on-surface-variant">Klik untuk upload bukti bayar</p>
+                <p class="text-sm font-medium text-on-surface-variant">Klik untuk upload bukti {{ paymentType === 'dp' ? 'DP' : 'pelunasan' }}</p>
                 <p class="text-[10px] text-on-surface-variant/40 mt-1">Maks 5MB, format gambar</p>
               </div>
             </div>
 
             <div v-else class="space-y-3">
               <div class="relative bg-surface-container rounded-xl overflow-hidden">
-                <img :src="booking.paymentProof" alt="Bukti Pembayaran" class="w-full max-h-64 object-contain">
+                <img :src="anyProof" alt="Bukti Pembayaran" class="w-full max-h-64 object-contain">
               </div>
               <div class="flex items-center justify-between">
                 <p class="text-xs text-emerald-600 font-medium flex items-center gap-1">
@@ -311,7 +327,7 @@
                   Bukti pembayaran terupload
                 </p>
                 <p class="text-xs text-on-surface-variant font-medium">
-                  {{ booking.paymentMethod === 'qris' ? 'QRIS' : 'Transfer Bank' }}
+                  {{ proofLabel }}
                 </p>
               </div>
             </div>
@@ -379,6 +395,21 @@ const uploadError = ref('')
 const fileInput = ref(null)
 const showImagePreview = ref(null)
 const paymentMethod = ref('qris')
+const paymentType = ref('final')
+
+const anyProof = computed(() => {
+  const b = booking.value
+  if (!b) return null
+  return b.finalPaymentProof || b.dpPaymentProof || b.paymentProof || null
+})
+
+const proofLabel = computed(() => {
+  const b = booking.value
+  if (!b) return ''
+  const type = b.finalPaymentProof ? 'Pelunasan' : (b.dpPaymentProof ? 'DP' : '')
+  const method = b.paymentMethod ? (b.paymentMethod === 'qris' ? 'QRIS' : 'Transfer Bank') : ''
+  return [type, method].filter(Boolean).join(' • ')
+})
 
 const whatsappUrl = computed(() => {
   if (!booking.value) return '#'
@@ -426,10 +457,19 @@ const handleFileSelect = async (e) => {
     await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/bookings/${booking.value.id}/payment`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentProof: data.url, paymentMethod: paymentMethod.value })
+      body: JSON.stringify({ paymentProof: data.url, paymentMethod: paymentMethod.value, paymentType: paymentType.value })
     })
-    booking.value.paymentProof = data.url
     booking.value.paymentMethod = paymentMethod.value
+    if (paymentType.value === 'dp') {
+      booking.value.dpPaymentProof = data.url
+      booking.value.dpPaid = true
+      booking.value.dpPaidAt = new Date().toISOString().split('T')[0]
+    } else {
+      booking.value.paymentProof = data.url
+      booking.value.finalPaymentProof = data.url
+      booking.value.finalPaid = true
+      booking.value.finalPaidAt = new Date().toISOString().split('T')[0]
+    }
     // Update paidAt to current date
     booking.value.paidAt = new Date().toISOString().split('T')[0]
   } catch (e) {

@@ -58,7 +58,7 @@
               </li>
               <li class="flex gap-3 text-sm md:text-base">
                 <span class="text-primary font-bold flex-shrink-0">•</span>
-                <span>Pembayaran DP minimal 50% dari total harga wajib dilakukan saat booking.</span>
+                <span>Pembayaran dapat berupa DP atau pelunasan penuh — cukup upload 1 bukti pembayaran saat booking.</span>
               </li>
               <li class="flex gap-3 text-sm md:text-base">
                 <span class="text-primary font-bold">•</span>

@@ -257,6 +257,10 @@ export function useBookings() {
         extraServices: form.value.extraServices.filter(s => s.id),
         inventoryItems: form.value.inventoryItems.filter(i => i.id)
       }
+      // Empty date inputs are '' — send null instead (backend DATEONLY rejects '')
+      for (const key of ['checkInDate', 'checkOutDate', 'dpPaidAt', 'finalPaidAt', 'paidAt']) {
+        if (payload[key] === '' || payload[key] === 'Invalid Date') payload[key] = null
+      }
       if (editingId.value) {
         await bookingService.update(editingId.value, payload)
       } else {
